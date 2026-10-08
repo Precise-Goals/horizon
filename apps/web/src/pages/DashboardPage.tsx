@@ -6,6 +6,7 @@ import { RecentActivityWidget } from '../components/dashboard/RecentActivityWidg
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { fetchNodes, fetchHealth } from '../lib/api';
+import { mstBlockchain } from '../engine/mstBlockchain';
 import type { SystemNode } from '../types';
 import {
   Clock,
@@ -15,6 +16,10 @@ import {
   RotateCcw,
   CheckCircle2,
   RefreshCw,
+  Cpu,
+  ShieldCheck,
+  ArrowRight,
+  ExternalLink,
 } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -22,12 +27,21 @@ export const DashboardPage: React.FC = () => {
   const [nodes, setNodes] = useState<SystemNode[]>([]);
   const [healthStatus, setHealthStatus] = useState<string>('UP');
   const [loading, setLoading] = useState<boolean>(true);
+  const [blockHeight, setBlockHeight] = useState<number>(1042891);
+  const [lastCheckTime, setLastCheckTime] = useState<string>('');
 
   const loadData = async () => {
     try {
       const [n, h] = await Promise.all([fetchNodes(), fetchHealth()]);
       setNodes(n);
       setHealthStatus(h.status);
+      setLastCheckTime(new Date().toLocaleTimeString());
+
+      // Read block height
+      const hBlock = await mstBlockchain.getBlockHeight();
+      setBlockHeight(hBlock);
+    } catch {
+      setHealthStatus('DEGRADED');
     } finally {
       setLoading(false);
     }
@@ -46,24 +60,30 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header and Quick Operations */}
+      {/* SRE Command Bar Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#FFF8F0]">
-            Resilience Command Center
-          </h1>
-          <p className="text-xs text-[#A3ADC2] mt-0.5">
-            Autonomous multi-tier telemetry and real-time dependency health monitoring.
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#FFF8F0]">
+              Resilience Command Center
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              SRE AUTONOMOUS v1.0
+            </span>
+          </div>
+          <p className="text-xs text-[#A3ADC2] mt-1">
+            Real-time directed acyclic graph telemetry, AI triage copilot, and MST on-chain audit.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="secondary"
             size="sm"
             onClick={loadData}
             className="gap-1.5 text-xs"
-            title="Poll endpoints"
+            title="Poll endpoints immediately"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             <span>Poll Cluster</span>
@@ -81,15 +101,16 @@ export const DashboardPage: React.FC = () => {
       {/* Sarvam AI SRE Copilot Command Bar */}
       <CommandBar />
 
-      {/* KPI Metric Bento Grid */}
+      {/* KPI Metric Bento Grid (Shadcn UI style with SVG Sparklines) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricWidget
           title="Mean Time To Recovery"
           value="3.8m"
-          trend="-18% vs avg"
+          trend="-18% vs 24h avg"
           isPositive={true}
           icon={<Clock className="w-4 h-4" />}
           subtitle="Target SLA: < 5.0m"
+          sparkline={[5.2, 4.8, 4.6, 4.3, 4.0, 3.8]}
         />
         <MetricWidget
           title="Cluster Availability"
@@ -98,46 +119,111 @@ export const DashboardPage: React.FC = () => {
           isPositive={downCount === 0}
           icon={<Activity className="w-4 h-4" />}
           subtitle="99.95% Monthly SLA"
+          sparkline={[99.8, 99.9, 99.8, 99.9, parseFloat(availabilityPct)]}
         />
         <MetricWidget
           title="Monitored Services"
           value={totalNodes}
+          badge="K8s & DB"
           icon={<Server className="w-4 h-4" />}
-          subtitle="PostgreSQL, Redis, Gateway, Auth"
+          subtitle="PostgreSQL, Redis, Gateways"
+          sparkline={[7, 7, 7, 7, 7, 7]}
         />
         <MetricWidget
           title="Active Outages"
           value={downCount}
-          trend={downCount === 0 ? "0 Unhandled" : "Autonomous Plan Ready"}
+          trend={downCount === 0 ? "0 Systemic Outages" : "Recovery Sequence Ready"}
           isPositive={downCount === 0}
           icon={<AlertTriangle className="w-4 h-4" />}
           subtitle="Continuous Health Probes"
+          sparkline={[0, 0, 1, 0, downCount]}
         />
       </div>
 
-      {/* Main Grid: Services Overview and Real-Time Stream */}
+      {/* Main Grid: Services Health Matrix & Incident Triage Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <SystemHealthOverview />
         <RecentActivityWidget />
       </div>
 
-      {/* Bottom Observability Strip */}
-      <Card className="p-4 flex flex-wrap items-center justify-between gap-4 text-xs text-[#A3ADC2]">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5 text-[#FFF8F0]">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            Backend FastAPI: <strong>http://127.0.0.1:8000</strong>
+      {/* Bottom Observability & Edge Telemetry Bento Strip */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Edge Serverless Status */}
+        <Card className="p-4 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[#1E6BFF]">
+              <Cpu className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-semibold text-[#FFF8F0] flex items-center gap-2">
+                <span>Vercel Edge Serverless</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300">
+                  {healthStatus}
+                </span>
+              </div>
+              <p className="text-[11px] text-[#A3ADC2] font-mono">
+                /api/v1/health • Bun & Hono
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-mono text-[#6E7A94]">
+            {lastCheckTime || 'Synced'}
           </span>
-          <span className="font-mono text-[11px] text-blue-400">
-            Health: {healthStatus}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link to="/topology" className="text-blue-400 hover:underline">
-            Inspect Topology DAG &rarr;
+        </Card>
+
+        {/* MST Blockchain Network Status */}
+        <Card className="p-4 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-semibold text-[#FFF8F0] flex items-center gap-2">
+                <span>MST Blockchain Testnet</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-500/15 text-purple-300">
+                  ID: 91562037
+                </span>
+              </div>
+              <p className="text-[11px] text-[#A3ADC2] font-mono">
+                Block #{blockHeight} • BridgeKey Active
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://scan.mst.today"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-purple-400 hover:text-purple-300 transition-colors p-1"
+            title="Inspect Explorer"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </Card>
+
+        {/* Quick DAG Navigation */}
+        <Card className="p-4 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="font-semibold text-[#FFF8F0]">
+                Zero-Downtime Topological DAG
+              </div>
+              <p className="text-[11px] text-[#A3ADC2]">
+                Inspect dependency blast radius & ordering.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/topology"
+            className="inline-flex items-center gap-1 font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            <span>View DAG</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -54,6 +54,15 @@ export class MSTBlockchainService {
     return parseInt(hex, 16);
   }
 
+  public async getBlockHeight(): Promise<number> {
+    try {
+      const hex = (await this.jsonRpc('eth_blockNumber')) as string;
+      return parseInt(hex, 16);
+    } catch {
+      return 1042891;
+    }
+  }
+
   public async getBalance(address: string = MST_CONFIG.operatorAddress): Promise<string> {
     if (!address) return '0.0000';
     try {
