@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -47,9 +48,10 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
   const gradientId = `spark-grad-${title.replace(/[^a-zA-Z0-9]/g, '')}`;
 
   return (
-    <div
+    <motion.div
+      whileHover={{ y: -3, transition: { duration: 0.2 } }}
       className={cn(
-        "p-5 sm:p-6 rounded-2xl bg-[#0D121D]/90 border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between group relative overflow-hidden transition-all duration-300 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/10 shadow-lg shadow-black/40",
+        "p-5 sm:p-6 rounded-2xl bg-[#0B0F19]/85 border border-white/[0.08] backdrop-blur-xl flex flex-col justify-between group relative overflow-hidden transition-all duration-300 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/10 shadow-lg shadow-black/40",
         className
       )}
     >
@@ -131,6 +133,6 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
           <span className="text-xs text-[#8E9DB8] font-medium truncate max-w-[160px]">{subtitle}</span>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };

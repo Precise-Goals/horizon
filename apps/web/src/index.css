@@ -2,15 +2,23 @@
 @import "./styles/theme.css";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+
+/* Poppins Typography Stack */
+@import "@fontsource/poppins/300.css";
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+@import "@fontsource/poppins/800.css";
+@import "@fontsource/poppins/900.css";
 
 @custom-variant dark (&:is(.dark *));
 @plugin "daisyui";
 
 @theme {
   --color-horizon-bg: #07090E;
-  --color-horizon-elevated: #0C101A;
-  --color-horizon-card: rgba(13, 18, 29, 0.7);
+  --color-horizon-elevated: #0B0F19;
+  --color-horizon-card: rgba(11, 15, 25, 0.75);
   --color-cobalt: #1E6BFF;
   --color-cobalt-glow: rgba(30, 107, 255, 0.35);
   --color-cream: #FFF8F0;
@@ -21,14 +29,14 @@
   --color-crimson: #EF4444;
 }
 
-/* Custom Scrollbar for Sleek Minimalist UI */
+/* Custom Scrollbar for Minimalist High-End UI */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(7, 9, 14, 0.5);
+  background: rgba(7, 9, 14, 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
@@ -37,12 +45,13 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(30, 107, 255, 0.5);
+  background: rgba(30, 107, 255, 0.6);
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -86,15 +95,15 @@
 :root {
   --background: #07090E;
   --foreground: #FFF8F0;
-  --card: #0D121D;
+  --card: #0B0F19;
   --card-foreground: #FFF8F0;
-  --popover: #0C101A;
+  --popover: #0B0E17;
   --popover-foreground: #FFF8F0;
   --primary: #1E6BFF;
   --primary-foreground: #FFF8F0;
-  --secondary: #131A29;
+  --secondary: #101626;
   --secondary-foreground: #E2D7CB;
-  --muted: #111724;
+  --muted: #0E1322;
   --muted-foreground: #A3ADC2;
   --accent: #1E6BFF;
   --accent-foreground: #FFF8F0;
@@ -102,21 +111,21 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.12);
   --ring: #1E6BFF;
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 }
 
 .dark {
   --background: #07090E;
   --foreground: #FFF8F0;
-  --card: #0D121D;
+  --card: #0B0F19;
   --card-foreground: #FFF8F0;
-  --popover: #0C101A;
+  --popover: #0B0E17;
   --popover-foreground: #FFF8F0;
   --primary: #1E6BFF;
   --primary-foreground: #FFF8F0;
-  --secondary: #131A29;
+  --secondary: #101626;
   --secondary-foreground: #E2D7CB;
-  --muted: #111724;
+  --muted: #0E1322;
   --muted-foreground: #A3ADC2;
   --accent: #1E6BFF;
   --accent-foreground: #FFF8F0;
@@ -124,17 +133,35 @@
   --border: rgba(255, 255, 255, 0.08);
   --input: rgba(255, 255, 255, 0.12);
   --ring: #1E6BFF;
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
-    @apply font-sans;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color-scheme: dark;
+    scroll-behavior: smooth;
   }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+/* Minimalist Classimalism Bento Surface Utilities */
+.bento-card {
+  background: rgba(11, 15, 25, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bento-card:hover {
+  border-color: rgba(30, 107, 255, 0.3);
+  box-shadow: 0 20px 40px -15px rgba(30, 107, 255, 0.08);
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { MetricWidget } from '../components/dashboard/MetricWidget';
 import { CommandBar } from '../components/copilot/CommandBar';
 import { SystemHealthOverview } from '../components/dashboard/SystemHealthOverview';
@@ -59,12 +60,17 @@ export const DashboardPage: React.FC = () => {
   const availabilityPct = totalNodes > 0 ? ((healthyCount / totalNodes) * 100).toFixed(1) : '99.9';
 
   return (
-    <div className="space-y-7">
-      {/* Top Nav: Return to Homepage Link */}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="space-y-6 sm:space-y-7 font-sans"
+    >
+      {/* Top Breadcrumb & Live Status Bar */}
       <div className="flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#94A3B8] hover:text-[#FFF8F0] transition-colors"
         >
           <span>&larr; Return to Homepage</span>
         </Link>
@@ -74,19 +80,19 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SRE Command Bar Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 pb-2">
+      {/* SRE Command Center Bento Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFF8F0]">
               Resilience Command Center
             </h1>
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 shadow-sm">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/25 shadow-sm">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               SRE AUTONOMOUS v1.0
             </span>
           </div>
-          <p className="text-sm sm:text-base text-[#A3ADC2] mt-1.5 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#94A3B8] mt-1.5 max-w-3xl leading-relaxed">
             Real-time directed acyclic graph telemetry, AI triage copilot, and MST on-chain audit.
           </p>
         </div>
@@ -115,7 +121,7 @@ export const DashboardPage: React.FC = () => {
       {/* Sarvam AI SRE Copilot Command Bar */}
       <CommandBar />
 
-      {/* KPI Metric Bento Grid (Shadcn UI style with larger font and SVG Sparklines) */}
+      {/* KPI Metric Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <MetricWidget
           title="Mean Time To Recovery"
@@ -154,7 +160,7 @@ export const DashboardPage: React.FC = () => {
         />
       </div>
 
-      {/* Main Grid: Services Health Matrix & Incident Triage Stream */}
+      {/* Main Bento Grid: Services Health Matrix & Incident Triage Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-7">
         <SystemHealthOverview />
         <RecentActivityWidget />
@@ -162,7 +168,7 @@ export const DashboardPage: React.FC = () => {
 
       {/* Bottom Observability & Edge Telemetry Bento Strip */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-        {/* Edge Serverless Status */}
+        {/* Edge Serverless Status Bento */}
         <Card className="p-5 flex items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[#1E6BFF]">
@@ -175,7 +181,7 @@ export const DashboardPage: React.FC = () => {
                   {healthStatus}
                 </span>
               </div>
-              <p className="text-xs text-[#A3ADC2] font-mono mt-0.5">
+              <p className="text-xs text-[#94A3B8] font-mono mt-0.5">
                 /api/v1/health • Bun & Hono
               </p>
             </div>
@@ -185,7 +191,7 @@ export const DashboardPage: React.FC = () => {
           </span>
         </Card>
 
-        {/* MST Blockchain Network Status */}
+        {/* MST Blockchain Network Status Bento */}
         <Card className="p-5 flex items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
@@ -198,7 +204,7 @@ export const DashboardPage: React.FC = () => {
                   ID: 91562037
                 </span>
               </div>
-              <p className="text-xs text-[#A3ADC2] font-mono mt-0.5">
+              <p className="text-xs text-[#94A3B8] font-mono mt-0.5">
                 Block #{blockHeight} • BridgeKey Active
               </p>
             </div>
@@ -214,7 +220,7 @@ export const DashboardPage: React.FC = () => {
           </a>
         </Card>
 
-        {/* Quick DAG Navigation */}
+        {/* Quick DAG Navigation Bento */}
         <Card className="p-5 flex items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-3.5">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
@@ -224,7 +230,7 @@ export const DashboardPage: React.FC = () => {
               <div className="font-bold text-[#FFF8F0] text-sm sm:text-base">
                 Zero-Downtime Topological DAG
               </div>
-              <p className="text-xs text-[#A3ADC2] mt-0.5">
+              <p className="text-xs text-[#94A3B8] mt-0.5">
                 Inspect dependency blast radius & ordering.
               </p>
             </div>
@@ -238,6 +244,6 @@ export const DashboardPage: React.FC = () => {
           </Link>
         </Card>
       </div>
-    </div>
+    </motion.div>
   );
 };

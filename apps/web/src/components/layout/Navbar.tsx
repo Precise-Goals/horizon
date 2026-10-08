@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '../common/Button';
 import { AuthModal } from '../auth/AuthModal';
 import { MSTWalletModal } from '../wallet/MSTWalletModal';
@@ -165,48 +166,56 @@ export const Navbar: React.FC = () => {
                 />
               </button>
 
-              {openDropdown === 'platform' && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50">
-                  <Link
-                    to="/dashboard"
-                    className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+              <AnimatePresence>
+                {openDropdown === 'platform' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.16, ease: 'easeOut' }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50"
                   >
-                    <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                      <LayoutDashboard className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-[#FFF8F0]">Dashboard</div>
-                      <div className="text-[10px] text-[#A3ADC2]">Telemetry & MTTR metrics</div>
-                    </div>
-                  </Link>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#FFF8F0]">Dashboard</div>
+                        <div className="text-[10px] text-[#A3ADC2]">Telemetry & MTTR metrics</div>
+                      </div>
+                    </Link>
 
-                  <Link
-                    to="/topology"
-                    className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
-                  >
-                    <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                      <Network className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-[#FFF8F0]">DAG Topology</div>
-                      <div className="text-[10px] text-[#A3ADC2]">Dependency blast radius</div>
-                    </div>
-                  </Link>
+                    <Link
+                      to="/topology"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                        <Network className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#FFF8F0]">DAG Topology</div>
+                        <div className="text-[10px] text-[#A3ADC2]">Dependency blast radius</div>
+                      </div>
+                    </Link>
 
-                  <Link
-                    to="/recovery"
-                    className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
-                  >
-                    <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                      <RotateCcw className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-[#FFF8F0]">Autonomous Recovery</div>
-                      <div className="text-[10px] text-[#A3ADC2]">Deterministic playbooks</div>
-                    </div>
-                  </Link>
-                </div>
-              )}
+                    <Link
+                      to="/recovery"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <RotateCcw className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#FFF8F0]">Autonomous Recovery</div>
+                        <div className="text-[10px] text-[#A3ADC2]">Deterministic playbooks</div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Governance Dropdown */}
@@ -227,35 +236,43 @@ export const Navbar: React.FC = () => {
                 />
               </button>
 
-              {openDropdown === 'governance' && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50">
-                  <Link
-                    to="/audit"
-                    className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+              <AnimatePresence>
+                {openDropdown === 'governance' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.16, ease: 'easeOut' }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50"
                   >
-                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      <ShieldCheck className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-[#FFF8F0]">Audit Vault</div>
-                      <div className="text-[10px] text-[#A3ADC2]">MST on-chain verification</div>
-                    </div>
-                  </Link>
+                    <Link
+                      to="/audit"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#FFF8F0]">Audit Vault</div>
+                        <div className="text-[10px] text-[#A3ADC2]">MST on-chain verification</div>
+                      </div>
+                    </Link>
 
-                  <Link
-                    to="/subscription"
-                    className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
-                  >
-                    <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                      <Gem className="w-3.5 h-3.5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold text-[#FFF8F0]">Subscription Plans</div>
-                      <div className="text-[10px] text-[#A3ADC2]">Web3 NFT token-gated tiers</div>
-                    </div>
-                  </Link>
-                </div>
-              )}
+                    <Link
+                      to="/subscription"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                        <Gem className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#FFF8F0]">Subscription Plans</div>
+                        <div className="text-[10px] text-[#A3ADC2]">Web3 NFT token-gated tiers</div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </nav>
 
@@ -311,29 +328,37 @@ export const Navbar: React.FC = () => {
                   </div>
                 </button>
 
-                {openDropdown === 'profile' && (
-                  <div className="absolute top-full right-0 mt-2 w-56 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50">
-                    <div className="p-2 border-b border-white/[0.08] mb-1">
-                      <div className="text-xs font-semibold text-[#FFF8F0] truncate">
-                        {user.displayName || 'Commander'}
-                      </div>
-                      <div className="text-[10px] font-mono text-[#A3ADC2] truncate">
-                        {user.email}
-                      </div>
-                      <div className="mt-1 inline-block text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        {user.role} Access
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={logout}
-                      className="w-full flex items-center gap-2 p-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                <AnimatePresence>
+                  {openDropdown === 'profile' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                      transition={{ duration: 0.16, ease: 'easeOut' }}
+                      className="absolute top-full right-0 mt-2 w-56 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50"
                     >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out</span>
-                    </button>
-                  </div>
-                )}
+                      <div className="p-2 border-b border-white/[0.08] mb-1">
+                        <div className="text-xs font-semibold text-[#FFF8F0] truncate">
+                          {user.displayName || 'Commander'}
+                        </div>
+                        <div className="text-[10px] font-mono text-[#A3ADC2] truncate">
+                          {user.email}
+                        </div>
+                        <div className="mt-1 inline-block text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          {user.role} Access
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-2 p-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <Button
@@ -359,52 +384,60 @@ export const Navbar: React.FC = () => {
       </header>
 
       {/* Mobile Navigation Drawer */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-x-4 top-20 z-50 p-4 rounded-3xl bg-[#0A0E17]/95 backdrop-blur-2xl border border-white/10 shadow-2xl space-y-2 md:hidden">
-          <Link
-            to="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed inset-x-4 top-20 z-50 p-4 rounded-3xl bg-[#0A0E17]/95 backdrop-blur-2xl border border-white/10 shadow-2xl space-y-2 md:hidden"
           >
-            Overview
-          </Link>
-          <Link
-            to="/dashboard"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
-          >
-            Resilience Dashboard
-          </Link>
-          <Link
-            to="/topology"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
-          >
-            DAG Dependency Graph
-          </Link>
-          <Link
-            to="/recovery"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
-          >
-            Autonomous Recovery Engine
-          </Link>
-          <Link
-            to="/audit"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
-          >
-            On-Chain Audit Vault
-          </Link>
-          <Link
-            to="/subscription"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
-          >
-            Subscription Plans
-          </Link>
-        </div>
-      )}
+            <Link
+              to="/"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              Overview
+            </Link>
+            <Link
+              to="/dashboard"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              Resilience Dashboard
+            </Link>
+            <Link
+              to="/topology"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              DAG Dependency Graph
+            </Link>
+            <Link
+              to="/recovery"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              Autonomous Recovery Engine
+            </Link>
+            <Link
+              to="/audit"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              On-Chain Audit Vault
+            </Link>
+            <Link
+              to="/subscription"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              Subscription Plans
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
       <MSTWalletModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />

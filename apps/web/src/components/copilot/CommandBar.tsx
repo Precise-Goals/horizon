@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { sarvamAgent, type SarvamCommandResult } from '../../engine/sarvamAgent';
@@ -136,28 +137,38 @@ export const CommandBar: React.FC = () => {
       </div>
 
       {/* AI Reasoning Response Panel */}
-      {result && (
-        <div className="mt-3.5 p-3.5 rounded-xl bg-blue-500/[0.08] border border-blue-500/25 text-xs animate-in fade-in space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-blue-300 flex items-center gap-1.5">
-              <Bot className="w-3.5 h-3.5" />
-              Sarvam AI Agent Reasoning
-            </span>
-            <span className="font-mono text-[10px] text-[#A3ADC2] uppercase px-2 py-0.5 rounded bg-white/[0.04]">
-              Action: {result.actionType}
-            </span>
-          </div>
+      <AnimatePresence>
+        {result && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: 8, height: 0 }}
+            transition={{ duration: 0.25, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3.5 p-3.5 rounded-xl bg-blue-500/[0.08] border border-blue-500/25 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-blue-300 flex items-center gap-1.5">
+                  <Bot className="w-3.5 h-3.5" />
+                  Sarvam AI Agent Reasoning
+                </span>
+                <span className="font-mono text-[10px] text-[#A3ADC2] uppercase px-2 py-0.5 rounded bg-white/[0.04]">
+                  Action: {result.actionType}
+                </span>
+              </div>
 
-          <p className="text-[#E2D7CB] leading-relaxed font-sans">{result.assistantReply}</p>
+              <p className="text-[#E2D7CB] leading-relaxed font-sans">{result.assistantReply}</p>
 
-          {result.reasoning && (
-            <div className="pt-2 border-t border-white/[0.06] text-[11px] font-mono text-emerald-300 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>{result.reasoning}</span>
+              {result.reasoning && (
+                <div className="pt-2 border-t border-white/[0.06] text-[11px] font-mono text-emerald-300 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>{result.reasoning}</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Card>
   );
 };

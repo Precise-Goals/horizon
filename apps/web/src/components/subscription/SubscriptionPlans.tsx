@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { useAuth } from '../../context/useAuth';
@@ -380,78 +381,83 @@ export const SubscriptionPlans: React.FC = () => {
           const isMintingThis = mintingTier === plan.id;
 
           return (
-            <Card
+            <motion.div
               key={plan.id}
-              className={`p-6 flex flex-col justify-between relative transition-all duration-300 hover:border-blue-500/40 ${
-                plan.isPopular
-                  ? 'border-blue-500/40 bg-[#0E1524]/90 shadow-2xl shadow-blue-500/10'
-                  : 'bg-[#0B0F19]/80 border-white/[0.08]'
-              }`}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="h-full flex flex-col"
             >
-              {plan.isPopular && (
-                <div className="absolute top-4 right-4">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-500 text-white shadow-md shadow-blue-500/30">
-                    RECOMMENDED
-                  </span>
-                </div>
-              )}
-
-              <div>
-                <h3 className="text-xl sm:text-2xl font-bold text-[#FFF8F0] tracking-tight">
-                  {plan.name}
-                </h3>
-                <p className="text-xs sm:text-sm text-[#A3ADC2] mt-1 min-h-[36px]">
-                  {plan.tagline}
-                </p>
-
-                <div className="my-5 pb-5 border-b border-white/[0.08]">
-                  <div className="text-3xl sm:text-4xl font-black font-mono text-[#FFF8F0]">
-                    {plan.price}
+              <Card
+                className={`p-6 flex flex-col justify-between relative h-full transition-all duration-300 hover:border-blue-500/40 ${
+                  plan.isPopular
+                    ? 'border-blue-500/40 bg-[#0E1524]/90 shadow-2xl shadow-blue-500/10'
+                    : 'bg-[#0B0F19]/80 border-white/[0.08]'
+                }`}
+              >
+                {plan.isPopular && (
+                  <div className="absolute top-4 right-4">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-blue-500 text-white shadow-md shadow-blue-500/30">
+                      RECOMMENDED
+                    </span>
                   </div>
-                  <div className="text-xs font-mono text-blue-400 mt-1">
-                    {plan.mstPrice}
+                )}
+
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#FFF8F0] tracking-tight">
+                    {plan.name}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#A3ADC2] mt-1 min-h-[36px]">
+                    {plan.tagline}
+                  </p>
+
+                  <div className="my-5 pb-5 border-b border-white/[0.08]">
+                    <div className="text-3xl sm:text-4xl font-black font-mono text-[#FFF8F0]">
+                      {plan.price}
+                    </div>
+                    <div className="text-xs font-mono text-blue-400 mt-1">
+                      {plan.mstPrice}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-6">
+                    <span className="text-xs font-semibold text-[#8E9DB8] uppercase tracking-wider block">
+                      Plan Capabilities
+                    </span>
+                    <ul className="space-y-2.5">
+                      {plan.features.map((feat, i) => (
+                        <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#E2D7CB]">
+                          <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                          <span className="leading-snug">{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-6">
-                  <span className="text-xs font-semibold text-[#8E9DB8] uppercase tracking-wider block">
-                    Plan Capabilities
-                  </span>
-                  <ul className="space-y-2.5">
-                    {plan.features.map((feat, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#E2D7CB]">
-                        <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        <span className="leading-snug">{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div>
+                  <Button
+                    variant={plan.isPopular ? 'primary' : 'secondary'}
+                    onClick={() => handleMint(plan.id)}
+                    disabled={!!mintingTier}
+                    className="w-full py-3 text-sm font-semibold gap-2 rounded-xl cursor-pointer"
+                  >
+                    {isMintingThis ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Transacting on MST...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4" />
+                        <span>Mint Subscription NFT</span>
+                      </>
+                    )}
+                  </Button>
+                  <p className="text-[10px] text-center text-[#6E7A94] mt-2 font-mono">
+                    Chain ID 91562037 • Non-Custodial
+                  </p>
                 </div>
-              </div>
-
-              <div>
-                <Button
-                  variant={plan.isPopular ? 'primary' : 'secondary'}
-                  onClick={() => handleMint(plan.id)}
-                  disabled={!!mintingTier}
-                  className="w-full py-3 text-sm font-semibold gap-2 rounded-xl cursor-pointer"
-                >
-                  {isMintingThis ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Transacting on MST...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Wallet className="w-4 h-4" />
-                      <span>Mint Subscription NFT</span>
-                    </>
-                  )}
-                </Button>
-                <p className="text-[10px] text-center text-[#6E7A94] mt-2 font-mono">
-                  Chain ID 91562037 • Non-Custodial
-                </p>
-              </div>
-            </Card>
+              </Card>
+            </motion.div>
           );
         })}
       </div>
