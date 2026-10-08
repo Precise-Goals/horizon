@@ -7,6 +7,7 @@ import { MSTWalletModal } from '../wallet/MSTWalletModal';
 import { useAuth } from '../../context/useAuth';
 import { fetchHealth, fetchNodes } from '../../lib/api';
 import { mstBlockchain } from '../../engine/mstBlockchain';
+import type { SystemNode } from '../../types';
 import {
   Activity,
   LayoutDashboard,
@@ -76,7 +77,7 @@ export const Navbar: React.FC = () => {
 
         const nodes = await fetchNodes();
         if (!isMounted) return;
-        const downCount = nodes.filter((n) => n.status === 'down' || n.status === 'degraded').length;
+        const downCount = nodes.filter((n: SystemNode) => n.status === 'down' || n.status === 'degraded').length;
         setIncidentCount(downCount);
       } catch {
         if (!isMounted) return;

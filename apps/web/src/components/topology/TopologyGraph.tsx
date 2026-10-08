@@ -27,8 +27,8 @@ export const TopologyGraph: React.FC = () => {
       } else {
         // Fallback default edges based on node dependencies
         const derivedEdges: { dependent_id: string; depends_on_id: string }[] = [];
-        n.forEach((node) => {
-          node.dependencies.forEach((dep) => {
+        n.forEach((node: SystemNode) => {
+          node.dependencies.forEach((dep: string) => {
             derivedEdges.push({ dependent_id: node.id, depends_on_id: dep });
           });
         });
