@@ -25,6 +25,7 @@ import {
   Sparkles,
   Zap,
   Network,
+  Terminal,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { cn } from '../lib/utils';
@@ -132,6 +133,13 @@ export const DashboardPage: React.FC = () => {
             <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-[#0047AB] border-[#0047AB]/20">
               <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />
               AI Architect
+            </Button>
+          </Link>
+
+          <Link to="/docs">
+            <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-[#0047AB] border-[#0047AB]/20">
+              <Terminal className="w-3.5 h-3.5 text-[#0047AB]" />
+              MCP & Docs
             </Button>
           </Link>
 

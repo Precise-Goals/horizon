@@ -11,6 +11,7 @@ import {
   Layers,
   Sparkles,
   Activity,
+  Terminal,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { autonomousWatchdog } from '../../engine/watchdog';
@@ -39,9 +40,16 @@ const NAV_LINKS = [
   },
   {
     to: '/architect',
-    label: 'AI Flow Architect',
+    label: 'AI Agent Architect',
     icon: Sparkles,
     desc: 'Natural language DAG',
+    accent: 'text-[#0047AB]',
+  },
+  {
+    to: '/docs',
+    label: 'MCP & API Docs',
+    icon: Terminal,
+    desc: 'MCP, Slash & CLI',
     accent: 'text-[#0047AB]',
   },
   {

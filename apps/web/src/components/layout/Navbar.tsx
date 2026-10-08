@@ -22,6 +22,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Terminal,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -98,7 +99,9 @@ export const Navbar: React.FC = () => {
     setOpenDropdown((prev) => (prev === name ? null : name));
   };
 
-  const isPlatformActive = ['/dashboard', '/topology', '/recovery', '/architect'].includes(location.pathname);
+  const isPlatformActive = ['/dashboard', '/topology', '/recovery'].includes(location.pathname);
+  const isAgentActive = location.pathname === '/architect';
+  const isDocsActive = ['/docs', '/mcp'].includes(location.pathname);
   const isGovernanceActive = ['/audit', '/subscription'].includes(location.pathname);
 
   return (
@@ -128,7 +131,7 @@ export const Navbar: React.FC = () => {
           <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#F4EBE0] border border-[rgba(26,26,26,0.1)] shadow-[inset_0_1px_2px_rgba(26,26,26,0.06),0_1px_0_#FFFFFF] relative">
             <Link
               to="/"
-              className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all ${
+              className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
                 location.pathname === '/'
                   ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
                   : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
@@ -141,7 +144,7 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => toggleDropdown('platform')}
-                className={`flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   isPlatformActive || openDropdown === 'platform'
                     ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
                     : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
@@ -208,29 +211,42 @@ export const Navbar: React.FC = () => {
                         <div className="text-[10px] text-[#666666]">Deterministic playbooks</div>
                       </div>
                     </Link>
-
-                    <Link
-                      to="/architect"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
-                    >
-                      <div className="p-1.5 rounded-lg bg-[#EBF1FA] text-[#0047AB] border border-[#0047AB]/20">
-                        <Sparkles className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <div className="text-xs font-bold text-[#1A1A1A]">AI Flow Architect</div>
-                        <div className="text-[10px] text-[#666666]">Natural language DAG & YAML</div>
-                      </div>
-                    </Link>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
+            {/* AI Agent Direct Navbar Item */}
+            <Link
+              to="/architect"
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                isAgentActive
+                  ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                  : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />
+              <span>AI Agent</span>
+            </Link>
+
+            {/* MCP & API Docs Direct Navbar Item */}
+            <Link
+              to="/docs"
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                isDocsActive
+                  ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                  : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5 text-[#0047AB]" />
+              <span>MCP & Docs</span>
+            </Link>
+
             {/* Governance Dropdown */}
             <div className="relative">
               <button
                 onClick={() => toggleDropdown('governance')}
-                className={`flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   isGovernanceActive || openDropdown === 'governance'
                     ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
                     : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
@@ -427,6 +443,13 @@ export const Navbar: React.FC = () => {
               className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               AI Flow Architect
+            </Link>
+            <Link
+              to="/docs"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
+            >
+              MCP & API Documentation
             </Link>
             <Link
               to="/audit"

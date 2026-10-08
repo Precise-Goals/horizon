@@ -9,6 +9,8 @@ import { AuditPage } from './pages/AuditPage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { ArchitectPage } from './pages/ArchitectPage';
 
+import { DocsPage } from './pages/DocsPage';
+
 export function App() {
   return (
     <AuthProvider>
@@ -22,6 +24,8 @@ export function App() {
             <Route path="/recovery" element={<RecoveryPage />} />
             <Route path="/audit" element={<AuditPage />} />
             <Route path="/subscription" element={<SubscriptionPage />} />
+            <Route path="/docs" element={<DocsPage />} />
+            <Route path="/mcp" element={<DocsPage />} />
           </Route>
         </Routes>
       </BrowserRouter>
