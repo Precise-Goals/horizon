@@ -103,43 +103,35 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* React Bits Centered Floating Dock Navbar */}
+      {/* Porcelain Skeuomorphic Floating Dock Navbar */}
       <header className="sticky top-3.5 z-50 w-full px-4 sm:px-6 pointer-events-none flex justify-center">
         <div
           ref={navRef}
-          className="pointer-events-auto w-full max-w-5xl rounded-full bg-[#0A0E17]/85 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/60 px-3.5 sm:px-5 py-2 flex items-center justify-between gap-3 ring-1 ring-white/[0.05] transition-all"
+          className="pointer-events-auto w-full max-w-5xl rounded-full bg-white/95 backdrop-blur-2xl border border-[rgba(26,26,26,0.14)] shadow-[inset_0_1px_0_#FFFFFF,0_4px_16px_-2px_rgba(26,26,26,0.08),0_12px_32px_-4px_rgba(0,71,171,0.08)] px-4 sm:px-5 py-2 flex items-center justify-between gap-3 transition-all"
         >
           {/* Brand Left */}
           <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#0F1626] border border-blue-500/30 shadow-md shadow-blue-500/20 group-hover:border-blue-400 group-hover:scale-105 transition-all">
-              <img
-                src="/logo.png"
-                alt="Horizon"
-                className="w-5 h-5 object-contain"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              <Activity className="w-4 h-4 text-[#1E6BFF]" />
+            <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#0047AB] border border-[#003680] shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_4px_rgba(0,71,171,0.3)] group-hover:scale-105 transition-all">
+              <Activity className="w-4 h-4 text-[#FFF8F0]" />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-extrabold tracking-wider text-[#FFF8F0] uppercase group-hover:text-blue-400 transition-colors">
+              <span className="text-sm font-black tracking-wider text-[#1A1A1A] uppercase group-hover:text-[#0047AB] transition-colors">
                 Horizon
               </span>
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30 hidden sm:inline">
+              <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-[#EBF1FA] text-[#0047AB] border border-[#0047AB]/20 hidden sm:inline">
                 SRE
               </span>
             </div>
           </Link>
 
-          {/* Center: Minimal Dock Links (React Bits Pill Dock) */}
-          <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-white/[0.03] border border-white/[0.06] relative">
+          {/* Center: Tactile Dock Links */}
+          <nav className="hidden md:flex items-center gap-1 p-1 rounded-full bg-[#F4EBE0] border border-[rgba(26,26,26,0.1)] shadow-[inset_0_1px_2px_rgba(26,26,26,0.06),0_1px_0_#FFFFFF] relative">
             <Link
               to="/"
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+              className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all ${
                 location.pathname === '/'
-                  ? 'bg-blue-500/20 text-[#FFF8F0] border border-blue-500/30 shadow-sm shadow-blue-500/20'
-                  : 'text-[#A3ADC2] hover:text-[#FFF8F0] hover:bg-white/[0.04]'
+                  ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                  : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
               }`}
             >
               Overview
@@ -149,21 +141,21 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => toggleDropdown('platform')}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   isPlatformActive || openDropdown === 'platform'
-                    ? 'bg-blue-500/20 text-[#FFF8F0] border border-blue-500/30'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0] hover:bg-white/[0.04]'
+                    ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                    : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
                 }`}
               >
                 <span>Platform</span>
                 {incidentCount > 0 && (
-                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-red-500/20 text-red-300 border border-red-500/30">
+                  <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-red-100 text-red-700 border border-red-300">
                     {incidentCount}
                   </span>
                 )}
                 <ChevronDown
-                  className={`w-3 h-3 text-[#6E7A94] transition-transform duration-200 ${
-                    openDropdown === 'platform' ? 'rotate-180 text-blue-400' : ''
+                  className={`w-3 h-3 text-[#777777] transition-transform duration-200 ${
+                    openDropdown === 'platform' ? 'rotate-180 text-[#0047AB]' : ''
                   }`}
                 />
               </button>
@@ -176,57 +168,57 @@ export const Navbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50"
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 rounded-2xl p-2 bg-white border border-[rgba(26,26,26,0.14)] shadow-[0_12px_32px_rgba(26,26,26,0.12),inset_0_1px_0_#FFFFFF] z-50"
                   >
                     <Link
                       to="/dashboard"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <div className="p-1.5 rounded-lg bg-[#EBF1FA] text-[#0047AB] border border-[#0047AB]/20">
                         <LayoutDashboard className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#FFF8F0]">Dashboard</div>
-                        <div className="text-[10px] text-[#A3ADC2]">Telemetry & MTTR metrics</div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">Dashboard</div>
+                        <div className="text-[10px] text-[#666666]">Telemetry & MTTR metrics</div>
                       </div>
                     </Link>
 
                     <Link
                       to="/topology"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      <div className="p-1.5 rounded-lg bg-[#EBF1FA] text-[#0047AB] border border-[#0047AB]/20">
                         <Network className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#FFF8F0]">DAG Topology</div>
-                        <div className="text-[10px] text-[#A3ADC2]">Dependency blast radius</div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">DAG Topology</div>
+                        <div className="text-[10px] text-[#666666]">Dependency blast radius</div>
                       </div>
                     </Link>
 
                     <Link
                       to="/recovery"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <div className="p-1.5 rounded-lg bg-[#FEF6E7] text-[#D97706] border border-[#D97706]/20">
                         <RotateCcw className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#FFF8F0]">Autonomous Recovery</div>
-                        <div className="text-[10px] text-[#A3ADC2]">Deterministic playbooks</div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">Autonomous Recovery</div>
+                        <div className="text-[10px] text-[#666666]">Deterministic playbooks</div>
                       </div>
                     </Link>
 
                     <Link
                       to="/architect"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                      <div className="p-1.5 rounded-lg bg-[#EBF1FA] text-[#0047AB] border border-[#0047AB]/20">
                         <Sparkles className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#FFF8F0]">AI Flow Architect</div>
-                        <div className="text-[10px] text-[#A3ADC2]">Natural language DAG & YAML</div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">AI Flow Architect</div>
+                        <div className="text-[10px] text-[#666666]">Natural language DAG & YAML</div>
                       </div>
                     </Link>
                   </motion.div>
@@ -238,16 +230,16 @@ export const Navbar: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => toggleDropdown('governance')}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                className={`flex items-center gap-1 px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   isGovernanceActive || openDropdown === 'governance'
-                    ? 'bg-blue-500/20 text-[#FFF8F0] border border-blue-500/30'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0] hover:bg-white/[0.04]'
+                    ? 'bg-white text-[#0047AB] border border-[rgba(26,26,26,0.14)] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                    : 'text-[#555555] hover:text-[#1A1A1A] hover:bg-white/60'
                 }`}
               >
                 <span>Governance</span>
                 <ChevronDown
-                  className={`w-3 h-3 text-[#6E7A94] transition-transform duration-200 ${
-                    openDropdown === 'governance' ? 'rotate-180 text-blue-400' : ''
+                  className={`w-3 h-3 text-[#777777] transition-transform duration-200 ${
+                    openDropdown === 'governance' ? 'rotate-180 text-[#0047AB]' : ''
                   }`}
                 />
               </button>
@@ -260,31 +252,31 @@ export const Navbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50"
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-60 rounded-2xl p-2 bg-white border border-[rgba(26,26,26,0.14)] shadow-[0_12px_32px_rgba(26,26,26,0.12),inset_0_1px_0_#FFFFFF] z-50"
                   >
                     <Link
                       to="/audit"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <div className="p-1.5 rounded-lg bg-[#EBF7EE] text-[#0F8E52] border border-[#0F8E52]/20">
                         <ShieldCheck className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#FFF8F0]">Audit Vault</div>
-                        <div className="text-[10px] text-[#A3ADC2]">MST on-chain verification</div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">Audit Vault</div>
+                        <div className="text-[10px] text-[#666666]">MST on-chain verification</div>
                       </div>
                     </Link>
 
                     <Link
                       to="/subscription"
-                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
                     >
-                      <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      <div className="p-1.5 rounded-lg bg-[#F5F3FF] text-[#7C3AED] border border-[#7C3AED]/20">
                         <Gem className="w-3.5 h-3.5" />
                       </div>
                       <div>
-                        <div className="text-xs font-semibold text-[#FFF8F0]">Subscription Plans</div>
-                        <div className="text-[10px] text-[#A3ADC2]">Web3 NFT token-gated tiers</div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">Subscription Plans</div>
+                        <div className="text-[10px] text-[#666666]">Web3 NFT token-gated tiers</div>
                       </div>
                     </Link>
                   </motion.div>
@@ -297,37 +289,26 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2">
             {/* Live Health Indicator */}
             <div
-              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] text-[11px]"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F4EBE0] border border-[rgba(26,26,26,0.1)] text-[11px] shadow-[inset_0_1px_2px_rgba(26,26,26,0.05)]"
               title={`Cluster Status: ${healthStatus} (${latencyMs ?? '...'}ms)`}
             >
-              <span className="relative flex h-2 w-2">
-                <span
-                  className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                    healthStatus === 'UP' ? 'bg-emerald-400' : 'bg-amber-400'
-                  }`}
-                />
-                <span
-                  className={`relative inline-flex rounded-full h-2 w-2 ${
-                    healthStatus === 'UP' ? 'bg-emerald-500' : 'bg-amber-500'
-                  }`}
-                />
-              </span>
-              <span className="text-[#A3ADC2] font-mono text-[10px]">
+              <span className="skeuo-led skeuo-led-healthy animate-pulse" />
+              <span className="text-[#555555] font-mono text-[10px] font-bold">
                 {latencyMs !== null ? `${latencyMs}ms` : 'MST'}
               </span>
             </div>
 
-            {/* BridgeKey Wallet Trigger */}
+            {/* BridgeKey Wallet Tactile Button */}
             <button
               onClick={() => setIsWalletModalOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all border bg-blue-500/10 border-blue-500/25 text-blue-300 hover:bg-blue-500/20 hover:border-blue-500/40 cursor-pointer shadow-sm shadow-blue-500/10"
+              className="skeuo-btn-primary flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer"
               title="BridgeKey Wallet — MST Testnet"
             >
-              <Wallet className="w-3.5 h-3.5 text-[#1E6BFF]" />
-              <span className="font-mono text-[11px] hidden sm:inline">
+              <Wallet className="w-3.5 h-3.5 text-white" />
+              <span className="font-mono text-[11px] hidden sm:inline text-white">
                 {walletBalance}
               </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#10B981]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] shadow-[0_0_6px_#10B981]" />
             </button>
 
             {/* Operator Auth Profile / Dropdown */}
@@ -335,12 +316,12 @@ export const Navbar: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => toggleDropdown('profile')}
-                  className="flex items-center gap-1.5 p-1 pl-2 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 p-1 pl-2 rounded-full bg-[#F4EBE0] hover:bg-[#EDE1D2] border border-[rgba(26,26,26,0.12)] transition-colors cursor-pointer"
                 >
-                  <span className="text-xs text-[#E2D7CB] max-w-[80px] truncate hidden sm:inline">
+                  <span className="text-xs font-bold text-[#1A1A1A] max-w-[80px] truncate hidden sm:inline">
                     {user.displayName || user.email.split('@')[0]}
                   </span>
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-[#1E6BFF] to-[#0047AB] flex items-center justify-center text-[10px] font-bold text-[#FFF8F0] shadow-sm">
+                  <div className="w-6 h-6 rounded-full bg-[#0047AB] border border-[#003680] flex items-center justify-center text-[10px] font-black text-white shadow-sm">
                     {user.email.slice(0, 2).toUpperCase()}
                   </div>
                 </button>
@@ -353,23 +334,23 @@ export const Navbar: React.FC = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.16, ease: 'easeOut' }}
-                      className="absolute top-full right-0 mt-2 w-56 rounded-2xl p-2 bg-[#0C101A]/95 border border-white/[0.1] shadow-2xl backdrop-blur-2xl z-50"
+                      className="absolute top-full right-0 mt-2 w-56 rounded-2xl p-2 bg-white border border-[rgba(26,26,26,0.14)] shadow-[0_12px_32px_rgba(26,26,26,0.12),inset_0_1px_0_#FFFFFF] z-50"
                     >
-                      <div className="p-2 border-b border-white/[0.08] mb-1">
-                        <div className="text-xs font-semibold text-[#FFF8F0] truncate">
+                      <div className="p-2 border-b border-[rgba(26,26,26,0.08)] mb-1">
+                        <div className="text-xs font-bold text-[#1A1A1A] truncate">
                           {user.displayName || 'Commander'}
                         </div>
-                        <div className="text-[10px] font-mono text-[#A3ADC2] truncate">
+                        <div className="text-[10px] font-mono text-[#666666] truncate">
                           {user.email}
                         </div>
-                        <div className="mt-1 inline-block text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <div className="mt-1 inline-block text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-300">
                           {user.role} Access
                         </div>
                       </div>
 
                       <button
                         onClick={logout}
-                        className="w-full flex items-center gap-2 p-2 rounded-xl text-xs text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+                        className="w-full flex items-center gap-2 p-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         <span>Sign Out</span>
@@ -393,7 +374,7 @@ export const Navbar: React.FC = () => {
             {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="p-1.5 rounded-full bg-white/[0.04] border border-white/10 text-[#A3ADC2] hover:text-[#FFF8F0] md:hidden cursor-pointer"
+              className="p-1.5 rounded-full bg-[#F4EBE0] border border-[rgba(26,26,26,0.12)] text-[#555555] hover:text-[#1A1A1A] md:hidden cursor-pointer"
             >
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
@@ -410,54 +391,54 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.98 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed inset-x-4 top-20 z-50 p-4 rounded-3xl bg-[#0A0E17]/95 backdrop-blur-2xl border border-white/10 shadow-2xl space-y-2 md:hidden"
+            className="fixed inset-x-4 top-20 z-50 p-4 rounded-3xl bg-white border border-[rgba(26,26,26,0.14)] shadow-2xl space-y-2 md:hidden"
           >
             <Link
               to="/"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               Overview
             </Link>
             <Link
               to="/dashboard"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               Resilience Dashboard
             </Link>
             <Link
               to="/topology"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               DAG Dependency Graph
             </Link>
             <Link
               to="/recovery"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               Autonomous Recovery Engine
             </Link>
             <Link
               to="/architect"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               AI Flow Architect
             </Link>
             <Link
               to="/audit"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               On-Chain Audit Vault
             </Link>
             <Link
               to="/subscription"
               onClick={() => setMobileMenuOpen(false)}
-              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               Subscription Plans
             </Link>

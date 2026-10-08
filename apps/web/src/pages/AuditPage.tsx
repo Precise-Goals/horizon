@@ -23,13 +23,13 @@ export const AuditPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#94A3B8] hover:text-[#FFF8F0] transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
           <span>&larr; Return to Homepage</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-          <span className="text-xs font-mono text-purple-300 font-semibold">MST Merkle Vault Anchored</span>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-[#0047AB] animate-pulse" />
+          <span className="text-xs font-mono text-[#0047AB] font-bold">MST Merkle Vault Anchored</span>
         </div>
       </div>
 
@@ -37,15 +37,15 @@ export const AuditPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFF8F0]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
               Cryptographic Audit Vault
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/25">
-              <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#0047AB]" />
               IMMUTABLE MERKLE VAULT
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-[#94A3B8] mt-1.5 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
             Real-time incident event log anchored on the MST Blockchain with cryptographic hash verification and tamper-evident timestamps.
           </p>
         </div>
@@ -54,7 +54,7 @@ export const AuditPage: React.FC = () => {
           href={MST_CONFIG.explorerUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-500/15 border border-purple-500/30 text-xs sm:text-sm font-bold text-purple-300 hover:bg-purple-500/25 transition-all shadow-lg shadow-purple-500/10 cursor-pointer w-fit"
+          className="skeuo-btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer w-fit"
         >
           <span>MSTScan Explorer</span>
           <ExternalLink className="w-4 h-4" />
@@ -63,40 +63,40 @@ export const AuditPage: React.FC = () => {
 
       {/* Bento Metric Summary Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Ledger Integrity</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">100%</div>
-          <div className="text-[11px] text-[#8E9DB8] font-mono">Tamper-Evident History</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">100%</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Tamper-Evident History</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Blockchain Network</span>
-            <Lock className="w-4 h-4 text-purple-400" />
+            <Lock className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-purple-300">MST Testnet</div>
-          <div className="text-[11px] text-[#8E9DB8] font-mono">Chain ID: {MST_CONFIG.chainId}</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">MST Testnet</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Chain ID: {MST_CONFIG.chainId}</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Hash Mechanism</span>
-            <FileCheck className="w-4 h-4 text-blue-400" />
+            <FileCheck className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#FFF8F0]">SHA-256</div>
-          <div className="text-[11px] text-blue-400 font-mono">Merkle Root Chained</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#1A1A1A]">SHA-256</div>
+          <div className="text-[11px] text-[#0047AB] font-mono font-bold">Merkle Root Chained</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Signer Protocol</span>
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
+            <ShieldCheck className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-amber-400">BridgeKey</div>
-          <div className="text-[11px] text-[#8E9DB8] font-mono">Cryptographic Multi-Sig</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-amber-700">BridgeKey</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Cryptographic Multi-Sig</div>
         </Card>
       </div>
 

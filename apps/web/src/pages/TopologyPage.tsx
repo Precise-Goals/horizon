@@ -23,13 +23,13 @@ export const TopologyPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#94A3B8] hover:text-[#FFF8F0] transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
           <span>&larr; Return to Homepage</span>
         </Link>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-mono text-emerald-300 font-semibold">O(V + E) Acyclic DAG Active</span>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-mono text-emerald-800 font-bold">O(V + E) Acyclic DAG Active</span>
         </div>
       </div>
 
@@ -37,21 +37,21 @@ export const TopologyPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFF8F0]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
               Dependency DAG Topology
             </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/25">
-              <Network className="w-3.5 h-3.5 text-blue-400" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
+              <Network className="w-3.5 h-3.5 text-[#0047AB]" />
               TOPOLOGICAL RESOLVER
             </span>
           </div>
-          <p className="text-xs sm:text-sm text-[#94A3B8] mt-1.5 max-w-3xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
             Dynamic Directed Acyclic Graph (DAG) visualizing parent-child service relationships, reverse dependency traversal, and failure blast radius.
           </p>
         </div>
 
         <Link to="/recovery">
-          <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-500/15 border border-blue-500/30 text-xs sm:text-sm font-bold text-blue-300 hover:bg-blue-500/25 transition-all shadow-lg shadow-blue-500/10 cursor-pointer">
+          <button className="skeuo-btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer">
             <span>Orchestrate Recovery</span>
             <ArrowRight className="w-4 h-4" />
           </button>
@@ -60,40 +60,40 @@ export const TopologyPage: React.FC = () => {
 
       {/* Bento Metric Summary Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Monitored Nodes</span>
-            <Server className="w-4 h-4 text-blue-400" />
+            <Server className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#FFF8F0]">7 Nodes</div>
-          <div className="text-[11px] text-emerald-400 font-mono">Microservices & Pods</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#1A1A1A]">7 Nodes</div>
+          <div className="text-[11px] text-emerald-800 font-mono font-bold">Microservices & Pods</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Graph Health</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400">0 Cycles</div>
-          <div className="text-[11px] text-[#8E9DB8] font-mono">Cycle Deadlock Free</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">0 Cycles</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Cycle Deadlock Free</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Topological Depth</span>
-            <Layers className="w-4 h-4 text-indigo-400" />
+            <Layers className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#FFF8F0]">4 Tiers</div>
-          <div className="text-[11px] text-[#8E9DB8] font-mono">Database to Gateway</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#1A1A1A]">4 Tiers</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Database to Gateway</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1">
-          <div className="flex items-center justify-between text-xs text-[#8E9DB8]">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Algorithm Complexity</span>
-            <Network className="w-4 h-4 text-cyan-400" />
+            <Network className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-cyan-400">O(V + E)</div>
-          <div className="text-[11px] text-[#8E9DB8] font-mono">Kahn's Sort Verified</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">O(V + E)</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Kahn's Sort Verified</div>
         </Card>
       </div>
 

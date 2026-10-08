@@ -15,207 +15,128 @@ import {
   FileCheck,
   Terminal,
   Zap,
-  GitBranch,
+  Server,
+  Layers,
+  Database,
+  Radio,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-/* ─── Reusable motion props factory ─── */
+/* ─── Motion Helpers ─── */
 const fadeUpProps = (delay = 0) => ({
-  initial:    { opacity: 0, y: 20 } as const,
+  initial:    { opacity: 0, y: 18 } as const,
   animate:    { opacity: 1, y: 0 }  as const,
-  transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-});
-
-const fadeUpInView = (delay = 0) => ({
-  initial:    { opacity: 0, y: 16 } as const,
-  whileInView:{ opacity: 1, y: 0 }  as const,
-  viewport:   { once: true }         as const,
-  transition: { duration: 0.5,  delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  transition: { duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
 });
 
 const FAQS = [
   {
     q: 'How does Horizon compute recovery order across dependent microservices?',
-    a: "Horizon builds an in-memory DAG of your cluster. When a parent service (like PostgreSQL Primary) fails, Kahn's topological sort determines the exact reverse dependency traversal — databases and cache layers recover and pass health checks before downstream application pods restart.",
+    a: "Horizon constructs an in-memory Directed Acyclic Graph (DAG) of the entire infrastructure mesh. When a root service (like PostgreSQL Primary) experiences failure, Kahn’s topological sort calculates the deterministic reverse dependency traversal: databases and cache pools recover and satisfy readiness health-probes before application pods route ingress traffic.",
   },
   {
-    q: 'Why store incident audit trails on MST Blockchain Testnet?',
-    a: "Traditional cloud logging (CloudWatch, Datadog) can be edited or deleted by rogue credentials during a compromise. By anchoring cryptographic Merkle roots of every state change on MST Blockchain (Chain ID 91562037), Horizon delivers immutable, mathematically verifiable audit trails compliant with SOC 2 and ISO 27001.",
+    q: 'Why anchor incident audit trails on the MST Blockchain Testnet?',
+    a: "Traditional cloud log aggregators (Datadog, CloudWatch) can be purged or altered during an infrastructure compromise. By anchoring cryptographic Merkle roots of every state change onto MST Blockchain (Chain ID 91562037), Horizon establishes an immutable, legally verifiable ledger compliant with SOC 2, HIPAA, and ISO 27001.",
   },
   {
-    q: 'What is the BridgeKey Wallet integration used for?',
-    a: "BridgeKey is the cryptographic signing mechanism for high-privilege SRE actions. High-risk DR operations (cross-region DB failover, gateway route shifts) pause at a Human Approval Gate until authenticated SRE engineers cryptographically sign the authorization payload with BridgeKey.",
+    q: 'What role does the BridgeKey Wallet play in autonomous recovery?',
+    a: "BridgeKey serves as the cryptographic signing mechanism for high-privilege SRE actions. High-blast-radius failovers (such as cross-region DB cutover or BGP route shift) halt at a Human Approval Gate until authorized SRE engineers sign the EIP-712 payload with their hardware-backed wallet.",
   },
   {
-    q: 'Can Horizon operate in serverless environments like Vercel?',
-    a: "Yes. Horizon is a monolithic Edge-ready architecture using TypeScript, Bun, and Hono serverless endpoints. Telemetry probing, state transitions, and Sarvam AI synthesis run with sub-millisecond cold starts on edge runtimes.",
+    q: 'Can Horizon operate on serverless platforms like Vercel without persistent daemons?',
+    a: "Yes. Horizon is architected as an Edge-ready monolithic engine utilizing TypeScript, Bun, and Hono serverless endpoints. Telemetry probes, state transitions, and Sarvam AI synthesis execute with sub-millisecond cold starts on Edge runtimes with zero external background daemons required.",
   },
   {
     q: 'How does Sarvam AI interact with the recovery engine?',
-    a: 'Sarvam AI acts as an autonomous SRE copilot. When outages are detected, it evaluates telemetry streams, generates incident postmortems in natural language, computes blast radius scores, and proposes targeted recovery actions that operators can execute in one click.',
+    a: "Sarvam AI (sarvam-105b) functions as an autonomous SRE copilot. During active incidents, it analyzes real-time error telemetry, generates incident postmortems in natural language, calculates blast radius scores, and synthesizes targeted recovery playbooks that operators can verify and execute.",
   },
 ];
 
 const TECH_SPECS = [
   { label: 'Autonomous MTTR', value: '< 3.8 min', detail: 'Deterministic topological rollout' },
-  { label: 'Dependency Order',  value: 'O(V + E)',  detail: 'Cycle-free topological sorting'  },
-  { label: 'On-Chain Ledger',   value: 'MST Chain', detail: 'Chain ID: 91562037'              },
-  { label: 'AI Reasoning',      value: 'Sarvam 105B', detail: 'Hybrid deterministic + LLM'    },
-  { label: 'Auth & Access',     value: 'Firebase + BridgeKey', detail: 'Web2 + Web3 dual verification' },
-  { label: 'Runtime Target',    value: 'Vercel Edge / Bun', detail: 'Zero external daemon'   },
+  { label: 'Dependency Ordering', value: 'O(V + E)', detail: 'Acyclic topological sorting' },
+  { label: 'On-Chain Ledger', value: 'MST Testnet', detail: 'Chain ID: 91562037' },
+  { label: 'AI Reasoning Core', value: 'Sarvam 105B', detail: 'Hybrid deterministic + LLM' },
+  { label: 'Auth & Access', value: 'Firebase + BridgeKey', detail: 'Web2 + Web3 dual authentication' },
+  { label: 'Runtime Target', value: 'Vercel Edge / Bun', detail: 'Zero external daemon' },
 ];
 
 const PHASES = [
-  { step: '01', title: 'Telemetry Detection',  desc: 'Sub-second TCP/HTTP probes detect latency degradation or socket termination.',      icon: Activity,  color: 'text-blue-400',    bg: 'bg-blue-500/10 border-blue-500/20'    },
-  { step: '02', title: 'DAG Blast Radius',     desc: 'Topological analysis maps dependent blast radius and locks downstream callers.',     icon: Network,   color: 'text-indigo-400',  bg: 'bg-indigo-500/10 border-indigo-500/20'  },
-  { step: '03', title: 'Sarvam AI Synthesis',  desc: 'Dual-speed reasoning generates optimal multi-tier playbook with risk scoring.',      icon: Sparkles,  color: 'text-cyan-400',    bg: 'bg-cyan-500/10 border-cyan-500/20'    },
-  { step: '04', title: 'Cryptographic Gate',   desc: 'High-risk commands pause for BridgeKey wallet signature from authorized SRE.',       icon: Lock,      color: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20'   },
-  { step: '05', title: 'On-Chain Attestation', desc: 'Execution completes; Merkle audit root anchored permanently on MST Blockchain.',    icon: FileCheck, color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-];
-
-/* ─── Bento cards for architectural pillars ─── */
-const PILLARS = [
-  {
-    id: 'dag',
-    title: 'Directed Acyclic Graph Engine',
-    desc: 'Unlike naive restart loops that crash pods concurrently, Horizon computes upstream and downstream blast radius. Primary databases and caching layers are restored and verified before application gateways route traffic, eliminating cascading connection storms.',
-    badge: 'O(V + E) Traversal',
-    badgeColor: 'text-blue-300 bg-blue-500/10 border-blue-500/20',
-    icon: Network,
-    iconColor: 'text-blue-400',
-    iconBg: 'bg-blue-500/10 border-blue-500/20',
-    hoverBorder: 'hover:border-blue-500/30 hover:shadow-blue-500/8',
-    stats: [
-      { val: '0 ms',  label: 'Cycle Deadlock' },
-      { val: '100%',  label: 'Order Determinism', highlight: 'text-emerald-400' },
-      { val: '7 Nodes', label: 'Real-time Probes', highlight: 'text-blue-400' },
-    ],
-    colSpan: 'md:col-span-2',
-  },
-  {
-    id: 'blockchain',
-    title: 'BridgeKey & On-Chain Audit',
-    desc: 'Cryptographic attestation on MST Blockchain Testnet. Every failover step and SRE signature is hashed into an immutable Merkle tree.',
-    badge: 'Chain ID 91562037',
-    badgeColor: 'text-purple-300 bg-purple-500/10 border-purple-500/20',
-    icon: ShieldCheck,
-    iconColor: 'text-purple-400',
-    iconBg: 'bg-purple-500/10 border-purple-500/20',
-    hoverBorder: 'hover:border-purple-500/30 hover:shadow-purple-500/8',
-    colSpan: 'md:col-span-1',
-  },
-  {
-    id: 'ai',
-    title: 'Sarvam AI Autonomous Copilot',
-    desc: 'SRE copilot continuously analyzing error signatures, interpreting natural language prompts, and synthesizing targeted recovery playbooks.',
-    badge: 'sarvam-105b',
-    badgeColor: 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20',
-    icon: Sparkles,
-    iconColor: 'text-cyan-400',
-    iconBg: 'bg-cyan-500/10 border-cyan-500/20',
-    hoverBorder: 'hover:border-cyan-500/30 hover:shadow-cyan-500/8',
-    colSpan: 'md:col-span-1',
-    terminal: true,
-  },
-  {
-    id: 'gates',
-    title: 'Cryptographic Human Approval Gates',
-    desc: "Full autonomy does not mean unchecked risk. High-impact operations — promoting a standby database to primary, purging distributed cache pools, or rerouting edge DNS — automatically pause awaiting multi-signature approval from SRE commanders via BridgeKey.",
-    badge: 'Zero-Trust Authorization',
-    badgeColor: 'text-amber-300 bg-amber-500/10 border-amber-500/20',
-    icon: Lock,
-    iconColor: 'text-amber-400',
-    iconBg: 'bg-amber-500/10 border-amber-500/20',
-    hoverBorder: 'hover:border-amber-500/30 hover:shadow-amber-500/8',
-    colSpan: 'md:col-span-2',
-  },
+  { step: '01', title: 'Telemetry Probing', desc: 'Sub-second TCP/HTTP probes detect node degradation or socket termination.', icon: Activity },
+  { step: '02', title: 'DAG Blast Radius', desc: 'Topological analysis maps downstream blast radius and locks dependent callers.', icon: Network },
+  { step: '03', title: 'Sarvam AI Synthesis', desc: 'Dual-speed reasoning generates optimal multi-tier playbook with risk scoring.', icon: Sparkles },
+  { step: '04', title: 'Cryptographic Gate', desc: 'High-risk actions pause for BridgeKey wallet EIP-712 signature from SRE.', icon: Lock },
+  { step: '05', title: 'On-Chain Attestation', desc: 'Deterministic execution concludes; Merkle audit root anchored on MST Blockchain.', icon: FileCheck },
 ];
 
 export const LandingPage: React.FC = () => {
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   return (
-    <div className="horizon-landing relative min-h-screen bg-[#07090E] text-[#FFF8F0] selection:bg-[#1E6BFF]/25 selection:text-white overflow-x-hidden">
-
-      {/* ── Background atmosphere ── */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-0">
-        {/* Radial top glow */}
-        <div className="absolute inset-x-0 top-0 h-[60vh] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(30,107,255,0.14),transparent_70%)]" />
-        {/* Subtle grid */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:5rem_5rem] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_0%,#000_60%,transparent_100%)]" />
-      </div>
-
-      {/* ── Navbar ── */}
+    <div className="horizon-landing relative min-h-screen bg-[#FFF8F0] text-[#1A1A1A] selection:bg-[#0047AB]/20 selection:text-[#0047AB] overflow-x-hidden font-sans">
+      {/* Porcelain Floating Dock Navbar */}
       <Navbar />
 
+      {/* Subtle Tactile Blueprint Grid on Cream */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-40 bg-[linear-gradient(to_right,rgba(26,26,26,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(26,26,26,0.04)_1px,transparent_1px)] bg-[size:4rem_4rem]"
+      />
+
       {/* ============================================================
-          HERO SECTION
+          HERO SECTION — DOMINATING CREAM WITH TACTILE DEPTH
           ============================================================ */}
       <section
-        className="horizon-hero relative pt-28 sm:pt-40 md:pt-52 pb-24 md:pb-36 flex flex-col items-center justify-center text-center overflow-hidden"
-        aria-label="Hero"
+        className="horizon-hero relative pt-24 sm:pt-36 md:pt-44 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center z-10"
+        aria-label="Horizon Hero"
       >
-        {/* Earth curve backdrop */}
-        <div
-          className="absolute inset-x-0 bottom-0 h-[320px] md:h-[420px] pointer-events-none overflow-hidden select-none"
-          aria-hidden="true"
-        >
-          <img
-            src="/horizon.jpg"
-            alt=""
-            className="w-full h-full object-cover object-top opacity-40 mix-blend-screen scale-105"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#07090E] via-[#07090E]/60 to-transparent" />
-        </div>
-
-        <div className="relative z-10 max-w-4xl mx-auto px-5 sm:px-8">
-          {/* Status pill */}
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 space-y-7">
+          {/* Tactile Hardware Status Pill */}
           <motion.div
             {...fadeUpProps(0)}
-            className="inline-flex items-center gap-2 mb-7 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.09] backdrop-blur-xl"
+            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-[rgba(26,26,26,0.14)] shadow-[inset_0_1px_0_#FFFFFF,0_2px_6px_rgba(26,26,26,0.06)]"
           >
-            <span className="status-dot status-dot-healthy animate-pulse" />
-            <span className="text-[11px] font-semibold text-[#C8D0DE] tracking-widest uppercase">
+            <span className="skeuo-led skeuo-led-healthy animate-pulse" />
+            <span className="text-[11px] font-bold text-[#1A1A1A] tracking-wider uppercase">
               Autonomous Cloud Resilience
             </span>
-            <span className="horizon-badge text-blue-300 bg-blue-500/10 border-blue-500/20 text-[10px]">
-              MST Testnet
+            <span className="horizon-badge text-[10px] text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20">
+              MST Testnet (91562037)
             </span>
           </motion.div>
 
-          {/* Headline */}
-          <motion.div {...fadeUpProps(0.06)}>
-            <h1
-              className="text-display text-[#FFF8F0] uppercase select-none mb-3"
-              style={{ filter: 'drop-shadow(0 0 40px rgba(30,107,255,0.2))' }}
-            >
+          {/* Monumental Inky Black Typography */}
+          <motion.div {...fadeUpProps(0.06)} className="space-y-3">
+            <h1 className="text-display font-black text-[#1A1A1A] uppercase tracking-tight leading-none drop-shadow-sm select-none">
               Horizon
             </h1>
-            <p className="text-label text-[#8896A8] tracking-[0.15em] mb-6">
-              Autonomous Self-Healing Infrastructure Platform
+            <p className="text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.2em] uppercase text-[#0047AB]">
+              Autonomous Infrastructure Recovery Platform
             </p>
           </motion.div>
 
-          {/* Description */}
+          {/* Value Proposition Description */}
           <motion.p
             {...fadeUpProps(0.12)}
-            className="text-base md:text-lg text-[#8896A8] max-w-2xl mx-auto leading-relaxed mb-9"
+            className="text-base sm:text-lg md:text-xl text-[#444444] max-w-2xl mx-auto leading-relaxed font-normal"
           >
             Detect systemic outages, compute topological blast radius in real time, and orchestrate
             deterministic recovery in strict dependency order — with cryptographic on-chain verification.
           </motion.p>
 
-          {/* CTAs */}
+          {/* Tactile Buttons */}
           <motion.div
             {...fadeUpProps(0.18)}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2"
           >
             <Link to="/dashboard">
               <Button
+                variant="primary"
                 size="lg"
-                className="horizon-cta-primary w-full sm:w-auto gap-2.5 px-8 rounded-2xl font-semibold shadow-xl shadow-blue-500/20 hover:shadow-blue-500/30 hover:scale-[1.02] transition-all"
+                className="w-full sm:w-auto text-sm font-bold gap-2 px-8 py-3.5 rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_4px_12px_rgba(0,71,171,0.3)] hover:scale-[1.02] transition-transform"
               >
-                Launch Command Center
+                <span>Launch Command Center</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
@@ -223,280 +144,423 @@ export const LandingPage: React.FC = () => {
               <Button
                 variant="secondary"
                 size="lg"
-                className="horizon-cta-secondary w-full sm:w-auto gap-2 px-7 rounded-2xl hover:border-blue-500/30"
+                className="w-full sm:w-auto text-sm font-bold gap-2 px-7 py-3.5 rounded-xl"
               >
-                <Network className="w-4 h-4 text-cyan-400" />
-                Explore Dependency DAG
+                <Network className="w-4 h-4 text-[#0047AB]" />
+                <span>Explore Dependency DAG</span>
               </Button>
             </Link>
           </motion.div>
 
-          {/* Live status dock */}
+          {/* Hardware Telemetry Strip Well */}
           <motion.div
             {...fadeUpProps(0.24)}
-            className="flex flex-wrap items-center justify-center gap-5 text-[11px] font-mono text-[#8896A8]"
+            className="skeuo-well inline-flex flex-wrap items-center justify-center gap-5 px-5 py-2.5 text-xs font-mono text-[#555555]"
           >
-            <span className="flex items-center gap-1.5">
-              <span className="status-dot status-dot-healthy animate-pulse" />
-              7 Services Monitored
-            </span>
-            <span aria-hidden="true">·</span>
-            <span>Target MTTR: <strong className="text-emerald-400">&lt; 3.8m</strong></span>
-            <span aria-hidden="true">·</span>
-            <span>Consensus: <strong className="text-blue-400">MST (91562037)</strong></span>
+            <div className="flex items-center gap-2">
+              <span className="skeuo-led skeuo-led-healthy" />
+              <span className="font-bold text-[#1A1A1A]">7 Services Monitored</span>
+            </div>
+            <span>&bull;</span>
+            <div>
+              Target MTTR: <span className="text-[#0F8E52] font-black">&lt; 3.8m</span>
+            </div>
+            <span>&bull;</span>
+            <div>
+              Consensus: <span className="text-[#0047AB] font-bold">MST Testnet</span>
+            </div>
           </motion.div>
         </div>
+
+        {/* ============================================================
+            HERO COBALT BLUE PATCH: TACTICAL RECOVERY TERMINAL HUD
+            ============================================================ */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16"
+        >
+          <div className="cobalt-patch p-6 sm:p-9 text-left">
+            {/* Top Tactical Bezel */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-white/15">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-400 border border-red-500 shadow-sm" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 border border-amber-500 shadow-sm" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-emerald-500 shadow-sm" />
+                </div>
+                <div className="h-4 w-px bg-white/20" />
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#E0ECFF]">
+                  Live Autonomous Engine Preview &bull; Kahn Topo Sort
+                </span>
+              </div>
+              <div className="flex items-center gap-2 text-xs font-mono text-[#D0E2FF]">
+                <Radio className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
+                <span>PROBING: 7/7 NODES SYNCED</span>
+              </div>
+            </div>
+
+            {/* Tactical Grid Inside Cobalt Patch */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
+              {/* Left Column: DAG Live State */}
+              <div className="lg:col-span-2 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Network className="w-4 h-4 text-cyan-300" />
+                    <span>Active Multi-Tier Dependency Graph</span>
+                  </h3>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/10 text-white font-semibold">
+                    Cycle-Free O(V + E)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+                  <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
+                    <div className="text-[10px] text-[#C8DCFF] uppercase font-bold">Tier 0 (Root Data)</div>
+                    <div className="text-white font-bold mt-1">PostgreSQL Primary</div>
+                    <div className="text-[11px] text-emerald-300 mt-0.5">● Port 5432 HEALTHY</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
+                    <div className="text-[10px] text-[#C8DCFF] uppercase font-bold">Tier 1 (Cache)</div>
+                    <div className="text-white font-bold mt-1">Redis Cluster</div>
+                    <div className="text-[11px] text-emerald-300 mt-0.5">● Port 6379 HEALTHY</div>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
+                    <div className="text-[10px] text-[#C8DCFF] uppercase font-bold">Tier 2 (Gateway)</div>
+                    <div className="text-white font-bold mt-1">API Edge Gateway</div>
+                    <div className="text-[11px] text-emerald-300 mt-0.5">● Port 8080 HEALTHY</div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#E0ECFF] leading-relaxed">
+                  When parent nodes degrade, downstream traffic locks automatically. Primary databases recover and pass TCP/HTTP health probes before downstream application pods restart.
+                </p>
+              </div>
+
+              {/* Right Column: Live Terminal Diagnostic */}
+              <div className="p-4 rounded-xl bg-[#002259] border border-white/20 font-mono text-[11px] text-[#C8DCFF] flex flex-col justify-between space-y-3">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-cyan-300 font-bold border-b border-white/10 pb-1.5">
+                    <span className="flex items-center gap-1.5">
+                      <Terminal className="w-3.5 h-3.5" />
+                      <span>sarvam-105b</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-300">WATCHDOG ACTIVE</span>
+                  </div>
+                  <div className="text-white">&gt; Telemetry: All 7 probes responding</div>
+                  <div className="text-emerald-300">&gt; Rolling MTTR: 18.2s (optimal SLA)</div>
+                  <div className="text-amber-200">&gt; Approval Gate: EIP-712 Arm Ready</div>
+                  <div className="text-[#A0C4FF]">&gt; MST Block: #1,042,912 Verified</div>
+                </div>
+
+                <Link
+                  to="/recovery"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-colors border border-white/20"
+                >
+                  <span>Simulate Chaos Incident &rarr;</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* ============================================================
-          ARCHITECTURAL PILLARS — BENTO GRID
+          ARCHITECTURAL PILLARS — SKEUOMORPHIC BENTO ON CREAM
           ============================================================ */}
       <section
-        className="horizon-pillars relative py-24 md:py-32 border-t border-white/[0.05]"
+        className="horizon-pillars relative py-20 sm:py-28 border-t border-[rgba(26,26,26,0.1)] bg-[#FFF8F0]"
         aria-labelledby="pillars-heading"
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 space-y-14">
-          {/* Section header */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto space-y-3"
-          >
-            <p className="text-label text-cyan-400">Core Architectural Pillars</p>
-            <h2 id="pillars-heading" className="text-hero text-[#FFF8F0]">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-14">
+          <div className="text-center max-w-3xl mx-auto space-y-2.5">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0047AB]">
+              Core Architectural Pillars
+            </span>
+            <h2 id="pillars-heading" className="text-hero text-[#1A1A1A]">
               Engineered for Zero-Downtime Resilience
             </h2>
-            <p className="text-base text-[#8896A8] leading-relaxed">
+            <p className="text-sm sm:text-base text-[#666666]">
               Every subsystem is designed to eliminate cascading outages without manual firefighting.
             </p>
-          </motion.div>
+          </div>
 
-          {/* Bento grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {PILLARS.map((pillar, idx) => {
-              const Icon = pillar.icon;
-              return (
-                <motion.article
-                  key={pillar.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.45, delay: idx * 0.06 }}
-                  whileHover={{ y: -3, transition: { duration: 0.18 } }}
-                  className={cn(
-                    'horizon-pillar-card bento-card p-7 md:p-8 flex flex-col gap-5 group transition-shadow',
-                    pillar.colSpan,
-                    pillar.hoverBorder
-                  )}
-                >
-                  {/* Card header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className={cn('p-2.5 rounded-xl border flex-shrink-0 group-hover:scale-105 transition-transform', pillar.iconBg)}>
-                      <Icon className={cn('w-5 h-5', pillar.iconColor)} aria-hidden="true" />
-                    </div>
-                    <span className={cn('horizon-badge', pillar.badgeColor)}>
-                      {pillar.badge}
-                    </span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Bento Card 1: DAG Engine (Spans 2 columns) */}
+            <div className="md:col-span-2 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EBF1FA] border border-[#0047AB]/25 flex items-center justify-center text-[#0047AB]">
+                    <Network className="w-6 h-6" />
                   </div>
+                  <span className="horizon-badge text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20">
+                    O(V + E) Topological Traversal
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#1A1A1A]">
+                    Directed Acyclic Graph (DAG) Blast-Radius Computation
+                  </h3>
+                  <p className="text-sm text-[#555555] mt-2.5 leading-relaxed">
+                    Unlike naive restart loops that crash pods concurrently, Horizon computes upstream and downstream blast radius. Primary databases and caching layers are restored and verified before application gateways route traffic, eliminating cascading connection storm crashes.
+                  </p>
+                </div>
+              </div>
 
-                  {/* Body */}
-                  <div>
-                    <h3 className="text-base font-bold text-[#FFF8F0] mb-2">{pillar.title}</h3>
-                    <p className="text-sm text-[#8896A8] leading-relaxed">{pillar.desc}</p>
+              {/* Inset debossed well stats */}
+              <div className="skeuo-well p-4 grid grid-cols-3 gap-3 text-center font-mono">
+                <div>
+                  <div className="text-2xl font-black text-[#1A1A1A]">0 ms</div>
+                  <div className="text-[11px] text-[#777777] mt-0.5">Cycle Deadlock</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-[#0F8E52]">100%</div>
+                  <div className="text-[11px] text-[#777777] mt-0.5">Order Determinism</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-[#0047AB]">7 Nodes</div>
+                  <div className="text-[11px] text-[#777777] mt-0.5">Real-time Probes</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bento Card 2: BridgeKey Blockchain Security */}
+            <div className="md:col-span-1 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#F5F3FF] border border-[#7C3AED]/25 flex items-center justify-center text-[#7C3AED]">
+                    <ShieldCheck className="w-6 h-6" />
                   </div>
+                  <span className="horizon-badge text-[#7C3AED] bg-[#F5F3FF] border-[#7C3AED]/20">
+                    Chain 91562037
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[#1A1A1A]">
+                    BridgeKey & On-Chain Audit
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#555555] mt-2 leading-relaxed">
+                    Cryptographic attestation on MST Blockchain Testnet. Every failover step and SRE signature is hashed into an immutable Merkle tree.
+                  </p>
+                </div>
+              </div>
 
-                  {/* Stats row (DAG card) */}
-                  {pillar.stats && (
-                    <div className="pt-4 border-t border-white/[0.05] grid grid-cols-3 gap-3 text-center font-mono">
-                      {pillar.stats.map((s) => (
-                        <div key={s.label} className="p-3 rounded-xl bg-black/30 border border-white/[0.04]">
-                          <div className={cn('text-lg font-bold', s.highlight || 'text-[#FFF8F0]')}>{s.val}</div>
-                          <div className="text-[10px] text-[#8896A8] mt-0.5">{s.label}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+              <div className="skeuo-well p-3.5 space-y-1 font-mono text-xs">
+                <div className="flex items-center justify-between text-[#7C3AED] font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>MST Vault</span>
+                  </span>
+                  <span>TESTNET VERIFIED</span>
+                </div>
+                <div className="text-[#555555] truncate text-[11px]">
+                  Contract: 0x8192...19284756
+                </div>
+              </div>
+            </div>
 
-                  {/* Terminal snippet (AI card) */}
-                  {pillar.terminal && (
-                    <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.05] font-mono text-[11px] space-y-1">
-                      <div className="flex items-center gap-1.5 text-cyan-400 font-semibold mb-1">
-                        <Terminal className="w-3.5 h-3.5" aria-hidden="true" />
-                        sarvam.diagnose()
-                      </div>
-                      <div className="text-emerald-400">&gt; Root cause: DB pool exhaustion (port 5432)</div>
-                      <div className="text-[#6B7A8D]">&gt; Sequence: Playbook #04 Standby Failover</div>
-                    </div>
-                  )}
+            {/* Bento Card 3: Sarvam AI Copilot */}
+            <div className="md:col-span-1 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#EBF1FA] border border-[#0047AB]/25 flex items-center justify-center text-[#0047AB]">
+                    <Sparkles className="w-6 h-6" />
+                  </div>
+                  <span className="horizon-badge text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20">
+                    sarvam-105b
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[#1A1A1A]">
+                    Sarvam AI Autonomous Copilot
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#555555] mt-2 leading-relaxed">
+                    Continuous telemetry reasoning core synthesizing targeted recovery playbooks in natural language.
+                  </p>
+                </div>
+              </div>
 
-                  {/* Gate footer (approval gates card) */}
-                  {pillar.id === 'gates' && (
-                    <div className="pt-4 border-t border-white/[0.05] flex flex-wrap items-center justify-between gap-3">
-                      <span className="flex items-center gap-2 text-xs font-mono text-[#C8D0DE]">
-                        <span className="status-dot status-dot-degraded animate-ping" />
-                        Approval Gate: Awaiting EIP-712 Signature
-                      </span>
-                      <Link to="/recovery">
-                        <Button variant="secondary" size="sm" className="text-xs gap-1.5 rounded-xl hover:border-amber-500/30">
-                          Inspect Gate <ArrowRight className="w-3 h-3" />
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
+              <div className="skeuo-well p-3 space-y-1 font-mono text-[11px]">
+                <div className="text-[#0047AB] font-bold">&gt; sarvam.diagnose()</div>
+                <div className="text-[#0F8E52] font-semibold">&gt; Pool exhaustion (5432)</div>
+                <div className="text-[#777777]">&gt; Sequence #04 Failover</div>
+              </div>
 
-                  {/* AI card CTA */}
-                  {pillar.id === 'ai' && (
-                    <Link
-                      to="/architect"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
-                    >
-                      Launch Agentic Flow Architect →
-                    </Link>
-                  )}
-                </motion.article>
-              );
-            })}
+              <Link
+                to="/architect"
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#0047AB] hover:underline"
+              >
+                Launch AI Flow Architect &rarr;
+              </Link>
+            </div>
+
+            {/* Bento Card 4: Human Approval Gates (Spans 2 columns) */}
+            <div className="md:col-span-2 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 rounded-2xl bg-[#FEF6E7] border border-[#D97706]/25 flex items-center justify-center text-[#D97706]">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <span className="horizon-badge text-[#D97706] bg-[#FEF6E7] border-[#D97706]/20">
+                    Zero-Trust Authorization
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-bold text-[#1A1A1A]">
+                    Cryptographic Human Approval Gates
+                  </h3>
+                  <p className="text-sm text-[#555555] mt-2 leading-relaxed">
+                    Full autonomy does not mean unchecked risk. High-impact operations—such as promoting a standby database to primary, purging distributed cache pools, or rerouting edge DNS—automatically pause awaiting multi-signature approval from SRE commanders via BridgeKey.
+                  </p>
+                </div>
+              </div>
+
+              <div className="skeuo-well p-3.5 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="skeuo-led skeuo-led-degraded animate-ping" />
+                  <span className="text-xs font-mono font-bold text-[#1A1A1A]">
+                    Approval Gate: Awaiting EIP-712 SRE Signature
+                  </span>
+                </div>
+                <Link to="/recovery">
+                  <Button variant="secondary" size="sm" className="text-xs font-bold">
+                    Inspect Gate Mechanism &rarr;
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* ============================================================
-          5-PHASE LIFECYCLE
+          COBALT BLUE BACKGROUND PATCH: 5-PHASE LIFECYCLE & SPECS
           ============================================================ */}
       <section
-        className="horizon-lifecycle relative py-24 md:py-32 border-t border-white/[0.05] bg-[#060811]/60"
+        className="horizon-lifecycle relative py-20 sm:py-28 bg-[#0047AB] text-[#FFF8F0]"
         aria-labelledby="lifecycle-heading"
       >
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 space-y-14">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto space-y-3"
-          >
-            <p className="text-label text-purple-400">System Architecture & Methodology</p>
-            <h2 id="lifecycle-heading" className="text-hero text-[#FFF8F0]">
-              5-Phase Autonomous Recovery Lifecycle
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16">
+          <div className="text-center max-w-3xl mx-auto space-y-2.5">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
+              System Architecture & Methodology
+            </span>
+            <h2 id="lifecycle-heading" className="text-hero text-white">
+              The 5-Phase Autonomous Recovery Lifecycle
             </h2>
-            <p className="text-base text-[#8896A8] leading-relaxed">
+            <p className="text-sm sm:text-base text-[#D0E2FF]">
               How Horizon transforms an uncontained production crisis into a verified recovery in under 4 minutes.
             </p>
-          </motion.div>
+          </div>
 
-          {/* Phase cards — horizontal flow */}
+          {/* 5 Phase Tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {PHASES.map((phase, idx) => {
+            {PHASES.map((phase) => {
               const Icon = phase.icon;
               return (
-                <motion.article
+                <div
                   key={phase.step}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.07 }}
-                  whileHover={{ y: -2, transition: { duration: 0.18 } }}
-                  className="horizon-phase-card bento-card p-5 flex flex-col gap-3 group"
+                  className="p-5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md flex flex-col justify-between space-y-3 shadow-lg"
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="text-label text-[#6B7A8D] group-hover:text-[#8896A8] transition-colors">
-                      Phase {phase.step}
-                    </span>
-                    <div className={cn('p-1.5 rounded-lg border', phase.bg)}>
-                      <Icon className={cn('w-3.5 h-3.5', phase.color)} aria-hidden="true" />
-                    </div>
-                  </div>
                   <div>
-                    <h4 className="text-sm font-bold text-[#FFF8F0] mb-1.5">{phase.title}</h4>
-                    <p className="text-[12px] text-[#8896A8] leading-relaxed">{phase.desc}</p>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono font-bold text-cyan-300">
+                        PHASE {phase.step}
+                      </span>
+                      <Icon className="w-4 h-4 text-white" />
+                    </div>
+                    <h4 className="text-sm font-bold text-white">
+                      {phase.title}
+                    </h4>
+                    <p className="text-xs text-[#D8E6FF] mt-1.5 leading-relaxed">
+                      {phase.desc}
+                    </p>
                   </div>
-                </motion.article>
+                </div>
               );
             })}
           </div>
 
-          {/* Tech spec matrix */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bento-card p-7 md:p-9"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-white/[0.05] mb-6">
+          {/* Technical Specifications Matrix Inside Cobalt Patch */}
+          <div className="rounded-3xl border border-white/20 bg-[#003680]/90 p-7 sm:p-9 space-y-6 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/15">
               <div>
-                <h3 className="text-base font-bold text-[#FFF8F0]">Horizon Technical Specifications</h3>
-                <p className="text-sm text-[#8896A8] mt-0.5">Performance benchmarks for mission-critical infrastructure.</p>
+                <h3 className="text-lg sm:text-xl font-bold text-white">
+                  Horizon Enterprise Technical Specifications
+                </h3>
+                <p className="text-xs sm:text-sm text-[#C8DCFF] mt-0.5">
+                  Rigorous performance benchmarks for mission-critical production infrastructure.
+                </p>
               </div>
-              <span className="flex items-center gap-2 text-xs font-mono text-emerald-400 font-semibold">
-                <span className="status-dot status-dot-healthy" />
+              <span className="text-xs font-mono text-emerald-300 flex items-center gap-2 font-bold">
+                <span className="w-2 h-2 rounded-full bg-emerald-300 shadow-[0_0_6px_#6EE7B7]" />
                 MST TESTNET VERIFIED
               </span>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {TECH_SPECS.map((spec) => (
                 <div
                   key={spec.label}
-                  className="p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] space-y-1.5"
+                  className="p-4 sm:p-5 rounded-2xl bg-white/10 border border-white/15 space-y-1 font-mono"
                 >
-                  <div className="text-label text-[#8896A8]">{spec.label}</div>
-                  <div className="text-lg font-bold font-mono text-[#FFF8F0] leading-tight">{spec.value}</div>
-                  <div className="text-[11px] text-[#6B7A8D] leading-snug">{spec.detail}</div>
+                  <div className="text-[11px] font-bold text-[#C8DCFF] uppercase tracking-wider">
+                    {spec.label}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-black text-white">
+                    {spec.value}
+                  </div>
+                  <div className="text-xs text-[#A8C8FF]">
+                    {spec.detail}
+                  </div>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* ============================================================
-          FAQ SECTION
+          FREQUENTLY ASKED QUESTIONS — PORCELAIN ON CREAM
           ============================================================ */}
       <section
-        className="horizon-faq relative py-24 md:py-32 border-t border-white/[0.05]"
+        className="horizon-faq relative py-20 sm:py-28 border-t border-[rgba(26,26,26,0.1)] bg-[#FFF8F0]"
         aria-labelledby="faq-heading"
       >
-        <div className="max-w-3xl mx-auto px-5 sm:px-8 space-y-12">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center space-y-3"
-          >
-            <p className="text-label text-blue-400">Technical Clarity</p>
-            <h2 id="faq-heading" className="text-hero text-[#FFF8F0]">Frequently Asked Questions</h2>
-            <p className="text-sm text-[#8896A8]">
+        <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-10">
+          <div className="text-center space-y-2.5">
+            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0047AB]">
+              Technical Clarity
+            </span>
+            <h2 id="faq-heading" className="text-hero text-[#1A1A1A]">
+              Frequently Asked Questions
+            </h2>
+            <p className="text-sm text-[#666666]">
               In-depth operational details for site reliability engineers and infrastructure leaders.
             </p>
-          </motion.div>
+          </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {FAQS.map((faq, idx) => (
-              <motion.div
+              <div
                 key={idx}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.35, delay: idx * 0.04 }}
-                className="bento-card overflow-hidden"
+                className="skeuo-card overflow-hidden"
               >
                 <button
                   type="button"
                   onClick={() => setActiveFaq((p) => (p === idx ? null : idx))}
-                  className="w-full px-6 py-5 flex items-start justify-between gap-4 text-left cursor-pointer hover:bg-white/[0.02] transition-colors"
+                  className="w-full p-5 sm:p-6 flex items-center justify-between text-left cursor-pointer hover:bg-[#FAF3EA] transition-colors"
                   aria-expanded={activeFaq === idx}
                 >
-                  <span className="text-sm font-semibold text-[#FFF8F0] leading-relaxed">{faq.q}</span>
+                  <span className="text-sm sm:text-base font-bold text-[#1A1A1A] pr-4">
+                    {faq.q}
+                  </span>
                   <ChevronDown
                     className={cn(
-                      'w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5 transition-transform duration-200',
+                      'w-4 h-4 text-[#0047AB] shrink-0 transition-transform duration-200',
                       activeFaq === idx && 'rotate-180'
                     )}
-                    aria-hidden="true"
                   />
                 </button>
                 <AnimatePresence>
@@ -506,74 +570,68 @@ export const LandingPage: React.FC = () => {
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.22, ease: 'easeInOut' }}
+                      transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <p className="px-6 pb-5 text-sm text-[#8896A8] leading-relaxed border-t border-white/[0.04] pt-4">
+                      <div className="px-5 pb-5 sm:px-6 sm:pb-6 text-xs sm:text-sm text-[#555555] leading-relaxed border-t border-[rgba(26,26,26,0.08)] pt-3.5 bg-[#FAF4ED]">
                         {faq.a}
-                      </p>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* ============================================================
-          BOTTOM CTA
+          FINAL WAR ROOM CTA — COBALT BLUE PATCH
           ============================================================ */}
-      <section className="horizon-cta relative py-24 md:py-32 border-t border-white/[0.05]">
-        <div className="max-w-5xl mx-auto px-5 sm:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55 }}
-            className="relative bento-card overflow-hidden p-10 md:p-16 text-center"
-            style={{ borderColor: 'rgba(30,107,255,0.2)', background: 'linear-gradient(135deg,rgba(30,107,255,0.06) 0%,rgba(15,20,32,0.8) 50%,rgba(99,102,241,0.06) 100%)' }}
-          >
-            {/* Glow */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              aria-hidden="true"
-              style={{ background: 'radial-gradient(ellipse at top, rgba(30,107,255,0.1) 0%, transparent 65%)' }}
-            />
-
-            <div className="relative z-10 max-w-2xl mx-auto space-y-3 mb-8">
-              <h2 className="text-hero text-[#FFF8F0]">
+      <section className="horizon-cta relative py-20 sm:py-28 border-t border-[rgba(26,26,26,0.1)] bg-[#FAF3EA]">
+        <div className="max-w-6xl mx-auto px-5 sm:px-8">
+          <div className="cobalt-patch p-8 sm:p-14 md:p-16 text-center space-y-6">
+            <div className="max-w-2xl mx-auto space-y-2.5 relative z-10">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
                 Ready for Deterministic Self-Healing?
               </h2>
-              <p className="text-base text-[#8896A8] leading-relaxed">
-                Step into the command center, simulate outages across multi-tier topologies, and verify on-chain cryptographic audit anchoring live.
+              <p className="text-sm sm:text-base text-[#D0E2FF] leading-relaxed">
+                Step into the resilience command center, simulate outages across multi-tier topologies, and verify on-chain cryptographic audit anchoring live.
               </p>
             </div>
-
-            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 relative z-10 pt-2">
               <Link to="/dashboard">
-                <Button size="lg" className="gap-2 px-8 rounded-2xl font-semibold shadow-xl shadow-blue-500/20">
-                  Enter Command Center <ArrowRight className="w-4 h-4" />
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto text-sm font-bold gap-2 px-8 py-3.5 rounded-xl bg-white text-[#0047AB] hover:bg-[#F0F5FF] shadow-xl hover:scale-[1.02]"
+                >
+                  <span>Enter Command Center</span>
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
               <Link to="/recovery">
-                <Button variant="secondary" size="lg" className="gap-2 px-7 rounded-2xl">
-                  <RotateCcw className="w-4 h-4 text-cyan-400" />
-                  Simulate Chaos Incident
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto text-sm font-bold gap-2 px-7 py-3.5 rounded-xl bg-transparent border-2 border-white text-white hover:bg-white/10"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Simulate Chaos Incident</span>
                 </Button>
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="horizon-footer border-t border-white/[0.05] py-8 px-5 text-center">
-        <p className="text-sm text-[#8896A8] mb-1">
+      {/* ============================================================
+          PARCHMENT SKEUOMORPHIC FOOTER
+          ============================================================ */}
+      <footer className="border-t border-[rgba(26,26,26,0.12)] py-10 px-5 text-center text-xs text-[#666666] space-y-1.5 font-mono bg-[#FAF3EA]">
+        <p className="font-bold text-[#1A1A1A]">
           Horizon Autonomous Enterprise Infrastructure Recovery
         </p>
-        <p className="text-[11px] font-mono text-[#6B7A8D]">
-          Protected by BridgeKey Cryptographic Signatures · MST Blockchain Testnet (Chain ID 91562037)
+        <p className="text-[11px] text-[#777777]">
+          Protected by BridgeKey Cryptographic Signatures &bull; MST Blockchain Testnet (Chain ID 91562037)
         </p>
       </footer>
     </div>

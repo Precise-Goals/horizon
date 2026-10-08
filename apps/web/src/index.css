@@ -10,37 +10,43 @@
 @import "@fontsource/poppins/800.css";
 @import "@fontsource/poppins/900.css";
 
-@custom-variant dark (&:is(.dark *));
 @plugin "daisyui";
 
 /* =====================================================================
-   HORIZON DESIGN TOKENS — Single source of truth
+   HORIZON TACTILE SKEUOMORPHIC DESIGN SYSTEM
+   Palette: Dominating Cream (#FFF8F0 / #FAF3EA), Deep Ink Black (#1A1A1A),
+   Rich Cobalt Blue (#0047AB) with physical tactile skeuomorphism.
    ===================================================================== */
 @theme {
-  --color-horizon-bg:      #07090E;
-  --color-horizon-surface: #0C1018;
-  --color-horizon-card:    #0F1420;
-  --color-horizon-border:  rgba(255, 255, 255, 0.07);
-  --color-cobalt:          #1E6BFF;
-  --color-cobalt-dim:      rgba(30, 107, 255, 0.15);
-  --color-cobalt-glow:     rgba(30, 107, 255, 0.35);
-  --color-cream:           #FFF8F0;
-  --color-cream-muted:     #C8D0DE;
-  --color-cream-subtle:    #8896A8;
-  --color-success:         #10B981;
-  --color-warning:         #F59E0B;
-  --color-danger:          #EF4444;
+  --color-horizon-bg:           #FFF8F0;
+  --color-horizon-surface:      #FAF3EA;
+  --color-horizon-card:         #FFFFFF;
+  --color-horizon-well:         #F3E9DD;
+  --color-horizon-border:       rgba(26, 26, 26, 0.12);
+  --color-horizon-ink:          #1A1A1A;
+  --color-horizon-charcoal:     #333333;
+  --color-horizon-graphite:     #666666;
+  --color-cobalt:               #0047AB;
+  --color-cobalt-deep:          #003380;
+  --color-cobalt-light:         #1C64D9;
+  --color-cobalt-dim:           rgba(0, 71, 171, 0.08);
+  --color-cobalt-glow:          rgba(0, 71, 171, 0.25);
+  --color-cream:                #FFF8F0;
+  --color-cream-subtle:         #FAF3EA;
+  --color-cream-deep:           #F2E7D8;
+  --color-success:              #0F8E52;
+  --color-warning:              #D97706;
+  --color-danger:               #DC2626;
 }
 
 /* =====================================================================
-   CSS VARIABLES — shadcn-compatible design token layer
+   CSS VARIABLES — Light Mode Dominating Cream & Cobalt Bridge
    ===================================================================== */
 @theme inline {
   --font-sans:    'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
 
-  /* Shadcn color bridge */
   --color-background:           var(--background);
   --color-foreground:           var(--foreground);
   --color-card:                 var(--card);
@@ -60,7 +66,6 @@
   --color-input:                var(--input);
   --color-ring:                 var(--ring);
 
-  /* Radius scale — subtle, not over-rounded */
   --radius-sm:  0.375rem;
   --radius-md:  0.625rem;
   --radius-lg:  0.875rem;
@@ -70,24 +75,24 @@
 }
 
 :root {
-  --background:           #07090E;
-  --foreground:           #FFF8F0;
-  --card:                 #0F1420;
-  --card-foreground:      #FFF8F0;
-  --popover:              #0C1018;
-  --popover-foreground:   #FFF8F0;
-  --primary:              #1E6BFF;
+  --background:           #FFF8F0;
+  --foreground:           #1A1A1A;
+  --card:                 #FFFFFF;
+  --card-foreground:      #1A1A1A;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #1A1A1A;
+  --primary:              #0047AB;
   --primary-foreground:   #FFF8F0;
-  --secondary:            #131B28;
-  --secondary-foreground: #C8D0DE;
-  --muted:                #0E1520;
-  --muted-foreground:     #8896A8;
-  --accent:               #1E6BFF;
+  --secondary:            #F5EDE2;
+  --secondary-foreground: #1A1A1A;
+  --muted:                #F2E7D8;
+  --muted-foreground:     #666666;
+  --accent:               #0047AB;
   --accent-foreground:    #FFF8F0;
-  --destructive:          #EF4444;
-  --border:               rgba(255, 255, 255, 0.07);
-  --input:                rgba(255, 255, 255, 0.10);
-  --ring:                 #1E6BFF;
+  --destructive:          #DC2626;
+  --border:               rgba(26, 26, 26, 0.12);
+  --input:                rgba(26, 26, 26, 0.14);
+  --ring:                 #0047AB;
   --radius:               0.875rem;
 }
 
@@ -102,7 +107,9 @@
 
   html {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    color-scheme: dark;
+    color-scheme: light;
+    background-color: #FFF8F0;
+    color: #1A1A1A;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -110,18 +117,18 @@
   }
 
   body {
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: #FFF8F0;
+    color: #1A1A1A;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     line-height: 1.6;
     margin: 0;
   }
 
-  /* Precise heading hierarchy */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-weight: 800;
+    color: #1A1A1A;
+    letter-spacing: -0.025em;
     line-height: 1.15;
   }
 
@@ -131,139 +138,211 @@
 }
 
 /* =====================================================================
-   CUSTOM SCROLLBAR — Thin, precise
+   CUSTOM SCROLLBAR
    ===================================================================== */
-::-webkit-scrollbar        { width: 4px; height: 4px; }
-::-webkit-scrollbar-track  { background: rgba(7, 9, 14, 0.5); }
-::-webkit-scrollbar-thumb  { background: rgba(255, 255, 255, 0.1); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(30, 107, 255, 0.5); }
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: #F5EDE2; }
+::-webkit-scrollbar-thumb  { background: rgba(26, 26, 26, 0.22); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #0047AB; }
 
 /* =====================================================================
-   BENTO CARD SYSTEM — Consistent surface language
+   TACTILE SKEUOMORPHISM SURFACES & CARDS
    ===================================================================== */
+
+/* Porcelain Skeuomorphic Card */
+.skeuo-card,
 .bento-card {
-  background:        rgba(15, 20, 32, 0.8);
-  backdrop-filter:   blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border:            1px solid rgba(255, 255, 255, 0.07);
-  border-radius:     1.25rem;
-  transition:        border-color 0.2s ease, box-shadow 0.2s ease;
+  background: #FFFFFF;
+  border: 1px solid rgba(26, 26, 26, 0.11);
+  border-radius: 1.25rem;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 1px 3px rgba(26, 26, 26, 0.05),
+    0 6px 20px -2px rgba(26, 26, 26, 0.06);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
 }
 
+.skeuo-card:hover,
 .bento-card:hover {
-  border-color: rgba(30, 107, 255, 0.25);
-  box-shadow:   0 8px 32px -8px rgba(30, 107, 255, 0.12);
+  border-color: rgba(0, 71, 171, 0.3);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    0 2px 6px rgba(26, 26, 26, 0.06),
+    0 12px 32px -4px rgba(0, 71, 171, 0.12);
 }
 
-/* Status variant surfaces */
-.bento-card-danger  { border-color: rgba(239, 68, 68, 0.25) !important; background: rgba(239, 68, 68, 0.04) !important; }
-.bento-card-warning { border-color: rgba(245, 158, 11, 0.25) !important; background: rgba(245, 158, 11, 0.04) !important; }
-.bento-card-success { border-color: rgba(16, 185, 129, 0.25) !important; background: rgba(16, 185, 129, 0.04) !important; }
+/* Debossed Well (Countersunk meter, terminal recess, or stat container) */
+.skeuo-well {
+  background: #F4EBE0;
+  border: 1px solid rgba(26, 26, 26, 0.10);
+  border-radius: 0.875rem;
+  box-shadow: 
+    inset 0 2px 4px rgba(26, 26, 26, 0.07),
+    inset 0 1px 2px rgba(26, 26, 26, 0.04),
+    0 1px 0 rgba(255, 255, 255, 0.9);
+}
 
-/* =====================================================================
-   TYPOGRAPHY UTILITIES
-   ===================================================================== */
+/* COBALT BLUE BACKGROUND PATCHES (Rich contrast zones in between cream) */
+.cobalt-patch {
+  background: linear-gradient(145deg, #003380 0%, #0047AB 55%, #00398A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 1.5rem;
+  color: #FFF8F0;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 4px 12px rgba(0, 51, 128, 0.2),
+    0 16px 40px -8px rgba(0, 71, 171, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.cobalt-patch h1,
+.cobalt-patch h2,
+.cobalt-patch h3,
+.cobalt-patch h4 {
+  color: #FFF8F0 !important;
+}
+
+.cobalt-patch p {
+  color: #E0ECFF !important;
+}
+
+/* Tactile Primary Cobalt Button */
+.skeuo-btn-primary {
+  background: linear-gradient(180deg, #1A62D6 0%, #0047AB 100%);
+  border: 1px solid #003680;
+  border-radius: 0.875rem;
+  color: #FFF8F0;
+  font-weight: 700;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 2px 4px rgba(0, 71, 171, 0.25),
+    0 6px 16px -2px rgba(0, 71, 171, 0.28);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.skeuo-btn-primary:hover {
+  background: linear-gradient(180deg, #246DE0 0%, #0050BD 100%);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 4px 8px rgba(0, 71, 171, 0.35),
+    0 8px 22px -2px rgba(0, 71, 171, 0.35);
+}
+
+.skeuo-btn-primary:active {
+  background: linear-gradient(180deg, #003F99 0%, #0047AB 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 20, 60, 0.45);
+  transform: translateY(1px);
+}
+
+/* Tactile Secondary Cream Porcelain Button */
+.skeuo-btn-secondary {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F5EDE2 100%);
+  border: 1px solid rgba(26, 26, 26, 0.18);
+  border-radius: 0.875rem;
+  color: #1A1A1A;
+  font-weight: 600;
+  box-shadow: 
+    inset 0 1px 0 #FFFFFF,
+    0 1px 3px rgba(26, 26, 26, 0.08),
+    0 3px 6px -1px rgba(26, 26, 26, 0.04);
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.skeuo-btn-secondary:hover {
+  background: linear-gradient(180deg, #FFFFFF 0%, #EFE5D7 100%);
+  border-color: rgba(0, 71, 171, 0.4);
+  color: #0047AB;
+  box-shadow: 
+    inset 0 1px 0 #FFFFFF,
+    0 2px 6px rgba(0, 71, 171, 0.15);
+}
+
+.skeuo-btn-secondary:active {
+  background: #EAE0D1;
+  box-shadow: inset 0 2px 3px rgba(26, 26, 26, 0.12);
+  transform: translateY(1px);
+}
+
+/* Hardware LED Status Lens */
+.skeuo-led {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  position: relative;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.skeuo-led-healthy {
+  background: radial-gradient(circle at 35% 35%, #6EE7B7 0%, #10B981 60%, #047857 100%);
+  box-shadow: 0 0 6px #10B981, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.skeuo-led-degraded {
+  background: radial-gradient(circle at 35% 35%, #FDE68A 0%, #F59E0B 60%, #B45309 100%);
+  box-shadow: 0 0 6px #F59E0B, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.skeuo-led-down {
+  background: radial-gradient(circle at 35% 35%, #FCA5A5 0%, #EF4444 60%, #B91C1C 100%);
+  box-shadow: 0 0 6px #EF4444, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.skeuo-led-cobalt {
+  background: radial-gradient(circle at 35% 35%, #93C5FD 0%, #1E6BFF 60%, #0047AB 100%);
+  box-shadow: 0 0 6px #1E6BFF, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+/* Badge Pill (Tactile debossed tag) */
+.horizon-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(26, 26, 26, 0.12);
+  background: #F4EBE0;
+  color: #1A1A1A;
+  box-shadow: inset 0 1px 2px rgba(26, 26, 26, 0.06), 0 1px 0 #FFFFFF;
+}
+
+/* Divider */
+.horizon-divider {
+  border: none;
+  border-top: 1px solid rgba(26, 26, 26, 0.10);
+  margin: 0;
+}
+
+/* Typography Scale */
 .text-display {
-  font-size:   clamp(3rem, 8vw, 6.5rem);
+  font-size: clamp(3rem, 8vw, 6.25rem);
   font-weight: 900;
+  color: #1A1A1A;
   letter-spacing: -0.04em;
   line-height: 0.95;
 }
 
 .text-hero {
-  font-size:   clamp(1.75rem, 4vw, 3.5rem);
-  font-weight: 800;
+  font-size: clamp(1.85rem, 4vw, 3.25rem);
+  font-weight: 850;
+  color: #1A1A1A;
   letter-spacing: -0.03em;
   line-height: 1.1;
 }
 
-.text-title {
-  font-size:   clamp(1.25rem, 2.5vw, 2rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-}
-
 .text-label {
-  font-size:      0.6875rem;
-  font-weight:    600;
+  font-size: 0.6875rem;
+  font-weight: 750;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-/* =====================================================================
-   HORIZON COMPONENT PRIMITIVES
-   ===================================================================== */
-
-/* Cobalt badge pill */
-.horizon-badge {
-  display:      inline-flex;
-  align-items:  center;
-  gap:          0.375rem;
-  padding:      0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size:    0.6875rem;
-  font-weight:  600;
-  font-family:  'JetBrains Mono', ui-monospace, Consolas, monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border:       1px solid rgba(255, 255, 255, 0.1);
-  background:   rgba(255, 255, 255, 0.04);
-}
-
-/* Status indicator dot */
-.status-dot {
-  display:       inline-block;
-  width:         0.5rem;
-  height:        0.5rem;
-  border-radius: 9999px;
-  flex-shrink:   0;
-}
-
-.status-dot-healthy  { background: #10B981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
-.status-dot-degraded { background: #F59E0B; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
-.status-dot-down     { background: #EF4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
-.status-dot-checking { background: #60A5FA; box-shadow: 0 0 8px rgba(96, 165, 250, 0.5); }
-
-/* Divider */
-.horizon-divider {
-  border: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  margin: 0;
-}
-
-/* =====================================================================
-   ANIMATION UTILITIES
-   ===================================================================== */
-@keyframes shimmer {
-  0%   { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-
-.shimmer {
-  position: relative;
-  overflow: hidden;
-}
-
-.shimmer::after {
-  content:    '';
-  position:   absolute;
-  top:        0;
-  left:       0;
-  width:      50%;
-  height:     100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
-  animation:  shimmer 2.5s infinite;
-}
-
-@keyframes float-up {
-  0%   { transform: translateY(0);   opacity: 1; }
-  100% { transform: translateY(-8px); opacity: 0; }
-}
-
-/* Glow ring on focus */
-:focus-visible {
-  outline:        2px solid rgba(30, 107, 255, 0.6);
-  outline-offset: 2px;
-  border-radius:  4px;
+  color: #555555;
 }

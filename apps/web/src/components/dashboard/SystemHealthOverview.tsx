@@ -17,6 +17,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import { Link } from 'react-router';
+import { cn } from '../../lib/utils';
 
 const iconMap: Record<string, React.ElementType> = {
   database: Database,
@@ -72,83 +73,85 @@ export const SystemHealthOverview: React.FC = () => {
     }
   };
 
-  const downCount = nodes.filter((n) => n.status === 'down' || n.status === 'degraded').length;
-
-  const filteredNodes = nodes.filter((node) => {
-    if (filter === 'all') return true;
-    if (filter === 'database') return node.type === 'database' || node.type === 'cache';
-    if (filter === 'service') return node.type !== 'database' && node.type !== 'cache';
+  const filteredNodes = nodes.filter((n) => {
+    if (filter === 'database') return n.type === 'database' || n.type === 'cache';
+    if (filter === 'service') return n.type === 'application' || n.type === 'gateway';
     return true;
   });
 
+  const downCount = nodes.filter((n) => n.status === 'down' || n.status === 'degraded').length;
+
   return (
-    <Card className="p-6 sm:p-7 col-span-1 lg:col-span-2 flex flex-col justify-between border-white/[0.08] shadow-2xl">
+    <Card className="p-6 sm:p-7 flex flex-col justify-between">
       <div>
-        {/* Top Header & Filter Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 mb-5 border-b border-white/[0.08] gap-3">
+        {/* Header with Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[rgba(26,26,26,0.08)] mb-6">
           <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-lg sm:text-xl font-bold text-[#FFF8F0] tracking-tight">
-                Cluster Topology Health Matrix
-              </h2>
-              <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-semibold">
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-lg sm:text-xl font-black text-[#1A1A1A]">
+                Infrastructure Services Matrix
+              </h3>
+              <span className="horizon-badge text-[11px] text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20">
                 {nodes.length} Nodes Active
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#A3ADC2] mt-1">
+            <p className="text-xs sm:text-sm text-[#666666] mt-1">
               Live probes across multi-tier database instances, distributed cache tiers, and edge gateways.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Filter Tabs */}
-            <div className="inline-flex rounded-xl bg-black/40 p-1 border border-white/[0.08] text-xs">
+            {/* Skeuomorphic Filter Tabs */}
+            <div className="inline-flex rounded-xl bg-[#F4EBE0] p-1 border border-[rgba(26,26,26,0.12)] shadow-[inset_0_1px_2px_rgba(26,26,26,0.06)] text-xs">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer ${
+                className={cn(
+                  'px-3 py-1.5 rounded-lg transition-all text-xs font-bold cursor-pointer',
                   filter === 'all'
-                    ? 'bg-[#1E6BFF] text-[#FFF8F0] shadow-sm'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
-                }`}
+                    ? 'bg-white text-[#0047AB] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                    : 'text-[#666666] hover:text-[#1A1A1A]'
+                )}
               >
                 All ({nodes.length})
               </button>
               <button
                 onClick={() => setFilter('database')}
-                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer ${
+                className={cn(
+                  'px-3 py-1.5 rounded-lg transition-all text-xs font-bold cursor-pointer',
                   filter === 'database'
-                    ? 'bg-[#1E6BFF] text-[#FFF8F0] shadow-sm'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
-                }`}
+                    ? 'bg-white text-[#0047AB] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                    : 'text-[#666666] hover:text-[#1A1A1A]'
+                )}
               >
                 Data Tier
               </button>
               <button
                 onClick={() => setFilter('service')}
-                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer ${
+                className={cn(
+                  'px-3 py-1.5 rounded-lg transition-all text-xs font-bold cursor-pointer',
                   filter === 'service'
-                    ? 'bg-[#1E6BFF] text-[#FFF8F0] shadow-sm'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
-                }`}
+                    ? 'bg-white text-[#0047AB] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
+                    : 'text-[#666666] hover:text-[#1A1A1A]'
+                )}
               >
                 App Services
               </button>
             </div>
 
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={loadNodes}
               className="p-2 h-9 w-9 rounded-xl"
               title="Refresh telemetry probes"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
             </Button>
           </div>
         </div>
 
-        {/* Nodes Bento Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        {/* Nodes Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredNodes.map((node) => {
             const Icon = iconMap[node.type] || Server;
             const isDown = node.status === 'down';
@@ -158,37 +161,39 @@ export const SystemHealthOverview: React.FC = () => {
             return (
               <div
                 key={node.id}
-                className={`p-4 rounded-2xl border backdrop-blur-md transition-all duration-200 flex flex-col justify-between group relative overflow-hidden ${
+                className={cn(
+                  'p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between group relative overflow-hidden',
                   isDown
-                    ? 'bg-red-500/[0.08] border-red-500/30 shadow-lg shadow-red-500/10'
+                    ? 'bg-[#FFF5F5] border-red-300 shadow-[0_2px_8px_rgba(220,38,38,0.1)]'
                     : isDegraded
-                    ? 'bg-amber-500/[0.08] border-amber-500/30 shadow-lg shadow-amber-500/10'
-                    : 'bg-white/[0.02] border-white/[0.07] hover:border-white/[0.18] hover:bg-white/[0.04]'
-                }`}
+                    ? 'bg-[#FFFDF5] border-amber-300 shadow-[0_2px_8px_rgba(217,119,6,0.1)]'
+                    : 'bg-white border-[rgba(26,26,26,0.11)] shadow-[inset_0_1px_0_#FFFFFF,0_1px_3px_rgba(26,26,26,0.05)] hover:border-[#0047AB]/30 hover:shadow-[0_4px_12px_rgba(0,71,171,0.08)]'
+                )}
               >
                 {/* Node Header */}
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
                     <div className="flex items-center gap-3">
                       <div
-                        className={`p-2.5 rounded-xl border transition-colors ${
+                        className={cn(
+                          'p-2.5 rounded-xl border transition-colors flex-shrink-0',
                           isDown
-                            ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse'
-                            : 'bg-blue-500/10 text-[#1E6BFF] border-blue-500/20 group-hover:bg-blue-500/20'
-                        }`}
+                            ? 'bg-red-100 text-red-700 border-red-200 animate-pulse'
+                            : 'bg-[#EBF1FA] text-[#0047AB] border-[#0047AB]/20'
+                        )}
                       >
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-sm sm:text-base font-bold text-[#FFF8F0] leading-tight">
+                        <h4 className="text-sm font-bold text-[#1A1A1A] leading-tight">
                           {node.name}
                         </h4>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-xs font-mono text-[#8E9DB8]">
+                          <span className="text-xs font-mono text-[#666666]">
                             :{telemetry.port}
                           </span>
-                          <span className="text-xs text-[#4F5B73]">•</span>
-                          <span className="text-xs font-mono text-[#8E9DB8]">
+                          <span className="text-xs text-[#999999]">•</span>
+                          <span className="text-xs font-mono text-[#666666]">
                             {telemetry.region}
                           </span>
                         </div>
@@ -199,38 +204,39 @@ export const SystemHealthOverview: React.FC = () => {
                     </Badge>
                   </div>
 
-                  {/* Telemetry Chips */}
-                  <div className="flex items-center justify-between text-xs py-2 px-2.5 rounded-xl bg-black/40 border border-white/[0.04] mb-3">
-                    <span className="text-[#A3ADC2] flex items-center gap-1.5 font-medium">
-                      <Clock className="w-3 h-3 text-blue-400" />
+                  {/* Debossed Telemetry Well */}
+                  <div className="skeuo-well flex items-center justify-between text-xs py-2 px-2.5 mb-3">
+                    <span className="text-[#666666] flex items-center gap-1.5 font-medium">
+                      <Clock className="w-3 h-3 text-[#0047AB]" />
                       Probe Latency:
                     </span>
-                    <span className={`font-mono font-bold ${isDown ? 'text-red-400' : 'text-emerald-400'}`}>
+                    <span className={cn('font-mono font-bold', isDown ? 'text-[#DC2626]' : 'text-[#0F8E52]')}>
                       {isDown ? 'TIMEOUT' : telemetry.latency}
                     </span>
                   </div>
                 </div>
 
                 {/* Node Footer Actions */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.04]">
-                  <div className="text-xs text-[#A3ADC2] font-mono truncate max-w-[130px]">
+                <div className="flex items-center justify-between pt-2.5 border-t border-[rgba(26,26,26,0.08)]">
+                  <div className="text-xs text-[#666666] font-mono truncate max-w-[130px]">
                     {node.dependencies.length > 0 ? (
                       <span title={`Depends on: ${node.dependencies.join(', ')}`}>
                         &larr; {node.dependencies.length} deps
                       </span>
                     ) : (
-                      <span className="text-blue-400 font-semibold">Root Service</span>
+                      <span className="text-[#0047AB] font-bold">Root Service</span>
                     )}
                   </div>
 
                   <button
                     onClick={() => handleToggleFailure(node)}
                     disabled={mutatingId === node.id}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer border ${
+                    className={cn(
+                      'text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer border select-none',
                       isDown
-                        ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30 shadow-sm shadow-emerald-500/20'
-                        : 'bg-red-500/10 text-red-300 border-red-500/25 hover:bg-red-500/20'
-                    }`}
+                        ? 'bg-[#EBF7EE] text-[#0A6C3D] border-[#0F8E52]/40 hover:bg-[#D8F0DE] shadow-[0_1px_2px_rgba(15,142,82,0.15)]'
+                        : 'bg-[#FDF2F2] text-[#B91C1C] border-[#DC2626]/25 hover:bg-[#FDE8E8]'
+                    )}
                   >
                     {mutatingId === node.id ? (
                       <RefreshCw className="w-3.5 h-3.5 animate-spin inline" />
@@ -248,12 +254,12 @@ export const SystemHealthOverview: React.FC = () => {
       </div>
 
       {/* SRE Chaos Guide Footer */}
-      <div className="mt-5 pt-4 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#A3ADC2]">
+      <div className="mt-6 pt-4 border-t border-[rgba(26,26,26,0.08)] flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#666666]">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-blue-400 shrink-0" />
+          <Zap className="w-4 h-4 text-[#0047AB] shrink-0" />
           <span>
             {downCount > 0 ? (
-              <strong className="text-amber-400">{downCount} service(s) impacted — autonomous recovery sequence initialized.</strong>
+              <strong className="text-[#D97706] font-bold">{downCount} service(s) impacted — autonomous recovery sequence initialized.</strong>
             ) : (
               'Chaos engineering switch active: toggle failover on any node to verify blast radius.'
             )}
@@ -261,7 +267,7 @@ export const SystemHealthOverview: React.FC = () => {
         </div>
         <Link
           to="/topology"
-          className="inline-flex items-center gap-1.5 font-bold text-blue-400 hover:text-blue-300 transition-colors"
+          className="inline-flex items-center gap-1.5 font-bold text-[#0047AB] hover:underline"
         >
           <span>Open Full Dependency DAG</span>
           <ArrowUpRight className="w-4 h-4" />

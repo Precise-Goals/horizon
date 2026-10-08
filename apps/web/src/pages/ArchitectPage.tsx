@@ -156,7 +156,7 @@ export const ArchitectPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/dashboard"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-[#94A3B8] hover:text-[#FFF8F0] transition-colors"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
           <span>&larr; Return to Dashboard</span>
         </Link>
@@ -166,15 +166,15 @@ export const ArchitectPage: React.FC = () => {
             variant="ghost"
             size="sm"
             onClick={handleResetToDefault}
-            className="text-xs text-[#A3ADC2] hover:text-[#FFF8F0] gap-1.5"
+            className="text-xs text-[#6E6258] hover:text-[#1A1A1A] gap-1.5 font-semibold"
             title="Reset active cluster to default 7-node baseline"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>Reset Baseline</span>
           </Button>
 
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/25">
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />
             AGENTIC SYNTHESIZER
           </span>
         </div>
@@ -182,10 +182,10 @@ export const ArchitectPage: React.FC = () => {
 
       {/* Main Header */}
       <div>
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#FFF8F0]">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
           AI Flow Architect & YAML Synthesizer
         </h1>
-        <p className="text-xs sm:text-sm text-[#94A3B8] mt-1.5 max-w-3xl leading-relaxed">
+        <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
           Describe arbitrary distributed architectures in plain English. The agent decodes dependency hierarchies,
           verifies cycle safety, visualizes the DAG, and outputs declarative recovery pipelines.
         </p>
@@ -193,7 +193,7 @@ export const ArchitectPage: React.FC = () => {
 
       {/* Quick Prompt Chips */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span className="text-[11px] font-mono font-bold text-[#6E7A94] uppercase shrink-0">
+        <span className="text-[11px] font-mono font-bold text-[#8A7B6D] uppercase shrink-0">
           Templates:
         </span>
         {promptChips.map((chip, idx) => (
@@ -201,10 +201,10 @@ export const ArchitectPage: React.FC = () => {
             key={idx}
             onClick={() => handleSendMessage(chip.prompt)}
             disabled={isProcessing}
-            className="shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] hover:border-blue-500/30 text-[#A3ADC2] hover:text-[#FFF8F0] transition-all cursor-pointer flex items-center gap-1.5"
+            className="shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#FAF3EA] hover:bg-[#F4EBE0] border border-[#E5D7C5] hover:border-[#0047AB]/40 text-[#403830] hover:text-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
           >
             <span>{chip.label}</span>
-            <ArrowRight className="w-2.5 h-2.5 opacity-60" />
+            <ArrowRight className="w-2.5 h-2.5 text-[#0047AB] opacity-70" />
           </button>
         ))}
       </div>
@@ -212,19 +212,19 @@ export const ArchitectPage: React.FC = () => {
       {/* Split Workspace: Chatbot on Left, Interactive Visualizer / YAML on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ================= LEFT: AGENTIC CHAT INTERFACE (5 cols) ================= */}
-        <Card className="lg:col-span-5 p-5 flex flex-col h-[700px] justify-between border-white/[0.08] bg-[#07090E]/90 backdrop-blur-xl">
+        <Card className="lg:col-span-5 p-5 flex flex-col h-[700px] justify-between skeuo-card border-[#E5D7C5]">
           {/* Chat Header */}
-          <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08]">
+          <div className="flex items-center justify-between pb-3.5 border-b border-[#EADCC9]">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[#1E6BFF]">
+              <div className="w-9 h-9 rounded-xl bg-[#0047AB]/10 border border-[#0047AB]/25 text-[#0047AB] flex items-center justify-center shadow-inner">
                 <Bot className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-[#FFF8F0]">Sarvam Autonomous Architect</h3>
-                <p className="text-[10px] text-[#A3ADC2] font-mono">Model: sarvam-105b &bull; Status: Online</p>
+                <h3 className="text-sm font-bold text-[#1A1A1A]">Sarvam Autonomous Architect</h3>
+                <p className="text-[10px] text-[#6E6258] font-mono font-medium">Model: sarvam-105b &bull; Status: Online</p>
               </div>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-xs" />
           </div>
 
           {/* Messages Scroll Area */}
@@ -234,7 +234,7 @@ export const ArchitectPage: React.FC = () => {
                 key={msg.id}
                 className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
-                <div className="flex items-center gap-1.5 mb-1 text-[10px] text-[#6E7A94] font-mono">
+                <div className="flex items-center gap-1.5 mb-1 text-[10px] text-[#8A7B6D] font-mono font-bold">
                   <span>{msg.sender === 'user' ? 'Commander' : 'AI Architect'}</span>
                   <span>&bull;</span>
                   <span>{msg.timestamp}</span>
@@ -243,32 +243,32 @@ export const ArchitectPage: React.FC = () => {
                 <div
                   className={`p-3.5 rounded-2xl max-w-[92%] leading-relaxed ${
                     msg.sender === 'user'
-                      ? 'bg-blue-600/20 border border-blue-500/30 text-[#FFF8F0]'
-                      : 'bg-white/[0.03] border border-white/[0.08] text-[#E2D7CB]'
+                      ? 'bg-blue-50 border border-blue-200 text-[#0047AB] font-semibold'
+                      : 'bg-[#FAF3EA] border border-[#E5D7C5] text-[#2C241E] font-medium'
                   }`}
                 >
                   <p>{msg.text}</p>
 
                   {/* Expandable Reasoning / Cycle Analysis */}
                   {msg.reasoning && (
-                    <div className="mt-2.5 pt-2 border-t border-white/[0.06] text-[11px] font-mono text-emerald-400/90 space-y-1">
+                    <div className="mt-2.5 pt-2 border-t border-[#E5D7C5] text-[11px] font-mono text-emerald-800 space-y-1">
                       <span className="font-bold flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                         Analysis:
                       </span>
-                      <p className="text-[#A3ADC2] text-[10px] leading-normal">{msg.reasoning}</p>
+                      <p className="text-[#5A4E44] text-[10px] leading-normal font-sans">{msg.reasoning}</p>
                     </div>
                   )}
 
                   {/* Quick Action when Agent finishes decoding */}
                   {msg.decoded && !msg.decoded.cycleDetected && (
-                    <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex items-center gap-2">
+                    <div className="mt-3 pt-2.5 border-t border-[#E5D7C5] flex items-center gap-2">
                       <button
                         onClick={() => {
                           setCurrentArchitecture(msg.decoded!);
                           handleDeployToCluster();
                         }}
-                        className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/40 transition-colors flex items-center gap-1 cursor-pointer"
+                        className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-[#0047AB]/10 hover:bg-[#0047AB]/20 text-[#0047AB] border border-[#0047AB]/30 transition-colors flex items-center gap-1 cursor-pointer"
                       >
                         <Rocket className="w-3 h-3" />
                         <span>Deploy this DAG to Live Cluster</span>
@@ -280,7 +280,7 @@ export const ArchitectPage: React.FC = () => {
             ))}
 
             {isProcessing && (
-              <div className="flex items-center gap-2 text-xs text-blue-400 font-mono py-2 animate-pulse">
+              <div className="flex items-center gap-2 text-xs text-[#0047AB] font-mono font-semibold py-2 animate-pulse">
                 <Bot className="w-3.5 h-3.5 animate-spin" />
                 <span>Synthesizing DAG topology and validating cycle constraints...</span>
               </div>
@@ -288,7 +288,7 @@ export const ArchitectPage: React.FC = () => {
           </div>
 
           {/* Chat Input Form */}
-          <div className="pt-3 border-t border-white/[0.08]">
+          <div className="pt-3 border-t border-[#EADCC9]">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -302,7 +302,7 @@ export const ArchitectPage: React.FC = () => {
                 placeholder="Describe your microservices stack, database dependencies, or failure expectations..."
                 rows={3}
                 disabled={isProcessing}
-                className="w-full rounded-2xl bg-black/50 border border-white/[0.1] px-3.5 py-2.5 text-xs text-[#FFF8F0] placeholder-[#6E7A94] focus:outline-none focus:border-blue-500/50 resize-none"
+                className="w-full rounded-2xl skeuo-well px-3.5 py-2.5 text-xs text-[#1A1A1A] placeholder-[#8A7B6D] focus:outline-none focus:ring-2 focus:ring-[#0047AB]/30 resize-none font-medium"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -312,12 +312,13 @@ export const ArchitectPage: React.FC = () => {
               />
 
               <div className="flex items-center justify-between mt-2">
-                <span className="text-[10px] font-mono text-[#6E7A94]">Shift + Enter for new line</span>
+                <span className="text-[10px] font-mono text-[#8A7B6D] font-medium">Shift + Enter for new line</span>
                 <Button
                   type="submit"
                   size="sm"
+                  variant="primary"
                   disabled={!inputPrompt.trim() || isProcessing}
-                  className="rounded-xl px-4 py-1.5 text-xs font-semibold gap-1.5"
+                  className="rounded-xl px-4 py-1.5 text-xs font-bold gap-1.5"
                 >
                   <Send className="w-3 h-3" />
                   <span>Synthesize</span>
@@ -328,13 +329,13 @@ export const ArchitectPage: React.FC = () => {
         </Card>
 
         {/* ================= RIGHT: VISUALIZER, PIPELINE YAML & RECOVERY PLAN (7 cols) ================= */}
-        <Card className="lg:col-span-7 p-6 flex flex-col h-[700px] justify-between border-white/[0.08] bg-[#07090E]/90 backdrop-blur-xl">
+        <Card className="lg:col-span-7 p-6 flex flex-col h-[700px] justify-between skeuo-card border-[#E5D7C5]">
           <div>
             {/* Top Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-white/[0.08] gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-[#EADCC9] gap-3">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h3 className="text-base font-bold text-[#FFF8F0] tracking-tight">
+                  <h3 className="text-base font-bold text-[#1A1A1A] tracking-tight">
                     {currentArchitecture.architectureName}
                   </h3>
                   {currentArchitecture.cycleDetected ? (
@@ -343,7 +344,7 @@ export const ArchitectPage: React.FC = () => {
                     <Badge status="healthy">Acyclic Verified</Badge>
                   )}
                 </div>
-                <p className="text-xs text-[#A3ADC2] mt-0.5">
+                <p className="text-xs text-[#6E6258] mt-0.5 font-medium">
                   {currentArchitecture.nodes.length} Services &bull; {currentArchitecture.edges.length} Dependencies &bull; {currentArchitecture.topologicalLevels.length} Recovery Tiers
                 </p>
               </div>
@@ -368,17 +369,17 @@ export const ArchitectPage: React.FC = () => {
                   variant="secondary"
                   size="sm"
                   onClick={handleCopyYaml}
-                  className="rounded-xl p-2 h-8 w-8 text-[#A3ADC2] hover:text-[#FFF8F0]"
+                  className="rounded-xl p-2 h-8 w-8 text-[#6E6258] hover:text-[#1A1A1A]"
                   title="Copy YAML to clipboard"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
 
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={handleDownloadYaml}
-                  className="rounded-xl p-2 h-8 w-8 text-[#A3ADC2] hover:text-[#FFF8F0]"
+                  className="rounded-xl p-2 h-8 w-8 text-[#6E6258] hover:text-[#1A1A1A]"
                   title="Download .yaml file"
                 >
                   <Download className="w-3.5 h-3.5" />
@@ -387,51 +388,51 @@ export const ArchitectPage: React.FC = () => {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex items-center gap-2 mb-4 border-b border-white/[0.06] pb-2">
+            <div className="flex items-center gap-2 mb-4 border-b border-[#EADCC9] pb-2">
               <button
                 onClick={() => setActiveTab('dag')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'dag'
-                    ? 'bg-blue-500/20 text-[#FFF8F0] border border-blue-500/40'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
+                    ? 'bg-[#0047AB] text-white shadow-xs'
+                    : 'text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#FAF3EA]'
                 }`}
               >
-                <Network className="w-3.5 h-3.5 text-blue-400" />
+                <Network className="w-3.5 h-3.5" />
                 <span>Interactive DAG Flow</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('yaml')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'yaml'
-                    ? 'bg-blue-500/20 text-[#FFF8F0] border border-blue-500/40'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
+                    ? 'bg-[#0047AB] text-white shadow-xs'
+                    : 'text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#FAF3EA]'
                 }`}
               >
-                <FileCode className="w-3.5 h-3.5 text-amber-400" />
+                <FileCode className="w-3.5 h-3.5" />
                 <span>Declarative YAML Spec</span>
               </button>
 
               <button
                 onClick={() => setActiveTab('recovery')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   activeTab === 'recovery'
-                    ? 'bg-blue-500/20 text-[#FFF8F0] border border-blue-500/40'
-                    : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
+                    ? 'bg-[#0047AB] text-white shadow-xs'
+                    : 'text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#FAF3EA]'
                 }`}
               >
-                <RotateCcw className="w-3.5 h-3.5 text-emerald-400" />
+                <RotateCcw className="w-3.5 h-3.5" />
                 <span>Topological Recovery Plan</span>
               </button>
             </div>
 
             {/* Cycle Warning Banner if detected */}
             {currentArchitecture.cycleDetected && (
-              <div className="mb-4 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-xs text-red-300 flex items-start gap-2.5">
-                <ShieldAlert className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+              <div className="mb-4 p-3.5 rounded-2xl bg-red-50 border border-red-300 text-xs text-red-900 flex items-start gap-2.5 shadow-xs">
+                <ShieldAlert className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
                 <div>
                   <span className="font-bold">Circular Deadlock Detected:</span>
-                  <p className="mt-0.5 text-red-200/80 leading-relaxed">
+                  <p className="mt-0.5 text-red-800 leading-relaxed font-medium">
                     {currentArchitecture.cycleExplanation}
                   </p>
                 </div>
@@ -459,8 +460,8 @@ export const ArchitectPage: React.FC = () => {
 
                         return (
                           <div key={actualTier} className="space-y-2">
-                            <div className="flex items-center justify-between text-[11px] font-mono text-[#6E7A94] border-b border-white/[0.04] pb-1">
-                              <span className="font-bold text-blue-400">
+                            <div className="flex items-center justify-between text-[11px] font-mono text-[#6E6258] border-b border-[#EADCC9] pb-1 font-bold">
+                              <span className="text-[#0047AB]">
                                 {actualTier === 0
                                   ? 'TIER 0: FOUNDATIONAL PERSISTENCE'
                                   : actualTier === 1
@@ -480,24 +481,24 @@ export const ArchitectPage: React.FC = () => {
                                 return (
                                   <div
                                     key={node.id}
-                                    className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.08] hover:border-blue-500/30 transition-all space-y-1.5"
+                                    className="p-3.5 rounded-xl bg-white border border-[#E5D7C5] hover:border-[#0047AB]/40 hover:shadow-md transition-all space-y-1.5 shadow-xs"
                                   >
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center gap-2">
-                                        <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                        <div className="p-1.5 rounded-lg bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20">
                                           <Icon className="w-3.5 h-3.5" />
                                         </div>
-                                        <span className="text-xs font-bold text-[#FFF8F0] truncate max-w-[140px]">
+                                        <span className="text-xs font-bold text-[#1A1A1A] truncate max-w-[140px]">
                                           {node.name}
                                         </span>
                                       </div>
-                                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-white/[0.04] text-[#A3ADC2]">
+                                      <span className="text-[9px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#FAF3EA] border border-[#E5D7C5] text-[#6E6258] font-bold">
                                         {node.type}
                                       </span>
                                     </div>
 
                                     {node.dependencies.length > 0 && (
-                                      <div className="text-[10px] text-[#A3ADC2] font-mono truncate">
+                                      <div className="text-[10px] text-[#6E6258] font-mono truncate font-medium">
                                         Depends on: {node.dependencies.join(', ')}
                                       </div>
                                     )}
@@ -519,7 +520,7 @@ export const ArchitectPage: React.FC = () => {
                     exit={{ opacity: 0 }}
                     className="relative"
                   >
-                    <pre className="p-4 rounded-2xl bg-[#030508] border border-white/[0.08] text-[11px] font-mono text-cyan-300 leading-relaxed overflow-x-auto select-all">
+                    <pre className="p-4 rounded-2xl bg-[#1A1A1A] border border-black text-[11px] font-mono text-cyan-300 leading-relaxed overflow-x-auto select-all shadow-inner">
                       <code>{currentArchitecture.yamlPipeline}</code>
                     </pre>
                   </motion.div>
@@ -533,12 +534,12 @@ export const ArchitectPage: React.FC = () => {
                     exit={{ opacity: 0 }}
                     className="space-y-3"
                   >
-                    <div className="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-[#FFF8F0] space-y-1">
-                      <span className="font-bold flex items-center gap-1.5 text-blue-300">
+                    <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-xs text-[#1A1A1A] space-y-1 shadow-xs">
+                      <span className="font-bold flex items-center gap-1.5 text-[#0047AB]">
                         <RotateCcw className="w-3.5 h-3.5" />
                         Topological Kahn's Bottom-Up Execution Plan
                       </span>
-                      <p className="text-[11px] text-[#A3ADC2]">
+                      <p className="text-[11px] text-[#5A4E44] font-medium">
                         When this cluster suffers a cascading blackout, Horizon activates the exact sequence below.
                         Foundational databases restore first. High-risk actions trigger a BridgeKey cryptographic prompt.
                       </p>
@@ -548,17 +549,17 @@ export const ArchitectPage: React.FC = () => {
                       {currentArchitecture.topologicalLevels.map((levelNodes, idx) => (
                         <div
                           key={idx}
-                          className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.08] flex items-center justify-between"
+                          className="p-3.5 rounded-xl bg-white border border-[#E5D7C5] flex items-center justify-between shadow-xs"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 rounded-full bg-blue-500/20 border border-blue-500/40 text-blue-300 text-xs font-mono font-bold flex items-center justify-center">
+                            <div className="w-6 h-6 rounded-full bg-[#0047AB]/10 border border-[#0047AB]/25 text-[#0047AB] text-xs font-mono font-bold flex items-center justify-center">
                               {idx + 1}
                             </div>
                             <div>
-                              <div className="text-xs font-bold text-[#FFF8F0]">
+                              <div className="text-xs font-bold text-[#1A1A1A]">
                                 Stage {idx + 1}: Restore {levelNodes.join(', ')}
                               </div>
-                              <div className="text-[10px] text-[#A3ADC2] font-mono">
+                              <div className="text-[10px] text-[#6E6258] font-mono font-medium">
                                 Strategy: {idx === 0 ? 'Storage Master Promotion / VIP repoint' : idx === 1 ? 'Cache Flush & Cache Warmup' : 'Zero-Downtime Rolling Ingress Restart'}
                               </div>
                             </div>
@@ -566,12 +567,12 @@ export const ArchitectPage: React.FC = () => {
 
                           <div className="flex items-center gap-2">
                             {idx === 0 ? (
-                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20 flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" />
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-300 flex items-center gap-1">
+                                <AlertTriangle className="w-3 h-3 text-amber-600" />
                                 BridgeKey EIP-712 Gate
                               </span>
                             ) : (
-                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
                                 Autonomous Auto-Run
                               </span>
                             )}
@@ -586,7 +587,7 @@ export const ArchitectPage: React.FC = () => {
           </div>
 
           {/* Bottom Footer Telemetry */}
-          <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-[#6E7A94]">
+          <div className="pt-3 border-t border-[#EADCC9] flex items-center justify-between text-[11px] font-mono text-[#8A7B6D] font-bold">
             <span>Spec: horizon.recovery.io/v1alpha1</span>
             <span>Target Governance: MST Testnet 91562037</span>
           </div>
