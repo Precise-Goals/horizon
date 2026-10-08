@@ -1,8 +1,10 @@
 /**
  * Sarvam AI SRE Copilot & Multi-Agent Orchestrator
- * Connects to https://api.sarvam.ai/v1/chat/completions using model 'sarvam-105b'.
+ * Connects directly to Sarvam AI completions API using configured model.
+ * Zero hardcoded keys or URLs; strictly loaded via validated env.ts.
  */
 import type { SystemNode } from '@/types';
+import { env } from '../env';
 
 export interface SarvamCommandResult {
   actionType: 'SIMULATE_FAILURE' | 'RESTORE_SERVICE' | 'TRIGGER_RECOVERY' | 'DIAGNOSE_CLUSTER' | 'QUERY_INFO' | 'UNKNOWN';
@@ -18,9 +20,9 @@ export class SarvamAgentService {
   private model: string;
 
   constructor() {
-    this.apiKey = import.meta.env.VITE_SARVAM_API_KEY || 'sk_mhp6zj2k_CZWnzOpKIR4wrCdCDUwa6hJY';
-    this.endpoint = 'https://api.sarvam.ai/v1/chat/completions';
-    this.model = 'sarvam-105b';
+    this.apiKey = env.VITE_SARVAM_API_KEY;
+    this.endpoint = `${env.VITE_SARVAM_BASE_URL.replace(/\/$/, '')}/v1/chat/completions`;
+    this.model = env.VITE_SARVAM_MODEL;
   }
 
   public async chat(messages: { role: 'system' | 'user' | 'assistant'; content: string }[]): Promise<string> {
@@ -38,12 +40,12 @@ export class SarvamAgentService {
       });
 
       if (!res.ok) {
-        throw new Error(`Sarvam API returned HTTP ${res.status}`);
+        throw new Error(`Sarvam API returned HTTP ${res.status}: ${res.statusText}`);
       }
 
-      const data = await res.json();
+      const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
       return data.choices?.[0]?.message?.content?.trim() || 'Diagnosis complete.';
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Sarvam AI request notice: using local SRE heuristics.', err);
       return '';
     }

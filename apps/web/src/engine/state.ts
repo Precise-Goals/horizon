@@ -4,7 +4,7 @@
  */
 import type { SystemNode, AuditLogEntry } from '@/types';
 import { DependencyGraph } from './dependencyGraph';
-import { mstBlockchain } from './mstBlockchain';
+import { mstBlockchain, MST_CONFIG } from './mstBlockchain';
 
 export interface RecoveryJobState {
   id: string;
@@ -186,14 +186,15 @@ class ClusterStateManager {
     this.notify();
   }
 
-  public async approveGate(): Promise<void> {
+  public async approveGate(commanderAddress?: string): Promise<void> {
     if (!this.activeJob) return;
 
+    const address = commanderAddress || MST_CONFIG.operatorAddress;
     const sigResult = await mstBlockchain.signApprovalGate({
       incidentId: this.activeJob.id,
       stepTitle: 'Human Commander Approval Gate',
       targetService: this.activeJob.targetNodeId,
-      commanderAddress: '0x73595081334A18D4298A160b162faB4Fb4B3c85B',
+      commanderAddress: address,
     });
 
     this.activeJob.approvalSignature = sigResult.signature;

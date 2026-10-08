@@ -1,10 +1,10 @@
-# Horizon ⚡
-
-<p align="center">
-  <img src="./public/logo.png" alt="Horizon Logo" width="220" />
-</p>
+# Horizon - Autonomous Enterprise Infrastructure Recovery Platform
 
 **Horizon** is an advanced AI-powered automated recovery engine. It continuously monitors your infrastructure, diagnoses problems, and executes automated recovery playbooks to maintain high availability and reliability. 
+
+<p align="center">
+  <img src="./public/horizon.png" alt="Horizon Logo" width="220" />
+</p>
 
 [![React](https://img.shields.io/badge/React-18+-61DAFB?logo=react&logoColor=black)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
