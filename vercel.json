@@ -1,12 +1,22 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd apps/web && bun install && bun run build",
+  "buildCommand": "bun run --cwd apps/web build",
   "outputDirectory": "apps/web/dist",
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "/api/v1/$1"
+    },
+    {
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/v1/tick",
+      "schedule": "* * * * *"
     }
   ]
 }
