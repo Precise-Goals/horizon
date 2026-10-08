@@ -484,6 +484,7 @@ export const LandingPage: React.FC = () => {
                 <AnimatePresence>
                   {activeFaq === idx && (
                     <motion.div
+                      key={`faq-answer-${idx}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}

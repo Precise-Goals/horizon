@@ -169,6 +169,7 @@ export const Navbar: React.FC = () => {
               <AnimatePresence>
                 {openDropdown === 'platform' && (
                   <motion.div
+                    key="platform-dropdown"
                     initial={{ opacity: 0, y: 8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -239,6 +240,7 @@ export const Navbar: React.FC = () => {
               <AnimatePresence>
                 {openDropdown === 'governance' && (
                   <motion.div
+                    key="governance-dropdown"
                     initial={{ opacity: 0, y: 8, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -331,6 +333,7 @@ export const Navbar: React.FC = () => {
                 <AnimatePresence>
                   {openDropdown === 'profile' && (
                     <motion.div
+                      key="profile-dropdown"
                       initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
@@ -387,6 +390,7 @@ export const Navbar: React.FC = () => {
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            key="mobile-nav-drawer"
             initial={{ opacity: 0, y: -12, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.98 }}
