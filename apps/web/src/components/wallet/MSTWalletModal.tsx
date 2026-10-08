@@ -10,6 +10,8 @@ import {
   Copy,
   RefreshCw,
   Sparkles,
+  AlertTriangle,
+  Loader2,
 } from 'lucide-react';
 
 interface MSTWalletModalProps {
@@ -22,12 +24,16 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [signStatus, setSignStatus] = useState<string | null>(null);
+  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   const loadWallet = async () => {
     setLoading(true);
+    setErrorStatus(null);
     try {
       const state = await mstBlockchain.getOperatorWalletState();
       setWalletState(state);
+    } catch (err: any) {
+      setErrorStatus(err.message || 'Failed to query MST operator wallet from RPC.');
     } finally {
       setLoading(false);
     }
@@ -45,36 +51,40 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleConnectInjected = async () => {
+  const handleConnectBridgeKey = async () => {
     try {
       setLoading(true);
-      const state = await mstBlockchain.connectInjectedWallet();
+      setErrorStatus(null);
+      const state = await mstBlockchain.connectBridgeKeyWallet();
       setWalletState(state);
     } catch (err: any) {
-      alert(err.message || 'Failed to connect injected wallet');
+      setErrorStatus(err.message || 'Failed to connect BridgeKey Wallet.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleTestSign = async () => {
-    setSignStatus('Signing test message on MST Testnet...');
+    if (!walletState?.address) return;
+    setSignStatus('Signing cryptographic verification on MST Testnet...');
+    setErrorStatus(null);
     try {
       const res = await mstBlockchain.signApprovalGate({
-        incidentId: 'TEST-PING',
-        stepTitle: 'Test Approval Verification',
+        incidentId: 'MST-PING-AUTH',
+        stepTitle: 'BridgeKey Approval Verification',
         targetService: 'db-primary',
-        commanderAddress: walletState?.address || MST_CONFIG.operatorAddress,
+        commanderAddress: walletState.address,
       });
-      setSignStatus(`Signature Validated: ${res.hash}`);
+      setSignStatus(`Signature Verified: ${res.hash}`);
       setTimeout(() => setSignStatus(null), 5000);
-    } catch {
-      setSignStatus('Sign failed');
+    } catch (err: any) {
+      setErrorStatus(err.message || 'Sign verification failed');
+      setSignStatus(null);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="MST Blockchain Testnet — Commander Wallet">
+    <Modal isOpen={isOpen} onClose={onClose} title="BridgeKey Wallet — MST Blockchain Testnet">
       <div className="space-y-5">
         {/* Network & Live Connection Status */}
         <div className="p-4 rounded-xl bg-blue-500/[0.08] border border-blue-500/25 flex items-center justify-between">
@@ -91,8 +101,17 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
               </p>
             </div>
           </div>
-          <Badge status="healthy">Connected</Badge>
+          <Badge status={walletState?.isAuthorized ? 'healthy' : 'warning'}>
+            {walletState?.isAuthorized ? 'BridgeKey Authorized' : 'Connecting'}
+          </Badge>
         </div>
+
+        {errorStatus && (
+          <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-300 flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <span>{errorStatus}</span>
+          </div>
+        )}
 
         {/* Live Balance & Commander Card */}
         <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.08] space-y-3">
@@ -111,7 +130,7 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
 
           <div className="flex items-baseline gap-2">
             <span className="text-3xl font-extrabold font-mono text-[#FFF8F0]">
-              {walletState?.balanceMst || '41.9169'}
+              {loading ? '...' : walletState?.balanceMst || '0.0000'}
             </span>
             <span className="text-xs font-mono font-bold text-blue-400">MST</span>
             <span className="ml-auto text-[10px] text-emerald-400 font-mono">
@@ -119,18 +138,20 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
             </span>
           </div>
 
-          <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
-            <span className="font-mono text-[#A3ADC2] truncate max-w-[220px]">
-              {walletState?.address || MST_CONFIG.operatorAddress}
-            </span>
-            <button
-              onClick={() => handleCopy(walletState?.address || MST_CONFIG.operatorAddress)}
-              className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
-            >
-              <Copy className="w-3 h-3" />
-              <span>{copied ? 'Copied' : 'Copy'}</span>
-            </button>
-          </div>
+          {walletState?.address && (
+            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
+              <span className="font-mono text-[#A3ADC2] truncate max-w-[220px]">
+                {walletState.address}
+              </span>
+              <button
+                onClick={() => handleCopy(walletState.address)}
+                className="text-[11px] text-blue-400 hover:text-blue-300 flex items-center gap-1 cursor-pointer"
+              >
+                <Copy className="w-3 h-3" />
+                <span>{copied ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Authorized Multi-Signer Addresses */}
@@ -147,7 +168,7 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
                 {idx + 1}. {addr}
               </span>
               <span className="text-[10px] text-emerald-400 font-bold">
-                {idx === 0 ? 'Commander Signer' : 'Authorized'}
+                {idx === 0 ? 'Primary Commander' : 'Authorized Signer'}
               </span>
             </div>
           ))}
@@ -167,20 +188,22 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
             variant="primary"
             size="sm"
             onClick={handleTestSign}
+            disabled={loading || !walletState?.isAuthorized}
             className="w-full text-xs gap-1.5 font-semibold"
           >
             <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Verify MST Testnet Signature</span>
+            <span>Verify BridgeKey Signature</span>
           </Button>
 
           <Button
             variant="secondary"
             size="sm"
-            onClick={handleConnectInjected}
+            onClick={handleConnectBridgeKey}
+            disabled={loading}
             className="w-full text-xs gap-1.5"
           >
-            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-            <span>Connect BridgeKey / MetaMask</span>
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-blue-400" />}
+            <span>Connect BridgeKey Wallet</span>
           </Button>
         </div>
       </div>

@@ -24,14 +24,16 @@ export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
-  const [walletBalance, setWalletBalance] = useState<string>('41.91 MST');
+  const [walletBalance, setWalletBalance] = useState<string>('...');
   const [healthStatus, setHealthStatus] = useState<'UP' | 'DEGRADED' | 'CHECKING'>('CHECKING');
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [incidentCount, setIncidentCount] = useState<number>(0);
   const location = useLocation();
 
   useEffect(() => {
-    mstBlockchain.getBalance().then((bal) => setWalletBalance(`${bal} MST`));
+    mstBlockchain.getBalance()
+      .then((bal) => setWalletBalance(`${bal} MST`))
+      .catch(() => setWalletBalance('0.00 MST'));
   }, []);
 
   // Poll real backend health and active nodes
@@ -191,15 +193,15 @@ export const Navbar: React.FC = () => {
               <ExternalLink className="w-3 h-3 text-[#A3ADC2]" />
             </a>
 
-            {/* MST Testnet Web3 Wallet Trigger */}
+            {/* BridgeKey Web3 Wallet Trigger */}
             <button
               onClick={() => setIsWalletModalOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all border bg-blue-500/15 border-blue-500/30 text-blue-300 hover:bg-blue-500/25 hover:border-blue-500/50 cursor-pointer shadow-sm shadow-blue-500/15"
-              title="MST Testnet Commander Signer"
+              title="BridgeKey Wallet — MST Testnet"
             >
               <Wallet className="w-3.5 h-3.5 text-[#1E6BFF]" />
               <span className="font-mono text-[11px]">
-                {walletBalance} (MST Testnet)
+                {walletBalance} (BridgeKey)
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#10B981]" />
             </button>
@@ -212,7 +214,7 @@ export const Navbar: React.FC = () => {
                     {user.email.slice(0, 2).toUpperCase()}
                   </div>
                   <span className="text-xs text-[#E2D7CB] max-w-[100px] truncate hidden sm:inline">
-                    {user.name || user.email.split('@')[0]}
+                    {user.displayName || user.email.split('@')[0]}
                   </span>
                 </div>
                 <Button variant="ghost" size="sm" onClick={logout}>

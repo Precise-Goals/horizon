@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { useAuth } from '../../context/useAuth';
-import { Lock, Mail, Sparkles } from 'lucide-react';
+import { Lock, Mail, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -10,24 +10,43 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-  const { login, loginDemo } = useAuth();
+  const { login, register, errorMessage, clearError } = useAuth();
+  const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    login(email, password);
-    onClose();
-  };
+    setLocalError(null);
+    clearError();
+    setLoading(true);
 
-  const handleDemo = () => {
-    loginDemo();
-    onClose();
+    try {
+      if (isRegister) {
+        await register(email, password);
+      } else {
+        await login(email, password);
+      }
+      onClose();
+    } catch (err: any) {
+      setLocalError(err.message || 'Authentication failed. Please verify credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Horizon Operator Access">
-      <form onSubmit={handleLogin} className="space-y-4">
+    <Modal isOpen={isOpen} onClose={onClose} title="Horizon Operator Authentication">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {(localError || errorMessage) && (
+          <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-xs flex items-start gap-2">
+            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <span className="flex-1">{localError || errorMessage}</span>
+          </div>
+        )}
+
         <div>
           <label className="block text-xs font-medium text-[#A3ADC2] mb-1.5">
             Operator Email
@@ -37,7 +56,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <input
               type="email"
               required
-              placeholder="sre@enterprise.io"
+              placeholder="commander@enterprise.io"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full pl-10 pr-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-[#FFF8F0] placeholder-[#6E7A94] focus:outline-none focus:border-blue-400 focus:bg-white/[0.06] transition-all"
@@ -62,27 +81,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        <Button type="submit" variant="primary" className="w-full mt-2 font-semibold text-xs">
-          Sign In to Command Center
+        <Button type="submit" variant="primary" disabled={loading} className="w-full mt-2 font-semibold text-xs gap-2">
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          <span>{isRegister ? 'Create Operator Account' : 'Authenticate via Firebase'}</span>
         </Button>
 
-        <div className="relative flex items-center py-2">
-          <div className="flex-grow border-t border-white/[0.08]" />
-          <span className="flex-shrink-0 mx-3 text-[11px] font-mono text-[#6E7A94] uppercase">
-            Quick Sandbox
-          </span>
-          <div className="flex-grow border-t border-white/[0.08]" />
+        <div className="pt-2 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setIsRegister(!isRegister);
+              setLocalError(null);
+              clearError();
+            }}
+            className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+          >
+            {isRegister
+              ? 'Already registered? Switch to Sign In'
+              : 'New operator deployment? Create Account'}
+          </button>
         </div>
-
-        <Button
-          type="button"
-          variant="secondary"
-          className="w-full gap-2 text-xs font-medium border-blue-500/30 text-blue-300 hover:bg-blue-500/10"
-          onClick={handleDemo}
-        >
-          <Sparkles className="w-4 h-4 text-blue-400" />
-          <span>Launch Demo Operator Session</span>
-        </Button>
       </form>
     </Modal>
   );
