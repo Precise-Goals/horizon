@@ -70,6 +70,10 @@ export class DagArchitectAgent {
       return this.buildStreamingPlatform(aiSummary);
     }
 
+    if (lower.includes('k8s') || lower.includes('kubernetes') || lower.includes('multi-region') || lower.includes('cockroach') || lower.includes('mesh')) {
+      return this.buildMultiRegionMesh(aiSummary);
+    }
+
     if (lower.includes('cycle') || lower.includes('circular') || lower.includes('deadlock')) {
       return this.buildCircularTrapExample();
     }
@@ -341,6 +345,44 @@ export class DagArchitectAgent {
       summary:
         aiSummary ||
         'Decoded distributed video ingestion, transcoding pipeline, and low-latency manifest delivery. ScyllaDB foundational tier recovers first.',
+      cycleDetected: false,
+      nodes,
+      edges,
+      topologicalLevels,
+      yamlPipeline,
+    };
+  }
+
+  /**
+   * Pre-built: Multi-Region Kubernetes Service Mesh
+   */
+  private buildMultiRegionMesh(aiSummary?: string): DecodedArchitecture {
+    const nodes: SystemNode[] = [
+      { id: 'db-cockroach-global', name: 'CockroachDB Multi-Region SQL', type: 'database', status: 'healthy', dependencies: [] },
+      { id: 'nats-streaming-bus', name: 'NATS JetStream Global Bus', type: 'cache', status: 'healthy', dependencies: ['db-cockroach-global'] },
+      { id: 'auth-mesh-worker', name: 'SPIFFE/SPIRE Zero-Trust Auth Worker', type: 'application', status: 'healthy', dependencies: ['db-cockroach-global'] },
+      { id: 'tenant-routing-api', name: 'Multi-Tenant Partition Service', type: 'application', status: 'healthy', dependencies: ['nats-streaming-bus', 'auth-mesh-worker'] },
+      { id: 'envoy-edge-mesh', name: 'Istio/Envoy Multi-Cluster Ingress', type: 'gateway', status: 'healthy', dependencies: ['tenant-routing-api'] },
+      { id: 'anycast-dns-gateway', name: 'Global Anycast Cloud Edge', type: 'gateway', status: 'healthy', dependencies: ['envoy-edge-mesh'] },
+    ];
+
+    const edges = [
+      { source: 'db-cockroach-global', target: 'nats-streaming-bus', relationship: 'Changefeeds CDC' },
+      { source: 'db-cockroach-global', target: 'auth-mesh-worker', relationship: 'mTLS Identity Anchor' },
+      { source: 'nats-streaming-bus', target: 'tenant-routing-api', relationship: 'Tenant Event Fanout' },
+      { source: 'auth-mesh-worker', target: 'tenant-routing-api', relationship: 'JWT Token Validation' },
+      { source: 'tenant-routing-api', target: 'envoy-edge-mesh', relationship: 'Service Mesh Proxy' },
+      { source: 'envoy-edge-mesh', target: 'anycast-dns-gateway', relationship: 'Geo-Routing Ingress' },
+    ];
+
+    const topologicalLevels = this.computeLevels(nodes);
+    const yamlPipeline = this.generateYamlSpec('k8s-multi-region-mesh', nodes, topologicalLevels);
+
+    return {
+      architectureName: 'Kubernetes Multi-Region Edge Mesh',
+      summary:
+        aiSummary ||
+        'Decoded active-active geo-distributed cluster across CockroachDB distributed persistence, NATS JetStream messaging, and Istio Envoy service mesh.',
       cycleDetected: false,
       nodes,
       edges,
