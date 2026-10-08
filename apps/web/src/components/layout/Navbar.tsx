@@ -21,6 +21,8 @@ import {
   X,
   Sparkles,
   Terminal,
+  BookOpen,
+  Scale,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -90,7 +92,7 @@ export const Navbar: React.FC = () => {
   const isPlatformActive = ['/dashboard', '/topology', '/recovery'].includes(location.pathname);
   const isAgentActive = location.pathname === '/architect';
   const isDocsActive = ['/docs', '/mcp'].includes(location.pathname);
-  const isGovernanceActive = ['/audit', '/subscription'].includes(location.pathname);
+  const isGovernanceActive = ['/audit', '/subscription', '/patents', '/policies', '/governance/patents', '/governance/policies'].includes(location.pathname);
 
   return (
     <>
@@ -286,6 +288,32 @@ export const Navbar: React.FC = () => {
                       <div>
                         <div className="text-xs font-bold text-[#1A1A1A]">Subscription Plans</div>
                         <div className="text-[10px] text-[#666666]">Web3 NFT token-gated tiers</div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/patents"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#FEF6E7] text-[#D97706] border border-[#D97706]/20">
+                        <BookOpen className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">Patents & Research</div>
+                        <div className="text-[10px] text-[#666666]">Invention paper (research.pdf)</div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/policies"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#EBF1FA] text-[#0047AB] border border-[#0047AB]/20">
+                        <Scale className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#1A1A1A]">Privacies & Policies</div>
+                        <div className="text-[10px] text-[#666666]">Zero-trust & security charter</div>
                       </div>
                     </Link>
                   </motion.div>
@@ -530,6 +558,20 @@ export const Navbar: React.FC = () => {
               className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               Subscription Plans
+            </Link>
+            <Link
+              to="/patents"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
+            >
+              Patents & Research (research.pdf)
+            </Link>
+            <Link
+              to="/policies"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
+            >
+              Privacies & Policies
             </Link>
 
             {/* Mobile Wallet & Auth Actions */}

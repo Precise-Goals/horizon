@@ -10,6 +10,8 @@ import { SubscriptionPage } from './pages/SubscriptionPage';
 import { ArchitectPage } from './pages/ArchitectPage';
 
 import { DocsPage } from './pages/DocsPage';
+import { PatentsPage } from './pages/PatentsPage';
+import { PoliciesPage } from './pages/PoliciesPage';
 
 export function App() {
   return (
@@ -26,6 +28,10 @@ export function App() {
             <Route path="/subscription" element={<SubscriptionPage />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/mcp" element={<DocsPage />} />
+            <Route path="/patents" element={<PatentsPage />} />
+            <Route path="/policies" element={<PoliciesPage />} />
+            <Route path="/governance/patents" element={<PatentsPage />} />
+            <Route path="/governance/policies" element={<PoliciesPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

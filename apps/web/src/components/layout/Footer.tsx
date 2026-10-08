@@ -41,34 +41,16 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-12 items-start justify-between">
           {/* TOP LEFT: Brand & Tagline */}
           <div className="lg:col-span-5 space-y-5">
-            {/* Live Operational Status Eyebrow */}
-            <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-zinc-300 shadow-inner">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10B981]" />
-              <span className="font-bold tracking-wide">AUTONOMOUS CLOUD SRE PLATFORM</span>
-            </div>
+            
 
             {/* Main Tagline */}
             <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white leading-snug">
               Deterministic infrastructure recovery orchestrated in topological dependency order.
             </h2>
 
-            <p className="text-sm text-zinc-400 max-w-md leading-relaxed font-normal">
-              Autonomous enterprise cloud resilience with real-time Kahn acyclic graph verification,
-              Web3 smart contract subscription tiers, and BridgeKey blockchain credential security.
-            </p>
+            
 
-            {/* Quick SRE Telemetry Badges */}
-            <div className="pt-2 flex flex-wrap items-center gap-2 text-[11px] font-mono font-medium text-zinc-400">
-              <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-cyan-400">
-                O(V + E) Kahn Engine
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-indigo-400">
-                MST Testnet 91562037
-              </span>
-              <span className="px-2.5 py-1 rounded-md bg-white/5 border border-white/10 text-emerald-400">
-                Zero MTTR Target
-              </span>
-            </div>
+            
           </div>
 
           {/* TOP RIGHT: Categorized Navigation Links */}
@@ -191,6 +173,35 @@ export const Footer: React.FC = () => {
                 </li>
                 <li>
                   <Link
+                    to="/patents"
+                    className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 group"
+                  >
+                    <span>Patents & Research</span>
+                    <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-white transition-colors" />
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/policies"
+                    className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 group"
+                  >
+                    <span>Privacies & Policies</span>
+                    <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-white transition-colors" />
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="/research.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 group"
+                  >
+                    <span className="text-[#60A5FA]">Invention Paper (PDF)</span>
+                    <ArrowUpRight className="w-3 h-3 text-[#60A5FA] group-hover:text-white transition-colors" />
+                  </a>
+                </li>
+                <li>
+                  <Link
                     to="/subscription"
                     className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 group"
                   >
@@ -242,13 +253,19 @@ export const Footer: React.FC = () => {
             2026 all rights reserved - horizon
           </p>
 
-          <div className="flex items-center gap-4 text-zinc-400 text-[11px]">
+          <div className="flex flex-wrap items-center gap-4 text-zinc-400 text-[11px]">
+            <Link to="/policies" className="hover:text-white transition-colors">
+              Privacies & Policies
+            </Link>
+            <span>&bull;</span>
+            <Link to="/patents" className="hover:text-white transition-colors">
+              Patents (research.pdf)
+            </Link>
+            <span>&bull;</span>
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               <span>Network: MST Testnet (Chain ID 91562037)</span>
             </span>
-            <span className="hidden md:inline">&bull;</span>
-            <span className="hidden md:inline">EIP-712 Multi-Sig Armed</span>
           </div>
         </div>
       </div>
