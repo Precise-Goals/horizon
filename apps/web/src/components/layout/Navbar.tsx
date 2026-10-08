@@ -102,11 +102,11 @@ export const Navbar: React.FC = () => {
           ref={navRef}
           className="pointer-events-auto w-full max-w-6xl rounded-2xl sm:rounded-full bg-white/95 backdrop-blur-2xl border border-[rgba(26,26,26,0.14)] shadow-[inset_0_1px_0_#FFFFFF,0_8px_32px_-4px_rgba(26,26,26,0.10),0_2px_8px_rgba(0,71,171,0.06)] px-5 sm:px-7 py-3 sm:py-3.5 flex items-center justify-between gap-4 transition-all"
         >
-          {/* Brand Left: home.png Logo */}
+          {/* Brand Left: logo.png Logo */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
             <div className="overflow-hidden rounded-xl h-9 sm:h-10 w-auto border border-[rgba(26,26,26,0.15)] shadow-[0_2px_4px_rgba(0,0,0,0.12),inset_0_1px_0_rgba(255,255,255,0.25)] group-hover:scale-105 transition-all bg-[#0a1128] flex items-center justify-center">
               <img
-                src="/home.png"
+                src="/logo.png"
                 alt="Horizon Logo"
                 className="h-9 sm:h-10 w-auto object-contain"
               />
