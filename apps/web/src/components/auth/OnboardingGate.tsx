@@ -13,6 +13,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '../common/Button';
+import { Link } from 'react-router';
 
 export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const {
@@ -103,6 +104,17 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       {/* Background ambient lighting */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] pointer-events-none rounded-full" />
       <div className="absolute bottom-10 right-1/4 w-[300px] h-[200px] bg-indigo-600/10 blur-[100px] pointer-events-none rounded-full" />
+
+      {/* Return to Homepage Link */}
+      <div className="relative z-10 w-full max-w-xl mb-4 flex items-center justify-between">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors bg-white/[0.04] hover:bg-white/[0.08] px-3.5 py-1.5 rounded-full border border-white/10"
+        >
+          <span>&larr; Return to Homepage</span>
+        </Link>
+        <span className="text-xs font-mono text-[#8E9DB8]">Horizon Security Gate</span>
+      </div>
 
       {/* Main Glassmorphic Onboarding Card */}
       <div className="relative z-10 w-full max-w-xl glass-card rounded-2xl p-6 sm:p-8 border border-white/[0.08] shadow-2xl backdrop-blur-2xl">

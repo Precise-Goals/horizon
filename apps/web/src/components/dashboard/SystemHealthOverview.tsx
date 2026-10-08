@@ -82,30 +82,30 @@ export const SystemHealthOverview: React.FC = () => {
   });
 
   return (
-    <Card className="p-5 sm:p-6 col-span-1 lg:col-span-2 flex flex-col justify-between border-white/[0.08] shadow-2xl">
+    <Card className="p-6 sm:p-7 col-span-1 lg:col-span-2 flex flex-col justify-between border-white/[0.08] shadow-2xl">
       <div>
         {/* Top Header & Filter Controls */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-4 border-b border-white/[0.08] gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 mb-5 border-b border-white/[0.08] gap-3">
           <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-base font-semibold text-[#FFF8F0] tracking-tight">
+            <div className="flex items-center gap-3">
+              <h2 className="text-lg sm:text-xl font-bold text-[#FFF8F0] tracking-tight">
                 Cluster Topology Health Matrix
               </h2>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                {nodes.length} Nodes
+              <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 font-semibold">
+                {nodes.length} Nodes Active
               </span>
             </div>
-            <p className="text-[11px] text-[#A3ADC2] mt-0.5">
-              Live probes across multi-tier database instances, cache tiers, and edge gateways.
+            <p className="text-xs sm:text-sm text-[#A3ADC2] mt-1">
+              Live probes across multi-tier database instances, distributed cache tiers, and edge gateways.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             {/* Filter Tabs */}
-            <div className="inline-flex rounded-lg bg-black/40 p-0.5 border border-white/[0.08] text-xs">
+            <div className="inline-flex rounded-xl bg-black/40 p-1 border border-white/[0.08] text-xs">
               <button
                 onClick={() => setFilter('all')}
-                className={`px-2.5 py-1 rounded-md transition-all text-[11px] font-medium cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer ${
                   filter === 'all'
                     ? 'bg-[#1E6BFF] text-[#FFF8F0] shadow-sm'
                     : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
@@ -115,7 +115,7 @@ export const SystemHealthOverview: React.FC = () => {
               </button>
               <button
                 onClick={() => setFilter('database')}
-                className={`px-2.5 py-1 rounded-md transition-all text-[11px] font-medium cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer ${
                   filter === 'database'
                     ? 'bg-[#1E6BFF] text-[#FFF8F0] shadow-sm'
                     : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
@@ -125,7 +125,7 @@ export const SystemHealthOverview: React.FC = () => {
               </button>
               <button
                 onClick={() => setFilter('service')}
-                className={`px-2.5 py-1 rounded-md transition-all text-[11px] font-medium cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer ${
                   filter === 'service'
                     ? 'bg-[#1E6BFF] text-[#FFF8F0] shadow-sm'
                     : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
@@ -139,16 +139,16 @@ export const SystemHealthOverview: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={loadNodes}
-              className="text-xs p-2 h-8 w-8"
+              className="p-2 h-9 w-9 rounded-xl"
               title="Refresh telemetry probes"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </Button>
           </div>
         </div>
 
         {/* Nodes Bento Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
           {filteredNodes.map((node) => {
             const Icon = iconMap[node.type] || Server;
             const isDown = node.status === 'down';
@@ -158,7 +158,7 @@ export const SystemHealthOverview: React.FC = () => {
             return (
               <div
                 key={node.id}
-                className={`p-3.5 rounded-xl border backdrop-blur-md transition-all duration-200 flex flex-col justify-between group relative overflow-hidden ${
+                className={`p-4 rounded-2xl border backdrop-blur-md transition-all duration-200 flex flex-col justify-between group relative overflow-hidden ${
                   isDown
                     ? 'bg-red-500/[0.08] border-red-500/30 shadow-lg shadow-red-500/10'
                     : isDegraded
@@ -168,27 +168,27 @@ export const SystemHealthOverview: React.FC = () => {
               >
                 {/* Node Header */}
                 <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2.5">
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-3">
                       <div
-                        className={`p-2 rounded-xl border transition-colors ${
+                        className={`p-2.5 rounded-xl border transition-colors ${
                           isDown
                             ? 'bg-red-500/20 text-red-300 border-red-500/30 animate-pulse'
                             : 'bg-blue-500/10 text-[#1E6BFF] border-blue-500/20 group-hover:bg-blue-500/20'
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-semibold text-[#FFF8F0] leading-tight">
+                        <h4 className="text-sm sm:text-base font-bold text-[#FFF8F0] leading-tight">
                           {node.name}
                         </h4>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-[10px] font-mono text-[#6E7A94] uppercase">
+                          <span className="text-xs font-mono text-[#8E9DB8]">
                             :{telemetry.port}
                           </span>
-                          <span className="text-[10px] text-[#4F5B73]">•</span>
-                          <span className="text-[10px] font-mono text-[#6E7A94]">
+                          <span className="text-xs text-[#4F5B73]">•</span>
+                          <span className="text-xs font-mono text-[#8E9DB8]">
                             {telemetry.region}
                           </span>
                         </div>
@@ -200,40 +200,40 @@ export const SystemHealthOverview: React.FC = () => {
                   </div>
 
                   {/* Telemetry Chips */}
-                  <div className="flex items-center justify-between text-[10px] py-1.5 px-2 rounded-lg bg-black/30 border border-white/[0.04] mb-3">
-                    <span className="text-[#A3ADC2] flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5 text-blue-400" />
-                      Latency:
+                  <div className="flex items-center justify-between text-xs py-2 px-2.5 rounded-xl bg-black/40 border border-white/[0.04] mb-3">
+                    <span className="text-[#A3ADC2] flex items-center gap-1.5 font-medium">
+                      <Clock className="w-3 h-3 text-blue-400" />
+                      Probe Latency:
                     </span>
-                    <span className={`font-mono font-semibold ${isDown ? 'text-red-400' : 'text-emerald-400'}`}>
+                    <span className={`font-mono font-bold ${isDown ? 'text-red-400' : 'text-emerald-400'}`}>
                       {isDown ? 'TIMEOUT' : telemetry.latency}
                     </span>
                   </div>
                 </div>
 
                 {/* Node Footer Actions */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/[0.04]">
-                  <div className="text-[10px] text-[#A3ADC2] font-mono truncate max-w-[120px]">
+                <div className="flex items-center justify-between pt-2.5 border-t border-white/[0.04]">
+                  <div className="text-xs text-[#A3ADC2] font-mono truncate max-w-[130px]">
                     {node.dependencies.length > 0 ? (
                       <span title={`Depends on: ${node.dependencies.join(', ')}`}>
                         &larr; {node.dependencies.length} deps
                       </span>
                     ) : (
-                      <span className="text-blue-400/80">Root Service</span>
+                      <span className="text-blue-400 font-semibold">Root Service</span>
                     )}
                   </div>
 
                   <button
                     onClick={() => handleToggleFailure(node)}
                     disabled={mutatingId === node.id}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-lg transition-all cursor-pointer border ${
+                    className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer border ${
                       isDown
                         ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30 shadow-sm shadow-emerald-500/20'
                         : 'bg-red-500/10 text-red-300 border-red-500/25 hover:bg-red-500/20'
                     }`}
                   >
                     {mutatingId === node.id ? (
-                      <RefreshCw className="w-3 h-3 animate-spin inline" />
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin inline" />
                     ) : isDown ? (
                       'Recover'
                     ) : (
@@ -248,23 +248,23 @@ export const SystemHealthOverview: React.FC = () => {
       </div>
 
       {/* SRE Chaos Guide Footer */}
-      <div className="mt-4 pt-3.5 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2 text-xs text-[#A3ADC2]">
+      <div className="mt-5 pt-4 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#A3ADC2]">
         <div className="flex items-center gap-2">
-          <Zap className="w-3.5 h-3.5 text-blue-400" />
+          <Zap className="w-4 h-4 text-blue-400 shrink-0" />
           <span>
             {downCount > 0 ? (
-              <strong className="text-amber-400">{downCount} service(s) disrupted — autonomous healing ready.</strong>
+              <strong className="text-amber-400">{downCount} service(s) impacted — autonomous recovery sequence initialized.</strong>
             ) : (
-              'Chaos switch active: trigger failure on any node to verify blast radius.'
+              'Chaos engineering switch active: toggle failover on any node to verify blast radius.'
             )}
           </span>
         </div>
         <Link
           to="/topology"
-          className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+          className="inline-flex items-center gap-1.5 font-bold text-blue-400 hover:text-blue-300 transition-colors"
         >
           <span>Open Full Dependency DAG</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
+          <ArrowUpRight className="w-4 h-4" />
         </Link>
       </div>
     </Card>

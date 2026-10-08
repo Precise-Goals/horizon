@@ -32,6 +32,10 @@ const clientEnvSchema = z.object({
   VITE_API_BASE: z.string().default('/api/v1'),
   VITE_DEMO_MODE: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
   VITE_ENVIRONMENT: z.enum(['development', 'staging', 'production']).default('production'),
+
+  // Smart Contracts on MST Testnet (Chain ID 91562037)
+  VITE_NFT_SUBSCRIPTION_CONTRACT: z.string().default('0x4362141505374635832a4e284a1418471a2e316a'),
+  VITE_AUDIT_VAULT_CONTRACT: z.string().default('0x8192305827361a29384756281938472619284756'),
 });
 
 const parseEnv = () => {
