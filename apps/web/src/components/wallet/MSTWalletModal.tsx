@@ -12,6 +12,9 @@ import {
   Sparkles,
   AlertTriangle,
   Loader2,
+  ExternalLink,
+  PlusCircle,
+  Gem,
 } from 'lucide-react';
 
 interface MSTWalletModalProps {
@@ -21,10 +24,12 @@ interface MSTWalletModalProps {
 
 export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose }) => {
   const [walletState, setWalletState] = useState<WalletState | null>(null);
+  const [userPass, setUserPass] = useState<Awaited<ReturnType<typeof mstBlockchain.getUserPass>>>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [signStatus, setSignStatus] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
+  const [watchStatus, setWatchStatus] = useState<string | null>(null);
 
   const loadWallet = async () => {
     setLoading(true);
@@ -32,6 +37,10 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
     try {
       const state = await mstBlockchain.getOperatorWalletState();
       setWalletState(state);
+
+      // Query on-chain pass for this address
+      const pass = await mstBlockchain.getUserPass(state.address);
+      setUserPass(pass);
     } catch (err: any) {
       setErrorStatus(err.message || 'Failed to query MST operator wallet from RPC.');
     } finally {
@@ -57,10 +66,29 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
       setErrorStatus(null);
       const state = await mstBlockchain.connectBridgeKeyWallet();
       setWalletState(state);
+
+      const pass = await mstBlockchain.getUserPass(state.address);
+      setUserPass(pass);
     } catch (err: any) {
       setErrorStatus(err.message || 'Failed to connect BridgeKey Wallet.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWatchNFTInWallet = async (tokenId: number = 1) => {
+    setWatchStatus('Prompting BridgeKey wallet to register NFT...');
+    try {
+      const success = await mstBlockchain.watchAssetInWallet(tokenId);
+      if (success) {
+        setWatchStatus(`NFT #${tokenId} watched in BridgeKey Wallet!`);
+      } else {
+        setWatchStatus(
+          `Request sent. If BridgeKey did not auto-import, use BridgeKey -> NFTs -> Import NFT with Contract 0x3EDad... and Token ID ${tokenId}`
+        );
+      }
+    } catch (err: any) {
+      setWatchStatus(`BridgeKey: ${err.message || 'Please open BridgeKey to approve.'}`);
     }
   };
 
@@ -150,6 +178,73 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
                 <Copy className="w-3 h-3" />
                 <span>{copied ? 'Copied' : 'Copy'}</span>
               </button>
+            </div>
+          )}
+        </div>
+
+        {/* On-Chain Zentrix Pass NFT Collectible Section */}
+        <div className="p-4 rounded-xl bg-purple-500/[0.06] border border-purple-500/20 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Gem className="w-4 h-4 text-purple-400" />
+              <span className="text-xs font-bold text-[#FFF8F0]">
+                Zentrix Pass (ZXPASS) Collectible
+              </span>
+            </div>
+            <a
+              href={`${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}/instance/${userPass?.tokenId || 1}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[11px] font-mono text-purple-300 hover:underline flex items-center gap-1"
+            >
+              <span>MSTScan Instance</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+
+          {userPass?.hasPass ? (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-[#A3ADC2]">Status:</span>
+                <span className="text-emerald-400 font-bold">{userPass.tierName} (#ZXPASS-{userPass.tokenId})</span>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-[#A3ADC2]">Contract:</span>
+                <span className="text-purple-300 truncate max-w-[180px]">{MST_CONFIG.subscriptionContractAddress}</span>
+              </div>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleWatchNFTInWallet(userPass.tokenId)}
+                className="w-full text-xs gap-1.5 mt-2 py-2 border-purple-500/30 text-purple-200 hover:bg-purple-500/10"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-purple-400" />
+                <span>Add NFT #{userPass.tokenId} to BridgeKey Wallet (EIP-747)</span>
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2 text-xs">
+              <div className="text-[#A3ADC2]">
+                Registered Contract: <span className="text-purple-300 font-mono">{MST_CONFIG.subscriptionContractAddress.slice(0, 10)}...{MST_CONFIG.subscriptionContractAddress.slice(-6)}</span>
+              </div>
+              <p className="text-[#8E9DB8] text-[11px]">
+                Token #1 owner is verified on-chain. Click below to add the NFT collectible directly into your BridgeKey wallet tab:
+              </p>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleWatchNFTInWallet(1)}
+                className="w-full text-xs gap-1.5 py-1.5 border-purple-500/30 text-purple-200 hover:bg-purple-500/10"
+              >
+                <PlusCircle className="w-3.5 h-3.5 text-purple-400" />
+                <span>Import NFT #1 into BridgeKey Wallet</span>
+              </Button>
+            </div>
+          )}
+
+          {watchStatus && (
+            <div className="p-2 rounded bg-purple-500/15 text-[11px] font-mono text-purple-200">
+              {watchStatus}
             </div>
           )}
         </div>

@@ -71,7 +71,7 @@ export const LandingPage: React.FC = () => {
         
         {/* ===================== MINIMAL HERO SECTION (Referencing home.png) ===================== */}
         <section className=" homehero relative text-center max-w-5xl mx-auto space-y-8 pt-4">
-          <img src="horizon.jpg" alt="horizon" />
+          <img src="horizon.jpg" className='horizon' alt="horizon" />
           {/* Minimal Status Pill */}
           <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl shadow-lg">
             <span className="relative flex h-2.5 w-2.5">
@@ -117,50 +117,7 @@ export const LandingPage: React.FC = () => {
             </Link>
           </div>
 
-          {/* Celestial Horizon Visual Container (Referencing home.png) */}
-          <div className="relative mt-12 rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-b from-[#080C16] via-[#05070D] to-[#030408] shadow-[0_20px_80px_-15px_rgba(30,107,255,0.35)] group transition-all duration-500">
-            <div className="relative">
-              <img
-                src="/home.png"
-                alt="Horizon Celestial Earth Horizon Visual Reference"
-                className="w-full h-auto max-h-[500px] object-cover object-bottom transition-transform duration-700 group-hover:scale-[1.01]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#05070D] via-transparent to-transparent opacity-90" />
-              <div className="absolute inset-0 bg-gradient-to-b from-[#05070D] via-transparent to-transparent opacity-60" />
-            </div>
-
-            {/* Floating Telemetry Dock Over Celestial Horizon */}
-            <div className="absolute bottom-4 left-4 right-4 sm:bottom-6 sm:left-6 sm:right-6 p-4 sm:p-5 rounded-2xl bg-[#090D18]/90 backdrop-blur-2xl border border-white/10 text-left flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-3.5">
-                <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_10px_#10B981] animate-pulse" />
-                <div>
-                  <div className="text-sm sm:text-base font-bold text-[#FFF8F0] tracking-wide">
-                    Autonomous Self-Healing Active
-                  </div>
-                  <div className="text-xs text-[#A3ADC2] font-mono mt-0.5">
-                    7 Monitored Services • Zero Cyclic Deadlocks
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-5 text-xs sm:text-sm font-mono text-[#A3ADC2]">
-                <div className="hidden sm:block">
-                  <span className="text-[#6E7A94]">Target MTTR: </span>
-                  <span className="text-emerald-400 font-bold">&lt; 3.8m</span>
-                </div>
-                <div className="hidden md:block">
-                  <span className="text-[#6E7A94]">Consensus: </span>
-                  <span className="text-blue-400 font-bold">MST Testnet (91562037)</span>
-                </div>
-                <Link to="/recovery">
-                  <Button variant="primary" size="sm" className="text-xs font-semibold rounded-full gap-1.5 py-1.5 px-3.5">
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Run Drill</span>
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
+          
         </section>
 
         {/* ===================== ACETERNITY BENTO GRID FEATURES ===================== */}

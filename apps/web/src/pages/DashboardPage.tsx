@@ -6,7 +6,7 @@ import { RecentActivityWidget } from '../components/dashboard/RecentActivityWidg
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { fetchNodes, fetchHealth } from '../lib/api';
-import { mstBlockchain } from '../engine/mstBlockchain';
+import { mstBlockchain, MST_CONFIG } from '../engine/mstBlockchain';
 import type { SystemNode } from '../types';
 import {
   Clock,
@@ -204,7 +204,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <a
-            href="https://scan.mst.today"
+            href={MST_CONFIG.explorerUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="text-purple-400 hover:text-purple-300 transition-colors p-1.5"
