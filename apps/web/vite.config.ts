@@ -13,5 +13,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),
     },
+    // Deduplicate React to prevent "Invalid hook call" from multiple copies
+    dedupe: ['react', 'react-dom', 'framer-motion'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'framer-motion'],
   },
 })
