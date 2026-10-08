@@ -1,8 +1,5 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import {
-  firebaseAuth,
-  isFirebaseConfigured,
-} from '../lib/firebase';
+import React, { createContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { firebaseAuth } from '../lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -10,143 +7,206 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser,
 } from 'firebase/auth';
+import { mstBlockchain, type WalletState, MST_CONFIG } from '../engine/mstBlockchain';
+import { env } from '../env';
 
-export type User = {
-  uid?: string;
+export type OnboardingStep = 'FIREBASE_AUTH' | 'BRIDGEKEY_WALLET' | 'COMPLETED';
+
+export interface OperatorUser {
+  uid: string;
   email: string;
-  name?: string;
-  walletAddress?: string;
-  role?: 'Commander' | 'Operator' | 'Viewer';
-};
+  displayName: string;
+  role: 'Commander' | 'Operator';
+}
 
 export interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
+  user: OperatorUser | null;
+  wallet: WalletState | null;
+  onboardingStep: OnboardingStep;
+  isLoading: boolean;
+  errorMessage: string | null;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string) => Promise<void>;
-  loginWithWallet: (address: string) => void;
+  connectBridgeKey: () => Promise<void>;
+  connectOperatorKeypair: () => Promise<void>;
+  disconnectWallet: () => void;
   logout: () => Promise<void>;
-  loginDemo: () => void;
+  clearError: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('horizon_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+const STORAGE_KEY_WALLET = 'horizon_bridgekey_wallet';
 
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<OperatorUser | null>(null);
+  const [wallet, setWallet] = useState<WalletState | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_WALLET);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Compute current onboarding step strictly:
+  // 1. Must have real Firebase Auth User
+  // 2. Must have connected BridgeKey wallet with verified MST authorization
+  const onboardingStep: OnboardingStep = !user
+    ? 'FIREBASE_AUTH'
+    : !wallet || !wallet.isAuthorized
+    ? 'BRIDGEKEY_WALLET'
+    : 'COMPLETED';
+
+  // Listen to live Firebase authentication state
   useEffect(() => {
-    if (isFirebaseConfigured && firebaseAuth) {
-      const unsubscribe = onAuthStateChanged(firebaseAuth, (fbUser: FirebaseUser | null) => {
+    const unsubscribe = onAuthStateChanged(
+      firebaseAuth,
+      (fbUser: FirebaseUser | null) => {
         if (fbUser) {
-          const profile: User = {
+          const operator: OperatorUser = {
             uid: fbUser.uid,
             email: fbUser.email || 'operator@horizon.io',
-            name: fbUser.displayName || fbUser.email?.split('@')[0] || 'Operator',
+            displayName: fbUser.displayName || fbUser.email?.split('@')[0] || 'Operator',
             role: 'Commander',
           };
-          setUser(profile);
-          localStorage.setItem('horizon_user', JSON.stringify(profile));
+          setUser(operator);
+        } else {
+          setUser(null);
         }
-      });
-      return () => unsubscribe();
-    }
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('[Firebase Auth Error]', error);
+        setErrorMessage(error.message);
+        setIsLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
+  const clearError = useCallback(() => {
+    setErrorMessage(null);
+  }, []);
+
+  // Real Firebase sign-in (strictly zero fallback/dummy credentials)
   const login = async (email: string, pass: string): Promise<void> => {
-    if (isFirebaseConfigured && firebaseAuth) {
-      try {
-        const cred = await signInWithEmailAndPassword(firebaseAuth, email, pass);
-        const profile: User = {
-          uid: cred.user.uid,
-          email: cred.user.email || email,
-          name: cred.user.displayName || email.split('@')[0],
-          role: 'Commander',
-        };
-        setUser(profile);
-        localStorage.setItem('horizon_user', JSON.stringify(profile));
-        return;
-      } catch (err: any) {
-        console.warn('Firebase login attempt fallback to local session:', err?.message);
-      }
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const cred = await signInWithEmailAndPassword(firebaseAuth, email.trim(), pass);
+      const operator: OperatorUser = {
+        uid: cred.user.uid,
+        email: cred.user.email || email,
+        displayName: cred.user.displayName || email.split('@')[0],
+        role: 'Commander',
+      };
+      setUser(operator);
+    } catch (err: any) {
+      console.error('[Firebase Login Failed]', err);
+      const message = err?.message || 'Authentication failed. Please verify your credentials.';
+      setErrorMessage(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
     }
-
-    const fallbackUser: User = {
-      email,
-      name: email.split('@')[0],
-      role: 'Commander',
-    };
-    setUser(fallbackUser);
-    localStorage.setItem('horizon_user', JSON.stringify(fallbackUser));
   };
 
+  // Real Firebase registration
   const register = async (email: string, pass: string): Promise<void> => {
-    if (isFirebaseConfigured && firebaseAuth) {
-      try {
-        const cred = await createUserWithEmailAndPassword(firebaseAuth, email, pass);
-        const profile: User = {
-          uid: cred.user.uid,
-          email: cred.user.email || email,
-          name: email.split('@')[0],
-          role: 'Commander',
-        };
-        setUser(profile);
-        localStorage.setItem('horizon_user', JSON.stringify(profile));
-        return;
-      } catch (err: any) {
-        console.warn('Firebase registration fallback to local session:', err?.message);
-      }
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const cred = await createUserWithEmailAndPassword(firebaseAuth, email.trim(), pass);
+      const operator: OperatorUser = {
+        uid: cred.user.uid,
+        email: cred.user.email || email,
+        displayName: cred.user.displayName || email.split('@')[0],
+        role: 'Commander',
+      };
+      setUser(operator);
+    } catch (err: any) {
+      console.error('[Firebase Registration Failed]', err);
+      const message = err?.message || 'Registration failed. Please check password complexity.';
+      setErrorMessage(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
     }
-
-    await login(email, pass);
   };
 
-  const loginWithWallet = (address: string): void => {
-    const walletUser: User = {
-      email: `${address.slice(0, 6)}...${address.slice(-4)}@mst.testnet`,
-      walletAddress: address,
-      name: `Commander (${address.slice(0, 6)})`,
-      role: 'Commander',
-    };
-    setUser(walletUser);
-    localStorage.setItem('horizon_user', JSON.stringify(walletUser));
+  // Connect injected BridgeKey Web3 Wallet on MST Blockchain Testnet
+  const connectBridgeKey = async (): Promise<void> => {
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const walletState = await mstBlockchain.connectBridgeKeyWallet();
+      setWallet(walletState);
+      localStorage.setItem(STORAGE_KEY_WALLET, JSON.stringify(walletState));
+    } catch (err: any) {
+      console.error('[BridgeKey Connection Failed]', err);
+      const message = err?.message || 'Failed to connect BridgeKey Wallet.';
+      setErrorMessage(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // Authenticate with pre-authorized MST Testnet Operator Keypair from environment
+  const connectOperatorKeypair = async (): Promise<void> => {
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const walletState = await mstBlockchain.getOperatorWalletState();
+      setWallet(walletState);
+      localStorage.setItem(STORAGE_KEY_WALLET, JSON.stringify(walletState));
+    } catch (err: any) {
+      console.error('[Operator Keypair Connection Failed]', err);
+      const message = err?.message || 'Failed to authenticate operator keypair on MST Testnet.';
+      setErrorMessage(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const disconnectWallet = (): void => {
+    setWallet(null);
+    localStorage.removeItem(STORAGE_KEY_WALLET);
+  };
+
+  // Logout from Firebase and disconnect BridgeKey credentials
   const logout = async (): Promise<void> => {
-    if (isFirebaseConfigured && firebaseAuth) {
-      try {
-        await firebaseSignOut(firebaseAuth);
-      } catch (e) {
-        console.warn(e);
-      }
+    setIsLoading(true);
+    try {
+      await firebaseSignOut(firebaseAuth);
+    } catch (e) {
+      console.warn('Sign out warning:', e);
     }
     setUser(null);
-    localStorage.removeItem('horizon_user');
-  };
-
-  const loginDemo = (): void => {
-    const demoUser: User = {
-      email: 'sre-commander@horizon-resilience.io',
-      name: 'Lead SRE Commander',
-      walletAddress: '0x73595081334A18D4298A160b162faB4Fb4B3c85B',
-      role: 'Commander',
-    };
-    setUser(demoUser);
-    localStorage.setItem('horizon_user', JSON.stringify(demoUser));
+    disconnectWallet();
+    setIsLoading(false);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        wallet,
+        onboardingStep,
+        isLoading,
+        errorMessage,
         login,
         register,
-        loginWithWallet,
+        connectBridgeKey,
+        connectOperatorKeypair,
+        disconnectWallet,
         logout,
-        loginDemo,
+        clearError,
       }}
     >
       {children}
