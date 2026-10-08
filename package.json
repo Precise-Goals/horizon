@@ -1,0 +1,18 @@
+{
+  "name": "horizon-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Horizon — Autonomous Enterprise Infrastructure Recovery Platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun --filter horizon-web build",
+    "dev": "bun --filter horizon-web dev",
+    "lint": "bun --filter horizon-web lint"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,6 +1,8 @@
 # Horizon ⚡
 
-![Horizon Logo](https://via.placeholder.com/150x50?text=Horizon) <!-- Replace with actual logo -->
+<p align="center">
+  <img src="./public/logo.png" alt="Horizon Logo" width="220" />
+</p>
 
 **Horizon** is an advanced AI-powered automated recovery engine. It continuously monitors your infrastructure, diagnoses problems, and executes automated recovery playbooks to maintain high availability and reliability. 
 
