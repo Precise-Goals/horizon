@@ -1,4 +1,4 @@
-﻿# Horizon Platform - Project Roadmap
+# Horizon Platform - Project Roadmap
 
 This document outlines the comprehensive 8-sprint plan (including Sprint 0) for the development of Horizon, the Autonomous Enterprise Infrastructure Recovery Platform.
 
@@ -258,7 +258,7 @@ flowchart LR
 
 ### User Stories
 - As a Customer, I want to purchase an Enterprise Subscription NFT to access Horizon.
-- As a User, I want to authenticate using my MetaMask wallet.
+- As a User, I want to authenticate using my BridgeKey wallet on MST Testnet.
 
 ### Tasks
 - **S6-001**: Write Subscription NFT Smart Contract (ERC-721/1155)

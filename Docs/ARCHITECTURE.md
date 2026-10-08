@@ -1,4 +1,4 @@
-﻿# Horizon System Architecture
+# Horizon System Architecture
 **Platform:** Autonomous Enterprise Infrastructure Recovery Platform
 **Version:** 1.0.0
 **Date:** October 8, 2026
@@ -238,7 +238,7 @@ stateDiagram-v2
 ## 9. Security Architecture
 
 - **Firebase Auth:** Handles traditional email/password and session management.
-- **Blockchain Credentials:** High-risk actions require a cryptographic signature from an authorized wallet via MetaMask.
+- **Blockchain Credentials:** High-risk actions require a cryptographic signature from an authorized wallet via BridgeKey Wallet on MST Blockchain Testnet.
 - **RBAC:** Roles defined in Firebase (Viewer, Operator, Commander). Only Commanders can approve cross-region failovers.
 - **Audit Logging:** Every state transition in the Workflow Engine is logged. Critical transitions are hashed and written to a smart contract.
 

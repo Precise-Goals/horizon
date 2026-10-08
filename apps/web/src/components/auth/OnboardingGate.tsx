@@ -9,9 +9,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   ArrowRight,
-  Sparkles,
   KeyRound,
-  ExternalLink,
   Loader2,
 } from 'lucide-react';
 import { Button } from '../common/Button';

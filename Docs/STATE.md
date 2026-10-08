@@ -12,7 +12,7 @@
   - Live JSON-RPC client (`apps/web/src/engine/mstBlockchain.ts`) connected to `https://testnetrpc.mstblockchain.com`.
   - Live on-chain balance query showing ~41.91 MST for Commander address `0x73595081334A18D4298A160b162faB4Fb4B3c85B`.
   - Multi-wallet authorization managing the 3 addresses from `.env` (`0x735950...`, `0x7FC1d...`, `0x8cA0f...`).
-  - Interactive `MSTWalletModal.tsx` for signing approval gates and switching to BridgeKey / MetaMask.
+  - Interactive `MSTWalletModal.tsx` for signing approval gates with BridgeKey Wallet on MST Testnet.
 - **Sarvam AI SRE Copilot & Multi-Agent Command Bar**:
   - Direct integration with `https://api.sarvam.ai/v1/chat/completions` using key `sk_mhp6zj2k_...` and model `sarvam-105b`.
   - SRE Command Bar (`apps/web/src/components/copilot/CommandBar.tsx`) allowing continuous natural language operator prompts (e.g., "simulate postgres outage", "diagnose cluster health", "execute recovery").

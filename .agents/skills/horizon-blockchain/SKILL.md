@@ -1,4 +1,4 @@
-﻿---
+---
 name: horizon-blockchain
 description: >-
   Use this skill when implementing Web3 features, NFT subscription plans,
@@ -27,7 +27,7 @@ Horizon utilizes Web3 and blockchain technology for transparent, decentralized a
 - `contracts/HorizonAudit.sol` — (Optional) On-chain ledger for critical infrastructure recovery events to prove compliance.
 
 ## Web3 Integration Points
-- **Wallet Connection**: Support for MetaMask, WalletConnect, and Coinbase Wallet (via wagmi/viem).
+- **Wallet Connection**: Support for BridgeKey Wallet on MST Blockchain Testnet.
 - **Minting UI**: Frontend flows for purchasing or upgrading subscription NFTs.
 - **Token Gating**: Backend middleware that verifies NFT ownership before allowing access to premium API routes.
 - **Credential Storage**: Transactions that write credential hashes or ZK-proofs to the blockchain.

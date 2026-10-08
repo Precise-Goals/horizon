@@ -1,4 +1,4 @@
-﻿# Horizon Platform - Task Tracker
+# Horizon Platform - Task Tracker
 
 This document contains all atomic tasks derived from the project roadmap, categorized by sprint.
 
@@ -565,7 +565,7 @@ This document contains all atomic tasks derived from the project roadmap, catego
 **Estimated Effort**: 2h
 **Dependencies**: S1-005
 **Description**: Integrate Wagmi or ethers.js to manage wallet connections in React.
-**Acceptance Criteria**: App can detect injected Web3 providers (e.g., MetaMask).
+**Acceptance Criteria**: App can detect injected Web3 providers (e.g., BridgeKey Wallet on MST Testnet).
 **Definition of Done**: Wallet state available globally in frontend.
 
 ## Task ID: S6-004

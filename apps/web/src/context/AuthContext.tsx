@@ -7,8 +7,7 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser,
 } from 'firebase/auth';
-import { mstBlockchain, type WalletState, MST_CONFIG } from '../engine/mstBlockchain';
-import { env } from '../env';
+import { mstBlockchain, type WalletState } from '../engine/mstBlockchain';
 
 export type OnboardingStep = 'FIREBASE_AUTH' | 'BRIDGEKEY_WALLET' | 'COMPLETED';
 

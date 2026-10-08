@@ -1,4 +1,4 @@
-﻿# Horizon: Autonomous Enterprise Infrastructure Recovery Platform
+# Horizon: Autonomous Enterprise Infrastructure Recovery Platform
 ## Product Requirements Document (PRD)
 
 **Version:** 1.0.0
@@ -98,7 +98,7 @@ Horizon is built for enterprise technology teams that manage complex, high-stake
 ### 5.8 NFT-Based SaaS Subscription Plans
 - Token-gated access to the SaaS platform.
 - Different tiers (e.g., Standard, Pro, Enterprise) represented by dynamic NFTs that unlock platform capabilities based on ownership.
-- Seamless Web3 wallet integration (MetaMask, WalletConnect) for authentication and subscription verification.
+- Seamless Web3 wallet integration (BridgeKey Wallet on MST Blockchain Testnet) for authentication and subscription verification.
 
 ---
 
