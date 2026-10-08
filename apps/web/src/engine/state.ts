@@ -44,6 +44,7 @@ class ClusterStateManager {
       { id: 'payment-service', name: 'Payment Service', type: 'application', status: 'healthy', dependencies: ['db-primary', 'auth-service'] },
     ];
 
+    this.nodes.clear();
     this.graph.clear();
     initialNodes.forEach((node) => {
       this.nodes.set(node.id, node);
@@ -229,6 +230,43 @@ class ClusterStateManager {
   }
 
   public resetRecovery(): void {
+    this.activeJob = null;
+    this.notify();
+  }
+
+  public setCustomTopology(newNodes: SystemNode[], topologyName: string = 'Custom Architecture'): void {
+    this.nodes.clear();
+    this.graph.clear();
+
+    newNodes.forEach((node) => {
+      this.nodes.set(node.id, { ...node, status: 'healthy', consecutive_failures: 0 });
+      this.graph.addNode(node);
+    });
+
+    newNodes.forEach((node) => {
+      node.dependencies.forEach((dep) => {
+        if (this.nodes.has(dep)) {
+          this.graph.addDependency(node.id, dep);
+        }
+      });
+    });
+
+    this.activeJob = null;
+
+    this.addAuditLog({
+      id: Math.random().toString(36).substring(2, 9),
+      timestamp: new Date().toISOString(),
+      actor: 'AI AGENT (Sarvam Architect)',
+      action: `Deploy Custom Topology: ${topologyName}`,
+      details: `Reconfigured cluster with ${newNodes.length} nodes and dynamic DAG dependency hierarchy.`,
+      severity: 'info',
+    });
+
+    this.notify();
+  }
+
+  public resetToDefaultTopology(): void {
+    this.seedInitialState();
     this.activeJob = null;
     this.notify();
   }

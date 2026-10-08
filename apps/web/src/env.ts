@@ -40,7 +40,33 @@ const clientEnvSchema = z.object({
 });
 
 const parseEnv = () => {
-  const result = clientEnvSchema.safeParse(import.meta.env);
+  const gProcess = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process;
+  const isTest = Boolean(
+    gProcess?.env?.NODE_ENV === 'test' ||
+    gProcess?.env?.BUN_ENV ||
+    (globalThis as unknown as { Bun?: { isMainThread?: boolean } }).Bun?.isMainThread
+  );
+  const testDefaults = {
+    VITE_FIREBASE_API_KEY: 'test-firebase-key',
+    VITE_FIREBASE_AUTH_DOMAIN: 'horizon-test.firebaseapp.com',
+    VITE_FIREBASE_PROJECT_ID: 'horizon-test',
+    VITE_FIREBASE_STORAGE_BUCKET: 'horizon-test.appspot.com',
+    VITE_FIREBASE_MESSAGING_SENDER_ID: '123456789',
+    VITE_FIREBASE_APP_ID: '1:123456789:web:abcdef',
+    VITE_FIREBASE_DATABASE_URL: 'https://horizon-test.firebaseio.com',
+    VITE_MST_TESTNET_RPC: 'https://testnet-rpc.mstscan.com',
+    VITE_MST_CHAIN_ID: '91562037',
+    VITE_AUTHORIZED_WALLETS: '0x71C8360216b7e0dfBE7A9cDE7eBaeA2b53b8110b',
+    VITE_SARVAM_API_KEY: 'test-sarvam-key',
+  };
+
+  const raw = {
+    ...(isTest ? testDefaults : {}),
+    ...(gProcess?.env || {}),
+    ...((typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : {}),
+  };
+
+  const result = clientEnvSchema.safeParse(raw);
 
   if (!result.success) {
     const issues = result.error.issues

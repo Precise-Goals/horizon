@@ -284,6 +284,13 @@ export const LandingPage: React.FC = () => {
                   &gt; Sequence: Playbook #04 Standby Failover
                 </div>
               </div>
+
+              <Link
+                to="/architect"
+                className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <span>Launch Agentic Flow Architect &rarr;</span>
+              </Link>
             </motion.div>
 
             {/* Bento Card 4: Human Approval Gates (Spans 2 columns) */}

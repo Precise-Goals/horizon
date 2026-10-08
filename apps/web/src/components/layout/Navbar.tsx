@@ -20,6 +20,7 @@ import {
   LogOut,
   Menu,
   X,
+  Sparkles,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -96,7 +97,7 @@ export const Navbar: React.FC = () => {
     setOpenDropdown((prev) => (prev === name ? null : name));
   };
 
-  const isPlatformActive = ['/dashboard', '/topology', '/recovery'].includes(location.pathname);
+  const isPlatformActive = ['/dashboard', '/topology', '/recovery', '/architect'].includes(location.pathname);
   const isGovernanceActive = ['/audit', '/subscription'].includes(location.pathname);
 
   return (
@@ -212,6 +213,19 @@ export const Navbar: React.FC = () => {
                       <div>
                         <div className="text-xs font-semibold text-[#FFF8F0]">Autonomous Recovery</div>
                         <div className="text-[10px] text-[#A3ADC2]">Deterministic playbooks</div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/architect"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-white/[0.06] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                        <Sparkles className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold text-[#FFF8F0]">AI Flow Architect</div>
+                        <div className="text-[10px] text-[#A3ADC2]">Natural language DAG & YAML</div>
                       </div>
                     </Link>
                   </motion.div>
@@ -424,6 +438,13 @@ export const Navbar: React.FC = () => {
               className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
             >
               Autonomous Recovery Engine
+            </Link>
+            <Link
+              to="/architect"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-medium text-[#FFF8F0] hover:bg-white/[0.06]"
+            >
+              AI Flow Architect
             </Link>
             <Link
               to="/audit"

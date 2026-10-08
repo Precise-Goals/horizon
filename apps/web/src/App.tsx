@@ -7,6 +7,7 @@ import { TopologyPage } from './pages/TopologyPage';
 import { RecoveryPage } from './pages/RecoveryPage';
 import { AuditPage } from './pages/AuditPage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
+import { ArchitectPage } from './pages/ArchitectPage';
 
 export function App() {
   return (
@@ -16,6 +17,7 @@ export function App() {
           <Route path="/" element={<LandingPage />} />
           <Route element={<RootLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/architect" element={<ArchitectPage />} />
             <Route path="/topology" element={<TopologyPage />} />
             <Route path="/recovery" element={<RecoveryPage />} />
             <Route path="/audit" element={<AuditPage />} />

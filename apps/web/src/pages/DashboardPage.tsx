@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   ArrowRight,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -97,7 +98,19 @@ export const DashboardPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <Link to="/architect">
+            <Button
+              variant="secondary"
+              size="md"
+              className="gap-2 text-xs sm:text-sm font-semibold rounded-xl border-cyan-500/30 text-cyan-300 hover:bg-cyan-500/10 shadow-sm"
+              title="Launch Agentic Flow Architect to synthesize custom topologies"
+            >
+              <Sparkles className="w-4 h-4 text-cyan-400" />
+              <span>AI Flow Architect</span>
+            </Button>
+          </Link>
+
           <Button
             variant="secondary"
             size="md"
