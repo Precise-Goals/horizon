@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from './Navbar';
+import { Footer } from './Footer';
 import { OnboardingGate } from '../auth/OnboardingGate';
 
 /**
@@ -50,6 +51,8 @@ export const RootLayout: React.FC = () => {
             </AnimatePresence>
           </div>
         </main>
+        {/* Antigravity-Style Monumental Footer */}
+        <Footer />
       </div>
     </OnboardingGate>
   );

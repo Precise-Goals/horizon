@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from '../components/layout/Navbar';
+import { Footer } from '../components/layout/Footer';
 import { Button } from '../components/common/Button';
 import {
   ShieldCheck,
@@ -624,31 +625,9 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ============================================================
-          PARCHMENT SKEUOMORPHIC FOOTER
+          ANTIGRAVITY-STYLE MONUMENTAL FOOTER
           ============================================================ */}
-      <footer className="border-t border-[rgba(26,26,26,0.12)] py-10 px-5 text-center text-xs text-[#666666] space-y-2.5 font-mono bg-[#FAF3EA]">
-        <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-[#0047AB] font-sans">
-          <Link to="/docs" className="hover:underline flex items-center gap-1">
-            <Terminal className="w-3.5 h-3.5" />
-            <span>MCP Server & API Docs</span>
-          </Link>
-          <span className="text-[#888888]">&bull;</span>
-          <Link to="/architect" className="hover:underline flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>AI Flow Architect</span>
-          </Link>
-          <span className="text-[#888888]">&bull;</span>
-          <Link to="/subscription" className="hover:underline">
-            <span>Web3 NFT Plans</span>
-          </Link>
-        </div>
-        <p className="font-bold text-[#1A1A1A]">
-          Horizon Autonomous Enterprise Infrastructure Recovery
-        </p>
-        <p className="text-[11px] text-[#777777]">
-          Protected by BridgeKey Cryptographic Signatures &bull; MST Blockchain Testnet (Chain ID 91562037)
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 };
