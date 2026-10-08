@@ -1,0 +1,194 @@
+name: Horizon Autonomous CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CI: true
+  BUN_VERSION: latest
+
+jobs:
+  # ============================================================================
+  # Stage 1: Security Audit & Secrets Hygiene
+  # ============================================================================
+  security-secrets-hygiene:
+    name: 🔒 Security & Secrets Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Verify No Live Secrets Checked Into Git
+        run: |
+          echo "Scanning git tracked files for accidental environment secret commits..."
+          TRACKED_ENVS=$(git ls-files | grep -E '(^|/)\.env($|\..*)' | grep -v '\.env\.example' || true)
+          if [ -n "$TRACKED_ENVS" ]; then
+            echo "::error::Found committed environment secrets in git index:"
+            echo "$TRACKED_ENVS"
+            exit 1
+          fi
+          echo "Git index is clean of sensitive environment files."
+
+      - name: Run Autonomous Secrets Hygiene & Security Audit
+        run: bun run security:audit
+
+  # ============================================================================
+  # Stage 2: Static Analysis, Linting & Typecheck
+  # ============================================================================
+  lint-and-typecheck:
+    name: 🧹 Lint & Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Execute Oxlint Static Analysis
+        run: bun run --cwd apps/web lint
+
+      - name: TypeScript Build & Typecheck Verification
+        run: bun run --cwd apps/web build
+
+  # ============================================================================
+  # Stage 3: Monorepo Unit Test Execution (Bun Test Runner)
+  # ============================================================================
+  unit-tests:
+    name: 🧪 Unit Test Execution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Execute Test Suite (Shared Packages, API & Web)
+        run: bun test
+
+  # ============================================================================
+  # Stage 4: Vercel Deployment Readiness & Dry-Run Validation
+  # ============================================================================
+  deployment-validation:
+    name: 🚀 Vercel Deployment Readiness
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun Runtime
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Cache Bun Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            bun-${{ runner.os }}-
+
+      - name: Install Monorepo Dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Validate Vercel Configuration & Routes (Pre-Build)
+        run: bun run validate:deployment
+
+      - name: Compile Production Web Artifacts
+        run: bun run --cwd apps/web build
+
+      - name: Validate Deployment Artifacts (Post-Build Dry-Run)
+        run: bun scripts/validate-deployment.ts --verify-dist
+
+  # ============================================================================
+  # Stage 5: Autonomous Pipeline Quality Gate & Summary
+  # ============================================================================
+  pipeline-gate:
+    name: 🏁 CI/CD Quality Gate
+    needs:
+      - security-secrets-hygiene
+      - lint-and-typecheck
+      - unit-tests
+      - deployment-validation
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Evaluate Pipeline Status
+        run: |
+          SEC_STATUS="${{ needs.security-secrets-hygiene.result }}"
+          LINT_STATUS="${{ needs.lint-and-typecheck.result }}"
+          TEST_STATUS="${{ needs.unit-tests.result }}"
+          DEPLOY_STATUS="${{ needs.deployment-validation.result }}"
+
+          echo "### 🛡️ Horizon CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status | Description |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔒 Security & Secrets | **$SEC_STATUS** | Clean git index, zero leaked keys, sanitized .env.example |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧹 Lint & Static Analysis | **$LINT_STATUS** | Oxlint passed, TypeScript compilation verified |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🧪 Unit Tests | **$TEST_STATUS** | Bun test execution across shared packages, API, and web |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🚀 Vercel Deployment | **$DEPLOY_STATUS** | vercel.json dry-run validated, production assets verified |" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$SEC_STATUS" = "success" ] && [ "$LINT_STATUS" = "success" ] && [ "$TEST_STATUS" = "success" ] && [ "$DEPLOY_STATUS" = "success" ]; then
+            echo -e "\n🎉 **All Horizon CI/CD pipeline stages passed successfully! Safe to deploy.**" >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo -e "\n❌ **One or more pipeline stages failed. Deployment halted.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

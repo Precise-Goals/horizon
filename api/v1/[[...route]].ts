@@ -135,4 +135,5 @@ app.get('/incidents', (c) => {
   return c.json(activeIncidents);
 });
 
+export { app };
 export default handle(app);

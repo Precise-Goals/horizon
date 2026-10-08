@@ -3,6 +3,8 @@ import { firebaseAuth } from '../lib/firebase';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  signInWithPopup,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
   onAuthStateChanged,
   type User as FirebaseUser,
@@ -26,6 +28,7 @@ export interface AuthContextType {
   errorMessage: string | null;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   connectBridgeKey: () => Promise<void>;
   connectOperatorKeypair: () => Promise<void>;
   disconnectWallet: () => void;
@@ -137,6 +140,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Real Firebase Google Sign-In
+  const loginWithGoogle = async (): Promise<void> => {
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
+      const cred = await signInWithPopup(firebaseAuth, provider);
+      const operator: OperatorUser = {
+        uid: cred.user.uid,
+        email: cred.user.email || 'operator@horizon.io',
+        displayName: cred.user.displayName || cred.user.email?.split('@')[0] || 'Operator',
+        role: 'Commander',
+      };
+      setUser(operator);
+    } catch (err: any) {
+      console.error('[Firebase Google Login Failed]', err);
+      const message = err?.message || 'Google sign-in failed. Please check popup permissions.';
+      setErrorMessage(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Connect injected BridgeKey Web3 Wallet on MST Blockchain Testnet
   const connectBridgeKey = async (): Promise<void> => {
     setErrorMessage(null);
@@ -201,6 +229,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         errorMessage,
         login,
         register,
+        loginWithGoogle,
         connectBridgeKey,
         connectOperatorKeypair,
         disconnectWallet,

@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /dashboard
+Allow: /topology
+Allow: /recovery
+Allow: /audit
+Allow: /subscription
+Disallow: /api/
+
+Sitemap: https://horizon-resilience.vercel.app/sitemap.xml
