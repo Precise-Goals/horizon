@@ -8,7 +8,7 @@ import { RecoveryPage } from './pages/RecoveryPage';
 import { AuditPage } from './pages/AuditPage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 
-function App() {
+export function App() {
   return (
     <AuthProvider>
       <BrowserRouter>

@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar';
 
 export const RootLayout = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFF8F0] text-[#1A1A1A]">
+    <div className="min-h-screen flex flex-col bg-[#07090E] text-[#FFF8F0] selection:bg-[#1E6BFF]/30 selection:text-white">
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

@@ -1,18 +1,36 @@
 @import "tailwindcss";
+@import "./styles/theme.css";
 @plugin "daisyui";
 
 @theme {
+  --color-horizon-bg: #07090E;
+  --color-horizon-elevated: #0C101A;
+  --color-horizon-card: rgba(13, 18, 29, 0.7);
+  --color-cobalt: #1E6BFF;
+  --color-cobalt-glow: rgba(30, 107, 255, 0.35);
   --color-cream: #FFF8F0;
-  --color-deep-black: #1A1A1A;
-  --color-cobalt-blue: #0047AB;
-  --color-cobalt-hover: #3366CC;
-  --color-success: #22C55E;
-  --color-warning: #F59E0B;
-  --color-danger: #EF4444;
+  --color-cream-muted: #E2D7CB;
+  --color-cream-subtle: #A3ADC2;
+  --color-emerald: #10B981;
+  --color-amber: #F59E0B;
+  --color-crimson: #EF4444;
 }
 
-body {
-  background-color: var(--color-cream);
-  color: var(--color-deep-black);
-  font-family: ui-sans-serif, system-ui, sans-serif;
+/* Custom Scrollbar for Sleek Minimalist UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(7, 9, 14, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(30, 107, 255, 0.5);
 }

@@ -1,31 +1,113 @@
-﻿:root {
-  /* Horizon Brand Colors */
+/* ==============================================================================
+   HORIZON — MODERN MINIMALISTIC GLASSMORPHISM DARK DESIGN SYSTEM
+   Palette: Deep Obsidian Black (#080A0F), Cream (#FFF8F0), Cobalt Blue (#1E6BFF)
+   ============================================================================== */
+
+:root {
+  /* Core Base Colors */
+  --horizon-bg: #07090E;
+  --horizon-bg-elevated: #0C101A;
+  --horizon-bg-card: rgba(13, 18, 29, 0.7);
+  --horizon-bg-card-hover: rgba(18, 25, 41, 0.85);
+  --horizon-bg-glass: rgba(15, 22, 36, 0.55);
+
+  /* Primary Cobalt Accents */
+  --horizon-cobalt: #1E6BFF;
+  --horizon-cobalt-light: #4A8CFF;
+  --horizon-cobalt-dark: #0047AB;
+  --horizon-cobalt-glow: rgba(30, 107, 255, 0.35);
+
+  /* Cream Typography & Warm Accents */
   --horizon-cream: #FFF8F0;
-  --horizon-black: #1A1A1A;
-  --horizon-cobalt: #0047AB;
-  --horizon-cobalt-light: #3366CC;
-  --horizon-cobalt-dark: #003380;
-  --horizon-success: #22C55E;
-  --horizon-danger: #EF4444;
-  --horizon-warning: #F59E0B;
-  --horizon-muted: #6B7280;
+  --horizon-cream-muted: #E2D7CB;
+  --horizon-cream-subtle: #A3ADC2;
 
-  /* Neo-Brutalistic Tokens */
-  --border-thick: 2px;
-  --border-thicker: 4px;
-  --shadow-brutal: 4px 4px 0px var(--horizon-black);
-  --shadow-brutal-sm: 2px 2px 0px var(--horizon-black);
-  --radius-card: 8px;
-  --radius-button: 4px;
+  /* Status Colors */
+  --horizon-emerald: #10B981;
+  --horizon-emerald-glow: rgba(16, 185, 129, 0.25);
+  --horizon-amber: #F59E0B;
+  --horizon-amber-glow: rgba(245, 158, 11, 0.25);
+  --horizon-crimson: #EF4444;
+  --horizon-crimson-glow: rgba(239, 68, 68, 0.25);
 
-  /* Typography */
-  --font-heading: 'Inter', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  /* Glassmorphism Specs */
+  --glass-blur: blur(16px);
+  --glass-blur-lg: blur(24px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+  --glass-border-hover: 1px solid rgba(30, 107, 255, 0.4);
+  --glass-border-subtle: 1px solid rgba(255, 255, 255, 0.05);
+
+  /* Specular Highlights & Glow Shadows */
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+  --glass-shadow-glow: 0 0 35px -5px rgba(30, 107, 255, 0.25);
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+
+  /* Radius Tokens */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Fonts */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
 body {
-  font-family: var(--font-body);
-  background-color: var(--horizon-cream);
-  color: var(--horizon-black);
+  background-color: var(--horizon-bg);
+  color: var(--horizon-cream);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(30, 107, 255, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 100% 50%, rgba(0, 71, 171, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 0% 100%, rgba(30, 107, 255, 0.05) 0%, transparent 40%);
+  background-attachment: fixed;
+}
+
+/* Glassmorphism Utility Classes */
+.glass-panel {
+  background: var(--horizon-bg-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel:hover {
+  background: var(--horizon-bg-card-hover);
+  border: var(--glass-border-hover);
+  box-shadow: var(--glass-shadow), var(--glass-shadow-glow), var(--glass-specular);
+}
+
+.glass-nav {
+  background: rgba(8, 11, 18, 0.82);
+  backdrop-filter: var(--glass-blur-lg);
+  -webkit-backdrop-filter: var(--glass-blur-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+}
+
+.glow-cobalt {
+  box-shadow: 0 0 25px rgba(30, 107, 255, 0.35);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+}
+
+.glow-crimson {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.35);
 }
