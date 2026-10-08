@@ -1,6 +1,6 @@
-# Veltrix Constraints
+﻿# Horizon Constraints
 
-This document outlines the hard constraints and requirements for the Veltrix project. Adherence to these constraints is mandatory for all development.
+This document outlines the hard constraints and requirements for the Horizon project. Adherence to these constraints is mandatory for all development.
 
 ## 1. Technology Constraints
 

@@ -1,15 +1,15 @@
-# Veltrix System Architecture
+﻿# Horizon System Architecture
 **Platform:** Autonomous Enterprise Infrastructure Recovery Platform
 **Version:** 1.0.0
 **Date:** October 8, 2026
 
-This document provides a comprehensive overview of the system architecture for Veltrix, detailing the frontend, backend, data layer, infrastructure, web3 integration, and core execution engines.
+This document provides a comprehensive overview of the system architecture for Horizon, detailing the frontend, backend, data layer, infrastructure, web3 integration, and core execution engines.
 
 ---
 
 ## 1. System Overview
 
-Veltrix is designed as a distributed, scalable platform that orchestrates recovery operations across simulated and real-world microservice environments. 
+Horizon is designed as a distributed, scalable platform that orchestrates recovery operations across simulated and real-world microservice environments. 
 
 The core design philosophy is event-driven. Monitoring systems detect anomalies, which are passed to the Workflow Engine. The engine uses a Dependency Graph to compute impact and delegates tasks to the Playbook Executor. A secondary LLM Agent assists in analyzing unseen errors and generating dynamic recovery steps.
 
@@ -80,7 +80,7 @@ flowchart TD
 
 ## 2. Frontend Architecture
 
-The Veltrix frontend is a modern, high-performance web application optimized for speed and real-time data ingestion.
+The Horizon frontend is a modern, high-performance web application optimized for speed and real-time data ingestion.
 
 - **Core:** React, built and served using Vite and the Bun runtime.
 - **Styling:** Tailwind CSS using a strict Light Theme (Cream, Black, Cobalt Blue) with neo-brutalistic design principles (sharp borders, strong shadows, high contrast).
@@ -119,7 +119,7 @@ classDiagram
 
 ## 3. Backend Architecture
 
-The backend is built in Python, leveraging FastAPI for asynchronous request handling. It acts as the orchestration brain of Veltrix.
+The backend is built in Python, leveraging FastAPI for asynchronous request handling. It acts as the orchestration brain of Horizon.
 
 - **API Layer:** FastAPI providing RESTful endpoints for configuration and CRUD operations, and WebSockets for pushing real-time log streams to the frontend.
 - **Monitoring Engine:** A dedicated daemon process that continuously polls the simulated infrastructure. It uses asynchronous HTTP requests, TCP port checks, and database pings to assess health.
@@ -130,7 +130,7 @@ The backend is built in Python, leveraging FastAPI for asynchronous request hand
 
 ## 4. Data Architecture
 
-Veltrix relies on a hybrid data model: real-time synchronization via Firebase, and immutable logging via blockchain.
+Horizon relies on a hybrid data model: real-time synchronization via Firebase, and immutable logging via blockchain.
 
 ### 4.1 Firebase RTDB Schema Design
 
@@ -140,7 +140,7 @@ The Realtime Database is structured for fast client-side syncing without complex
 {
   "users": {
     "uid123": {
-      "email": "admin@veltrix.com",
+      "email": "admin@horizon.com",
       "role": "incident_commander",
       "wallet_address": "0xABC..."
     }
@@ -179,15 +179,15 @@ The Realtime Database is structured for fast client-side syncing without complex
 
 ## 5. Infrastructure Layer
 
-Veltrix is designed to run in modern containerized environments. 
+Horizon is designed to run in modern containerized environments. 
 
 - **Orchestration:** Kubernetes (K8s) is the target execution environment.
-- **Simulated Environment:** For testing and demonstration, Veltrix deploys a target cluster consisting of:
+- **Simulated Environment:** For testing and demonstration, Horizon deploys a target cluster consisting of:
   1. A Postgres Database deployment.
   2. A Redis Cache deployment.
   3. A Python/Flask API layer.
   4. A Node.js frontend layer.
-- Veltrix's Playbook Executor interacts with the Kubernetes API to orchestrate restarts, rollbacks, and configuration changes on these simulated targets.
+- Horizon's Playbook Executor interacts with the Kubernetes API to orchestrate restarts, rollbacks, and configuration changes on these simulated targets.
 
 ---
 
@@ -196,7 +196,7 @@ Veltrix is designed to run in modern containerized environments.
 The Web3 integration provides verifiable access control and tiered service plans.
 
 - **Smart Contracts:** Deployed on an EVM-compatible chain (e.g., Polygon).
-- **NFT Subscription:** Access to Veltrix is gated by ownership of a Veltrix NFT. 
+- **NFT Subscription:** Access to Horizon is gated by ownership of a Horizon NFT. 
   - *Standard Tier NFT:* Basic automated recovery.
   - *Enterprise Tier NFT:* Unlocks LLM agent capabilities and full audit log exports.
 - **Credential Security:** Hashes of critical recovery execution approvals are stored on-chain to provide an immutable audit trail that cannot be tampered with, even by a database administrator.
@@ -205,7 +205,7 @@ The Web3 integration provides verifiable access control and tiered service plans
 
 ## 7. Recovery Engine
 
-This is the most critical algorithmic component of Veltrix.
+This is the most critical algorithmic component of Horizon.
 
 1. **Dependency Graph Construction:** The engine builds a Directed Acyclic Graph (DAG) representing the infrastructure.
 2. **Blast Radius Calculation:** When a node fails, the engine traverses downstream edges to find all affected services.
@@ -246,7 +246,7 @@ stateDiagram-v2
 
 ## 10. API Design
 
-Veltrix uses a combination of REST and WebSockets.
+Horizon uses a combination of REST and WebSockets.
 
 **REST Endpoints (FastAPI):**
 - `POST /api/v1/nodes` - Register a new infrastructure node.
@@ -254,16 +254,16 @@ Veltrix uses a combination of REST and WebSockets.
 - `POST /api/v1/playbooks/{id}/execute` - Manually trigger a runbook.
 
 **WebSocket (FastAPI):**
-- `ws://api.veltrix.com/stream/logs` - Streams live output of playbook execution commands to the frontend terminal component.
+- `ws://api.horizon.com/stream/logs` - Streams live output of playbook execution commands to the frontend terminal component.
 
 ---
 
 ## 11. Deployment Architecture
 
-- **CI/CD:** GitHub Actions pipelines that build Docker images for the Veltrix Backend and Frontend.
+- **CI/CD:** GitHub Actions pipelines that build Docker images for the Horizon Backend and Frontend.
 - **Environments:**
   - *Development:* Local docker-compose encompassing frontend, backend, Firebase emulator, and simulated target nodes.
-  - *Production:* K8s cluster hosting Veltrix services, connecting to production Firebase and Mainnet/Testnet RPCs.
+  - *Production:* K8s cluster hosting Horizon services, connecting to production Firebase and Mainnet/Testnet RPCs.
 
 ---
 
@@ -272,7 +272,7 @@ Veltrix uses a combination of REST and WebSockets.
 The project follows a monorepo structure to keep frontend, backend, and documentation unified.
 
 ```
-D:\Workspace\Projects\veltrix\
+D:\Workspace\Projects\horizon\
 ├── .github/                  # CI/CD workflows
 ├── Docs/                     # Documentation files
 │   ├── PRD.md

@@ -1,6 +1,6 @@
-# Architecture Decision Records (ADRs)
+﻿# Architecture Decision Records (ADRs)
 
-This document tracks major architectural decisions for the Veltrix platform.
+This document tracks major architectural decisions for the Horizon platform.
 
 ## ADR-001: Use React + Vite + Bun for Frontend
 
@@ -53,7 +53,7 @@ This document tracks major architectural decisions for the Veltrix platform.
 ## ADR-007: Use Neo-brutalistic Design with Cream/Black/Cobalt Blue Theme
 
 *   **Status:** Accepted
-*   **Context:** Veltrix needs a distinct, modern, and striking visual identity.
+*   **Context:** Horizon needs a distinct, modern, and striking visual identity.
 *   **Decision:** Adopt a light theme (Cream `#FFF8F0`, Black `#1A1A1A`, Cobalt Blue `#0047AB`) utilizing neo-brutalistic design principles (bento grids, strong borders, glassmorphism).
 *   **Consequences:** Strong brand identity, might require custom CSS rather than relying on out-of-the-box utility classes.
 *   **Alternatives Considered:** Standard corporate clean design (too generic).

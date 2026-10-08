@@ -1,4 +1,4 @@
-# Veltrix Platform - Task Tracker
+﻿# Horizon Platform - Task Tracker
 
 This document contains all atomic tasks derived from the project roadmap, categorized by sprint.
 
@@ -162,7 +162,7 @@ This document contains all atomic tasks derived from the project roadmap, catego
 **Dependencies**: S1-005
 **Description**: Install and configure Tailwind, Shadcn UI, and DaisyUI.
 **Acceptance Criteria**: Components from libraries render correctly with Tailwind styles.
-**Definition of Done**: Theme configuration reflects Veltrix brand (cream, black, cobalt blue).
+**Definition of Done**: Theme configuration reflects Horizon brand (cream, black, cobalt blue).
 
 ## Task ID: S1-007
 **Title**: Create FastAPI Backend Skeleton
@@ -493,7 +493,7 @@ This document contains all atomic tasks derived from the project roadmap, catego
 **Definition of Done**: Performant rendering of large log datasets.
 
 ## Task ID: S5-005
-**Title**: Style App with Veltrix Theme
+**Title**: Style App with Horizon Theme
 **Sprint**: 5 — Dashboard & UI
 **Status**: 🔴 Not Started
 **Priority**: P1 — High
@@ -664,7 +664,7 @@ This document contains all atomic tasks derived from the project roadmap, catego
 **Assignee**: Agent/Human
 **Estimated Effort**: 3h
 **Dependencies**: S7-001, S5-001
-**Description**: Veltrix Assistant UI for operators to query system health.
+**Description**: Horizon Assistant UI for operators to query system health.
 **Acceptance Criteria**: Chat interface functions smoothly with streaming responses.
 **Definition of Done**: Chat history persisted locally or in DB.
 

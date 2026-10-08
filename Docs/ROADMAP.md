@@ -1,10 +1,10 @@
-# Veltrix Platform - Project Roadmap
+﻿# Horizon Platform - Project Roadmap
 
-This document outlines the comprehensive 8-sprint plan (including Sprint 0) for the development of Veltrix, the Autonomous Enterprise Infrastructure Recovery Platform.
+This document outlines the comprehensive 8-sprint plan (including Sprint 0) for the development of Horizon, the Autonomous Enterprise Infrastructure Recovery Platform.
 
 ## 1. Project Timeline Overview
 
-The Veltrix project is structured into 9 sequential 2-week sprints (Sprint 0 through Sprint 8).
+The Horizon project is structured into 9 sequential 2-week sprints (Sprint 0 through Sprint 8).
 
 ```mermaid
 flowchart LR
@@ -77,7 +77,7 @@ flowchart LR
 - Integrate Firebase Authentication.
 
 ### User Stories
-- As a User, I want to securely log in to the Veltrix platform.
+- As a User, I want to securely log in to the Horizon platform.
 - As a Developer, I want the backend and frontend to communicate successfully.
 
 ### Tasks
@@ -113,7 +113,7 @@ flowchart LR
 - Store telemetry data securely.
 
 ### User Stories
-- As a SysAdmin, I want Veltrix to detect when a server goes down automatically.
+- As a SysAdmin, I want Horizon to detect when a server goes down automatically.
 - As an SRE, I want configurable health check intervals.
 
 ### Tasks
@@ -216,7 +216,7 @@ flowchart LR
 **Focus:** Bento grid dashboard, recovery timeline view, audit log UI, real-time updates.
 
 ### Goals
-- Finalize the neo-brutalistic Veltrix theme (cream, black, cobalt blue).
+- Finalize the neo-brutalistic Horizon theme (cream, black, cobalt blue).
 - Build the main administrative dashboard.
 - Implement detailed logging and timeline views.
 
@@ -229,7 +229,7 @@ flowchart LR
 - **S5-002**: Build Global Health Overview Widgets
 - **S5-003**: Create Recovery Timeline Component
 - **S5-004**: Develop Paginated Audit Log Table
-- **S5-005**: Style App with Veltrix Theme (Neo-brutalism)
+- **S5-005**: Style App with Horizon Theme (Neo-brutalism)
 - **S5-006**: Connect UI to Firebase Real-time Updates
 - **S5-007**: Add Magic UI / Aceternity UI Flourishes
 
@@ -257,7 +257,7 @@ flowchart LR
 - Enforce access control based on NFT ownership.
 
 ### User Stories
-- As a Customer, I want to purchase an Enterprise Subscription NFT to access Veltrix.
+- As a Customer, I want to purchase an Enterprise Subscription NFT to access Horizon.
 - As a User, I want to authenticate using my MetaMask wallet.
 
 ### Tasks
@@ -300,7 +300,7 @@ flowchart LR
 - **S7-001**: Integrate OpenAI / Local LLM API
 - **S7-002**: Build Prompt Engineering Pipeline for Incident Context
 - **S7-003**: Implement Natural Language Post-Mortem Generator
-- **S7-004**: Create AI Chat Interface in Dashboard (Veltrix Assistant)
+- **S7-004**: Create AI Chat Interface in Dashboard (Horizon Assistant)
 - **S7-005**: Develop Recovery Strategy Suggestion Engine
 - **S7-006**: Ensure PII/Sensitive Data is Masked before LLM processing
 - **S7-007**: Evaluate LLM Output Accuracy and Latency

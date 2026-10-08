@@ -1,6 +1,6 @@
-# Agent Rules and Configuration
+﻿# Agent Rules and Configuration
 
-This document defines the rules, roles, and boundaries for AI agents operating within the Veltrix development and runtime environments.
+This document defines the rules, roles, and boundaries for AI agents operating within the Horizon development and runtime environments.
 
 ## 1. Agent Roles
 

@@ -1,0 +1,17 @@
+{
+  "name": "horizon-contracts",
+  "version": "1.0.0",
+  "description": "Smart contracts for Horizon subscription and audit vault",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.22.0"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.0"
+  }
+}

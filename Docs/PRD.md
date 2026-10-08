@@ -1,4 +1,4 @@
-# Veltrix: Autonomous Enterprise Infrastructure Recovery Platform
+﻿# Horizon: Autonomous Enterprise Infrastructure Recovery Platform
 ## Product Requirements Document (PRD)
 
 **Version:** 1.0.0
@@ -9,9 +9,9 @@
 
 ## 1. Executive Summary
 
-Veltrix is an Autonomous Enterprise Infrastructure Recovery Platform designed to revolutionize how organizations handle critical system outages and infrastructure failures. Delivered as a modern Software-as-a-Service (SaaS) platform with Web3/NFT-based subscription tiers, Veltrix provides continuous system monitoring, dependency-aware impact assessment, and automated, orchestrated recovery playbooks. 
+Horizon is an Autonomous Enterprise Infrastructure Recovery Platform designed to revolutionize how organizations handle critical system outages and infrastructure failures. Delivered as a modern Software-as-a-Service (SaaS) platform with Web3/NFT-based subscription tiers, Horizon provides continuous system monitoring, dependency-aware impact assessment, and automated, orchestrated recovery playbooks. 
 
-In today's highly complex microservices and distributed systems architectures, downtime is exponentially costly. When failures occur, the order in which services are brought back online is just as critical as the recovery itself. Veltrix intelligently maps these dependencies, identifies root causes through LLM-assisted analysis, and orchestrates the precise recovery sequence required to restore full operational capacity, requiring human intervention only for high-risk approval gates.
+In today's highly complex microservices and distributed systems architectures, downtime is exponentially costly. When failures occur, the order in which services are brought back online is just as critical as the recovery itself. Horizon intelligently maps these dependencies, identifies root causes through LLM-assisted analysis, and orchestrates the precise recovery sequence required to restore full operational capacity, requiring human intervention only for high-risk approval gates.
 
 ---
 
@@ -27,7 +27,7 @@ When a critical component fails (e.g., a core database goes down), a cascade of 
 - **Human Error:** In the heat of an outage, engineers often execute recovery steps out of order (e.g., restarting application servers before the database has fully recovered and accepted connections). This leads to application crash loops, extended outages, and further data corruption.
 - **Coordination Overhead:** Teams spend valuable minutes in "war rooms" simply figuring out *what* failed and *who* is responsible for fixing it, rather than actually executing the fix.
 
-Veltrix solves this by replacing manual, error-prone coordination with autonomous, dependency-aware recovery orchestration.
+Horizon solves this by replacing manual, error-prone coordination with autonomous, dependency-aware recovery orchestration.
 
 ---
 
@@ -35,17 +35,17 @@ Veltrix solves this by replacing manual, error-prone coordination with autonomou
 
 **To provide a platform that detects infrastructure failures in real-time, autonomously organizes recovery across all connected systems in the mathematically correct order, and perfectly balances automation with human oversight.**
 
-Veltrix envisions a world where "war rooms" are a thing of the past. When an outage occurs, Veltrix has already identified the failure, mapped the blast radius, formulated a recovery plan based on pre-defined playbooks and LLM analysis, and executed the safe steps while waiting for a single human click to proceed with the high-risk operations. 
+Horizon envisions a world where "war rooms" are a thing of the past. When an outage occurs, Horizon has already identified the failure, mapped the blast radius, formulated a recovery plan based on pre-defined playbooks and LLM analysis, and executed the safe steps while waiting for a single human click to proceed with the high-risk operations. 
 
 ---
 
 ## 4. Target Users
 
-Veltrix is built for enterprise technology teams that manage complex, high-stakes infrastructure:
+Horizon is built for enterprise technology teams that manage complex, high-stakes infrastructure:
 
 1. **Site Reliability Engineers (SREs):**
    - *Needs:* Deep visibility into system health, automated runbooks, reduced toil, and clear dependency graphs.
-   - *Value:* Veltrix handles the mundane recovery steps so they can focus on post-mortem analysis and infrastructure improvements.
+   - *Value:* Horizon handles the mundane recovery steps so they can focus on post-mortem analysis and infrastructure improvements.
 
 2. **DevOps Engineers:**
    - *Needs:* CI/CD integration, Infrastructure-as-Code (IaC) compatibility, and fast mean-time-to-recovery (MTTR).
@@ -119,13 +119,13 @@ Veltrix is built for enterprise technology teams that manage complex, high-stake
 - **Event Throughput:** The monitoring pipeline must handle up to 50,000 telemetry events per second.
 
 ### 6.4 Availability
-- **Platform Uptime:** Veltrix itself must maintain 99.99% availability, utilizing multi-region deployment to ensure it outlives the infrastructure it monitors.
+- **Platform Uptime:** Horizon itself must maintain 99.99% availability, utilizing multi-region deployment to ensure it outlives the infrastructure it monitors.
 
 ---
 
 ## 7. Tech Stack
 
-Veltrix utilizes a cutting-edge, highly performant technology stack to deliver on its demanding requirements:
+Horizon utilizes a cutting-edge, highly performant technology stack to deliver on its demanding requirements:
 
 - **Frontend:** 
   - React (Core UI library)
@@ -151,7 +151,7 @@ Veltrix utilizes a cutting-edge, highly performant technology stack to deliver o
 
 ## 8. UI/UX Requirements
 
-Veltrix aims for a modern, clean, and highly functional aesthetic that reduces cognitive load during high-stress incident scenarios.
+Horizon aims for a modern, clean, and highly functional aesthetic that reduces cognitive load during high-stress incident scenarios.
 
 - **Theme:** Light theme exclusively.
 - **Color Palette:** 
@@ -167,7 +167,7 @@ Veltrix aims for a modern, clean, and highly functional aesthetic that reduces c
 
 ## 9. Success Metrics
 
-The success of the Veltrix platform will be evaluated against the following Key Performance Indicators (KPIs):
+The success of the Horizon platform will be evaluated against the following Key Performance Indicators (KPIs):
 
 1. **Mean Time To Recovery (MTTR) Reduction:** Aiming for a minimum 60% reduction in MTTR compared to manual baseline metrics during simulated outages.
 2. **Recovery Accuracy:** 99.9% execution of recovery steps in the exact topologically sorted dependency order.
@@ -178,7 +178,7 @@ The success of the Veltrix platform will be evaluated against the following Key 
 
 ## 10. Deliverables
 
-The final delivery of the Veltrix project will include:
+The final delivery of the Horizon project will include:
 
 1. **Working Platform:** A fully functional SaaS application deployed against a simulated enterprise environment.
 2. **Live Demo:** A recorded and repeatable demonstration showing a cascading multi-system failure being autonomously recovered in the correct sequence, including a paused high-risk approval gate.

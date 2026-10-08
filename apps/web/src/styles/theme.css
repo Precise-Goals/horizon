@@ -1,0 +1,31 @@
+﻿:root {
+  /* Horizon Brand Colors */
+  --horizon-cream: #FFF8F0;
+  --horizon-black: #1A1A1A;
+  --horizon-cobalt: #0047AB;
+  --horizon-cobalt-light: #3366CC;
+  --horizon-cobalt-dark: #003380;
+  --horizon-success: #22C55E;
+  --horizon-danger: #EF4444;
+  --horizon-warning: #F59E0B;
+  --horizon-muted: #6B7280;
+
+  /* Neo-Brutalistic Tokens */
+  --border-thick: 2px;
+  --border-thicker: 4px;
+  --shadow-brutal: 4px 4px 0px var(--horizon-black);
+  --shadow-brutal-sm: 2px 2px 0px var(--horizon-black);
+  --radius-card: 8px;
+  --radius-button: 4px;
+
+  /* Typography */
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--horizon-cream);
+  color: var(--horizon-black);
+}

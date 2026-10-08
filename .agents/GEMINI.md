@@ -1,7 +1,7 @@
-# Veltrix — Project Rules
+﻿# Horizon — Project Rules
 
 ## Project Overview
-Veltrix is an Autonomous Enterprise Infrastructure Recovery Platform — a SaaS product that detects infrastructure failures and orchestrates recovery across connected systems in the correct dependency order. It features Web3/NFT-based subscription plans and blockchain credential security.
+Horizon is an Autonomous Enterprise Infrastructure Recovery Platform — a SaaS product that detects infrastructure failures and orchestrates recovery across connected systems in the correct dependency order. It features Web3/NFT-based subscription plans and blockchain credential security.
 
 ## Tech Stack
 - **Frontend**: React 18+ with Vite, Bun as package manager/runtime

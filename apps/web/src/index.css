@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@theme {
+  --color-cream: #FFF8F0;
+  --color-deep-black: #1A1A1A;
+  --color-cobalt-blue: #0047AB;
+  --color-cobalt-hover: #3366CC;
+  --color-success: #22C55E;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-deep-black);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
