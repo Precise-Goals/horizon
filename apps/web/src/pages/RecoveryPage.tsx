@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type BezierDefinition } from 'framer-motion';
 import { Link } from 'react-router';
 import { RecoveryTimeline } from '../components/recovery/RecoveryTimeline';
 import { Card } from '../components/common/Card';
@@ -11,30 +11,49 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, duration: 0.3 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.38, ease: EASE },
+  },
+};
+
 export const RecoveryPage: React.FC = () => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="space-y-6 sm:space-y-7 font-sans"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6 sm:space-y-8 font-sans w-full"
     >
-      {/* Return Navigation */}
-      <div className="flex items-center justify-between">
+      {/* Return Navigation & Status Pill */}
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
         <Link
           to="/"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
-          <span>&larr; Return to Homepage</span>
+          <span>&larr; Return to Home</span>
         </Link>
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 shadow-xs">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           <span className="text-xs font-mono text-emerald-800 font-bold">Self-Healing Engine Armed</span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
@@ -56,10 +75,10 @@ export const RecoveryPage: React.FC = () => {
             <ArrowRight className="w-4 h-4 text-[#0047AB]" />
           </button>
         </Link>
-      </div>
+      </motion.div>
 
       {/* Bento Metric Summary Strip */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
           <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Mean Recovery Time</span>
@@ -95,10 +114,12 @@ export const RecoveryPage: React.FC = () => {
           <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">MST Testnet</div>
           <div className="text-[11px] text-[#6E6258] font-mono font-medium">Chain ID: 91562037</div>
         </Card>
-      </div>
+      </motion.div>
 
       {/* Recovery Timeline & Steps */}
-      <RecoveryTimeline />
+      <motion.div variants={itemVariants}>
+        <RecoveryTimeline />
+      </motion.div>
     </motion.div>
   );
 };

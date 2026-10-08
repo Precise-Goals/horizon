@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type BezierDefinition } from 'framer-motion';
 import { Link } from 'react-router';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -25,6 +25,25 @@ import {
   Zap,
   Code2,
 } from 'lucide-react';
+
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, duration: 0.3 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.38, ease: EASE },
+  },
+};
 
 export const DocsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'mcp' | 'slash' | 'cli' | 'api'>('mcp');
@@ -281,27 +300,27 @@ export const DocsPage: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="space-y-7 font-sans"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-7 font-sans w-full"
     >
       {/* Top Breadcrumb Navigation */}
-      <div className="flex items-center justify-between">
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
         <Link
-          to="/dashboard"
+          to="/"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
-          <span>&larr; Return to Dashboard</span>
+          <span>&larr; Return to Home</span>
         </Link>
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 shadow-xs">
           <span className="w-2 h-2 rounded-full bg-[#0047AB] animate-pulse" />
           <span className="text-xs font-mono text-[#0047AB] font-bold">MCP v1.0.0 SSE & Stdio Active</span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
@@ -326,10 +345,10 @@ export const DocsPage: React.FC = () => {
             </Button>
           </Link>
         </div>
-      </div>
+      </motion.div>
 
       {/* Hero Cobalt Blue Patch: Quick Start Command Deck */}
-      <div className="cobalt-patch p-6 sm:p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
+      <motion.div variants={itemVariants} className="cobalt-patch p-6 sm:p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
         <div className="relative z-10 max-w-3xl space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-xs font-mono font-bold">
             <Terminal className="w-3.5 h-3.5" />
@@ -365,10 +384,10 @@ export const DocsPage: React.FC = () => {
             </a>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Navigation Tabs */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#EADCC9] pb-3 text-xs">
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 border-b border-[#EADCC9] pb-3 text-xs">
         <button
           onClick={() => setActiveTab('mcp')}
           className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 ${
@@ -416,7 +435,7 @@ export const DocsPage: React.FC = () => {
           <Globe className="w-4 h-4" />
           <span>REST & Edge API</span>
         </button>
-      </div>
+      </motion.div>
 
       {/* Tab 1: MCP Server & Client Configurations */}
       {activeTab === 'mcp' && (

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type BezierDefinition } from 'framer-motion';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -36,6 +36,25 @@ const iconMap: Record<string, React.ElementType> = {
   cache: Server,
   gateway: Globe,
   application: Layers,
+};
+
+const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, duration: 0.3 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 14 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.38, ease: EASE },
+  },
 };
 
 export const ArchitectPage: React.FC = () => {
@@ -147,18 +166,18 @@ export const ArchitectPage: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="space-y-6 sm:space-y-7 font-sans"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="space-y-6 sm:space-y-7 font-sans w-full"
     >
       {/* Top Breadcrumb & Status */}
-      <div className="flex items-center justify-between">
+      <motion.div variants={itemVariants} className="flex items-center justify-between">
         <Link
-          to="/dashboard"
+          to="/"
           className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
-          <span>&larr; Return to Dashboard</span>
+          <span>&larr; Return to Home</span>
         </Link>
 
         <div className="flex items-center gap-2.5">
@@ -178,10 +197,10 @@ export const ArchitectPage: React.FC = () => {
             AGENTIC SYNTHESIZER
           </span>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Header */}
-      <div>
+      <motion.div variants={itemVariants}>
         <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
           AI Flow Architect & YAML Synthesizer
         </h1>
@@ -189,10 +208,10 @@ export const ArchitectPage: React.FC = () => {
           Describe arbitrary distributed architectures in plain English. The agent decodes dependency hierarchies,
           verifies cycle safety, visualizes the DAG, and outputs declarative recovery pipelines.
         </p>
-      </div>
+      </motion.div>
 
       {/* Quick Prompt Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+      <motion.div variants={itemVariants} className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         <span className="text-[11px] font-mono font-bold text-[#8A7B6D] uppercase shrink-0">
           Templates:
         </span>
@@ -207,10 +226,10 @@ export const ArchitectPage: React.FC = () => {
             <ArrowRight className="w-2.5 h-2.5 text-[#0047AB] opacity-70" />
           </button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Split Workspace: Chatbot on Left, Interactive Visualizer / YAML on Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* ================= LEFT: AGENTIC CHAT INTERFACE (5 cols) ================= */}
         <Card className="lg:col-span-5 p-5 flex flex-col h-[700px] justify-between skeuo-card border-[#E5D7C5]">
           {/* Chat Header */}
@@ -592,7 +611,7 @@ export const ArchitectPage: React.FC = () => {
             <span>Target Governance: MST Testnet 91562037</span>
           </div>
         </Card>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

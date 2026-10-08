@@ -93,7 +93,7 @@ export const DashboardPage: React.FC = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="horizon-dashboard space-y-7 text-[#1A1A1A]"
+      className="horizon-dashboard space-y-7 text-[#1A1A1A] w-full"
     >
       {/* ── Page Header ── */}
       <motion.div variants={itemVariants} className="horizon-dashboard-header flex flex-col sm:flex-row sm:items-start justify-between gap-4">
