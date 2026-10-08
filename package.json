@@ -13,7 +13,8 @@
     "lint": "bun --filter horizon-web lint",
     "test": "bun test",
     "validate:deployment": "bun scripts/validate-deployment.ts",
-    "security:audit": "bun scripts/secrets-hygiene.ts"
+    "security:audit": "bun scripts/secrets-hygiene.ts",
+    "agent": "bun scripts/docker-agent.ts"
   },
   "engines": {
     "node": ">=18"

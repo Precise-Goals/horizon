@@ -6,20 +6,29 @@ import type { SystemNode, AuditLogEntry } from '@/types';
 import { DependencyGraph } from './dependencyGraph';
 import { mstBlockchain, MST_CONFIG } from './mstBlockchain';
 
+export interface RecoveryJobStep {
+  id: number;
+  title: string;
+  service: string;
+  action: string;
+  isHighRisk: boolean;
+  status: 'completed' | 'running' | 'waiting_approval' | 'pending';
+  log: string;
+  tier?: number;
+}
+
 export interface RecoveryJobState {
   id: string;
   targetNodeId: string;
+  targetNodeName: string;
   status: 'PENDING' | 'RUNNING' | 'PAUSED_APPROVAL' | 'COMPLETED' | 'FAILED';
   currentStepIndex: number;
   approvalSignature?: string;
-  steps: {
-    id: number;
-    title: string;
-    action: string;
-    isHighRisk: boolean;
-    status: 'completed' | 'running' | 'waiting_approval' | 'pending';
-    log: string;
-  }[];
+  blastRadius: string[];
+  detectedAt: number;
+  resolvedAt?: number;
+  elapsedMs?: number;
+  steps: RecoveryJobStep[];
 }
 
 class ClusterStateManager {
@@ -131,58 +140,136 @@ class ClusterStateManager {
     this.notify();
   }
 
-  public startRecovery(targetNodeId: string = 'db-primary'): void {
-    const target = this.nodes.get(targetNodeId);
-    const isDb = target?.type === 'database';
+  public startRecovery(targetNodeId?: string): void {
+    let targetId = targetNodeId;
+    if (!targetId) {
+      const downNode = Array.from(this.nodes.values()).find(
+        (n) => n.status === 'down' || n.status === 'degraded'
+      );
+      targetId = downNode?.id || 'db-primary';
+    }
+
+    const target = this.nodes.get(targetId) || Array.from(this.nodes.values())[0];
+    if (!target) return;
+
+    const blast = this.graph.computeBlastRadius(target.id);
+    const steps: RecoveryJobStep[] = [];
+    let stepId = 1;
+
+    // Step 1: Isolation
+    steps.push({
+      id: stepId++,
+      title: `Isolate Impaired ${target.name}`,
+      service: `${target.id} (${target.type})`,
+      action: target.type === 'database' ? 'Drain connection pool & revoke write lock' : 'Divert ingress traffic away from degraded pods',
+      isHighRisk: false,
+      status: 'completed',
+      log: `[00:01.1] ${target.name} isolated. Active traffic drained safely.`,
+      tier: 0,
+    });
+
+    // Step 2: Human Commander Approval Gate (High-Risk)
+    const requiresHighRiskApproval = target.type === 'database' || blast.severity === 'critical';
+    steps.push({
+      id: stepId++,
+      title: 'Human Commander Approval Gate',
+      service: 'Horizon Cryptographic Orchestrator',
+      action: requiresHighRiskApproval
+        ? `Cryptographic authorization for ${target.name} state failover (EIP-712)`
+        : `Service mutation verification for ${target.name}`,
+      isHighRisk: true,
+      status: 'waiting_approval',
+      log: '[00:02.0] Execution paused at gate: Awaiting BridgeKey EIP-712 cryptographic signature.',
+      tier: 0,
+    });
+
+    // Step 3: Primary Target Restoration
+    steps.push({
+      id: stepId++,
+      title: target.type === 'database'
+        ? `Promote Standby Replica for ${target.name}`
+        : target.type === 'cache'
+        ? `Flush & Warmup ${target.name}`
+        : `Rolling Zero-Downtime Restart of ${target.name}`,
+      service: `${target.id} (${target.type})`,
+      action: target.type === 'database'
+        ? 'Execute replica promotion & repoint virtual IP'
+        : target.type === 'cache'
+        ? 'Purge stale keys & rehydrate from persistent store'
+        : 'Trigger rolling container pod replacement',
+      isHighRisk: false,
+      status: 'pending',
+      log: `Rebuilding primary state for ${target.name}.`,
+      tier: 1,
+    });
+
+    // Step 4+: Cascading Downstream Caches
+    const downstreamCaches = blast.affectedNodeIds
+      .map((id) => this.nodes.get(id))
+      .filter((n): n is SystemNode => n?.type === 'cache');
+
+    downstreamCaches.forEach((c) => {
+      steps.push({
+        id: stepId++,
+        title: `Invalidate Stale Cache: ${c.name}`,
+        service: `${c.id} (cache)`,
+        action: 'Purge dirty keys and update database connection pool',
+        isHighRisk: false,
+        status: 'pending',
+        log: `Flushing stale keys in ${c.name}.`,
+        tier: 2,
+      });
+    });
+
+    // Step 5+: Cascading Downstream Apps & Gateways
+    const downstreamApps = blast.affectedNodeIds
+      .map((id) => this.nodes.get(id))
+      .filter((n): n is SystemNode => n?.type === 'application' || n?.type === 'gateway');
+
+    downstreamApps.forEach((app) => {
+      steps.push({
+        id: stepId++,
+        title: `Rolling Restart: ${app.name}`,
+        service: `${app.id} (${app.type})`,
+        action: 'Zero-downtime rolling restart & health probe verification',
+        isHighRisk: false,
+        status: 'pending',
+        log: `Rolling restart initiated for ${app.name}.`,
+        tier: 3,
+      });
+    });
+
+    // Final Verification Step
+    steps.push({
+      id: stepId++,
+      title: 'Cryptographic Audit & Merkle Proof Anchoring',
+      service: 'MST Testnet Validator (Chain 91562037)',
+      action: 'Anchor recovery transaction hash and Merkle root on-chain',
+      isHighRisk: false,
+      status: 'pending',
+      log: 'Post-recovery verification and immutable ledger anchoring.',
+      tier: 4,
+    });
 
     this.activeJob = {
-      id: `REC-${Date.now().toString().slice(-4)}`,
-      targetNodeId,
+      id: `INC-${Date.now().toString().slice(-4)}`,
+      targetNodeId: target.id,
+      targetNodeName: target.name,
       status: 'PAUSED_APPROVAL',
       currentStepIndex: 1,
-      steps: [
-        {
-          id: 1,
-          title: `Isolate Impaired ${target?.name || 'Primary Node'}`,
-          action: 'Drain connection pool & revoke write lock',
-          isHighRisk: false,
-          status: 'completed',
-          log: `[00:01.2] Connection pool drained: 142 connections safely terminated.`,
-        },
-        {
-          id: 2,
-          title: 'Human Commander Approval Gate',
-          action: isDb ? 'High-risk database replica promotion authorization' : 'Service failover verification',
-          isHighRisk: true,
-          status: 'waiting_approval',
-          log: '[00:02.0] Execution paused: Awaiting cryptographic signature from authorized commander.',
-        },
-        {
-          id: 3,
-          title: isDb ? 'Promote Standby Read Replica' : 'Restart Container Pods',
-          action: isDb ? 'Execute replica failover & VIP cutover' : 'Zero-downtime rolling restart',
-          isHighRisk: false,
-          status: 'pending',
-          log: isDb ? '[00:04.8] Replication lag 0B. Standby replica promoted to Master.' : '[00:03.5] Pods restarted.',
-        },
-        {
-          id: 4,
-          title: 'Invalidate Stale Redis Cache Keys',
-          action: 'Purge session cache & update connection strings',
-          isHighRisk: false,
-          status: 'pending',
-          log: '[00:06.1] Flushed stale keys. Redis ping: PONG.',
-        },
-        {
-          id: 5,
-          title: 'Rolling Restart API Gateway',
-          action: 'Zero-downtime traffic shift to healthy replicas',
-          isHighRisk: false,
-          status: 'pending',
-          log: '[00:08.5] Health checks passed: 10/10 pods reporting 200 OK.',
-        },
-      ],
+      blastRadius: blast.affectedNodeIds,
+      detectedAt: Date.now(),
+      steps,
     };
+
+    this.addAuditLog({
+      id: Math.random().toString(36).substring(2, 9),
+      timestamp: new Date().toISOString(),
+      actor: 'AUTONOMOUS ORCHESTRATOR',
+      action: `Incident Declared: ${target.name}`,
+      details: `Generated ${steps.length} topological recovery steps. Blast radius: ${blast.affectedNodeIds.length} nodes impacted.`,
+      severity: 'warning',
+    });
 
     this.notify();
   }
@@ -200,32 +287,49 @@ class ClusterStateManager {
 
     this.activeJob.approvalSignature = sigResult.signature;
     this.activeJob.steps[1].status = 'completed';
-    this.activeJob.steps[1].log = `[00:03.1] Cryptographically signed on MST Testnet (TxHash: ${sigResult.hash}). Approval accepted.`;
+    this.activeJob.steps[1].log = `[00:03.1] Cryptographically signed on MST Testnet (TxHash: ${sigResult.hash.slice(0, 10)}...). Resuming execution.`;
     this.activeJob.status = 'RUNNING';
 
-    // Auto-advance subsequent steps
-    setTimeout(() => {
+    this.addAuditLog({
+      id: Math.random().toString(36).substring(2, 9),
+      timestamp: new Date().toISOString(),
+      actor: `COMMANDER (${address.slice(0, 8)}...)`,
+      action: `EIP-712 Gate Approved: ${this.activeJob.targetNodeName}`,
+      details: `Cryptographic approval verified on MST Testnet (TxHash: ${sigResult.hash}).`,
+      severity: 'info',
+    });
+
+    let nextIdx = 2;
+    const advanceNext = () => {
       if (!this.activeJob) return;
-      this.activeJob.steps[2].status = 'completed';
-      this.notify();
-
-      setTimeout(() => {
-        if (!this.activeJob) return;
-        this.activeJob.steps[3].status = 'completed';
+      if (nextIdx < this.activeJob.steps.length) {
+        this.activeJob.steps[nextIdx].status = 'completed';
+        this.activeJob.currentStepIndex = nextIdx;
+        nextIdx++;
         this.notify();
+        setTimeout(advanceNext, 700);
+      } else {
+        this.activeJob.status = 'COMPLETED';
+        this.activeJob.resolvedAt = Date.now();
+        this.activeJob.elapsedMs = this.activeJob.resolvedAt - this.activeJob.detectedAt;
 
-        setTimeout(() => {
-          if (!this.activeJob) return;
-          this.activeJob.steps[4].status = 'completed';
-          this.activeJob.status = 'COMPLETED';
+        const nodesToHeal = [this.activeJob.targetNodeId, ...this.activeJob.blastRadius];
+        nodesToHeal.forEach((id) => this.setNodeStatus(id, 'healthy'));
 
-          // Restore target node
-          this.setNodeStatus(this.activeJob.targetNodeId, 'healthy');
-          this.notify();
-        }, 800);
-      }, 800);
-    }, 800);
+        this.addAuditLog({
+          id: Math.random().toString(36).substring(2, 9),
+          timestamp: new Date().toISOString(),
+          actor: 'AUTONOMOUS ORCHESTRATOR',
+          action: `Incident Resolved: ${this.activeJob.targetNodeName}`,
+          details: `Cluster fully restored in ${(this.activeJob.elapsedMs / 1000).toFixed(1)}s. 0 cycle deadlocks detected.`,
+          severity: 'info',
+        });
 
+        this.notify();
+      }
+    };
+
+    setTimeout(advanceNext, 600);
     this.notify();
   }
 

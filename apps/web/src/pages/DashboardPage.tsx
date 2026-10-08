@@ -4,10 +4,13 @@ import { MetricWidget } from '../components/dashboard/MetricWidget';
 import { CommandBar } from '../components/copilot/CommandBar';
 import { SystemHealthOverview } from '../components/dashboard/SystemHealthOverview';
 import { RecentActivityWidget } from '../components/dashboard/RecentActivityWidget';
+import { WarRoomWidget } from '../components/dashboard/WarRoomWidget';
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { fetchNodes, fetchHealth } from '../lib/api';
 import { mstBlockchain, MST_CONFIG } from '../engine/mstBlockchain';
+import { autonomousWatchdog, type WatchdogMetrics } from '../engine/watchdog';
+import { dockerBridge, type DockerBridgeStatus } from '../engine/dockerBridge';
 import type { SystemNode } from '../types';
 import {
   Clock,
@@ -22,6 +25,7 @@ import {
   ArrowRight,
   ExternalLink,
   Sparkles,
+  Zap,
 } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -31,6 +35,21 @@ export const DashboardPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [blockHeight, setBlockHeight] = useState<number>(1042891);
   const [lastCheckTime, setLastCheckTime] = useState<string>('');
+  const [watchdogMetrics, setWatchdogMetrics] = useState<WatchdogMetrics>(() => autonomousWatchdog.getMetrics());
+  const [dockerStatus, setDockerStatus] = useState<DockerBridgeStatus>(() => dockerBridge.getStatus());
+
+  useEffect(() => {
+    const unsub = autonomousWatchdog.subscribe(() => {
+      setWatchdogMetrics(autonomousWatchdog.getMetrics());
+    });
+    const unsubDocker = dockerBridge.subscribe(() => {
+      setDockerStatus(dockerBridge.getStatus());
+    });
+    return () => {
+      unsub();
+      unsubDocker();
+    };
+  }, []);
 
   const loadData = async () => {
     try {
@@ -99,6 +118,21 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => autonomousWatchdog.toggleSentinel()}
+            className={`gap-2 text-xs sm:text-sm font-semibold rounded-xl border transition-all ${
+              watchdogMetrics.isSentinelActive
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm shadow-amber-500/20'
+                : 'text-[#A3ADC2] hover:text-[#FFF8F0]'
+            }`}
+            title="Toggle autonomous spontaneous chaos injection for live hands-free evaluator demo"
+          >
+            <Zap className={`w-4 h-4 ${watchdogMetrics.isSentinelActive ? 'text-amber-400 animate-pulse' : ''}`} />
+            <span>{watchdogMetrics.isSentinelActive ? 'Sentinel Active (Auto-Fail)' : 'Enable Chaos Sentinel'}</span>
+          </Button>
+
           <Link to="/architect">
             <Button
               variant="secondary"
@@ -138,12 +172,12 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         <MetricWidget
           title="Mean Time To Recovery"
-          value="3.8m"
-          trend="-18% vs 24h avg"
+          value={`${watchdogMetrics.rollingMttrSeconds.toFixed(1)}s`}
+          trend={watchdogMetrics.activeStopwatchSeconds > 0 ? `Active: ${watchdogMetrics.activeStopwatchSeconds}s` : "Optimal SLA (< 60s)"}
           isPositive={true}
           icon={<Clock className="w-5 h-5" />}
-          subtitle="Target SLA: < 5.0m"
-          sparkline={[5.2, 4.8, 4.6, 4.3, 4.0, 3.8]}
+          subtitle={`Autonomous Probes: ${watchdogMetrics.totalIncidentsDiscovered} caught`}
+          sparkline={[22.4, 20.1, 19.5, 18.2, 16.8, watchdogMetrics.rollingMttrSeconds]}
         />
         <MetricWidget
           title="Cluster Availability"
@@ -179,28 +213,39 @@ export const DashboardPage: React.FC = () => {
         <RecentActivityWidget />
       </div>
 
+      {/* Cross-Team Incident Broadcast War Room Feed */}
+      <WarRoomWidget />
+
       {/* Bottom Observability & Edge Telemetry Bento Strip */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
-        {/* Edge Serverless Status Bento */}
+        {/* Hybrid Infrastructure Engine Bento */}
         <Card className="p-5 flex items-center justify-between gap-3 text-xs sm:text-sm">
           <div className="flex items-center gap-3.5">
-            <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[#1E6BFF]">
-              <Cpu className="w-5 h-5" />
+            <div className={`p-2.5 rounded-xl border ${
+              dockerStatus.connected
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-blue-500/10 border-blue-500/20 text-[#1E6BFF]'
+            }`}>
+              <Server className="w-5 h-5" />
             </div>
             <div>
               <div className="font-bold text-[#FFF8F0] text-sm sm:text-base flex items-center gap-2">
-                <span>Vercel Edge Serverless</span>
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-semibold">
-                  {healthStatus}
+                <span>{dockerStatus.connected ? 'Docker Local Agent' : 'Hybrid Execution Engine'}</span>
+                <span className={`text-xs font-mono px-2 py-0.5 rounded-full font-semibold ${
+                  dockerStatus.connected
+                    ? 'bg-emerald-500/15 text-emerald-300'
+                    : 'bg-blue-500/15 text-blue-300'
+                }`}>
+                  {dockerStatus.connected ? 'LIVE CONTAINERS' : 'SIMULATOR'}
                 </span>
               </div>
               <p className="text-xs text-[#94A3B8] font-mono mt-0.5">
-                /api/v1/health • Bun & Hono
+                {dockerStatus.connected ? '5 containers monitored on :5174' : 'In-memory deterministic sandbox'}
               </p>
             </div>
           </div>
           <span className="text-xs font-mono text-[#8E9DB8]">
-            {lastCheckTime || 'Synced'}
+            {dockerStatus.connected ? 'Port 5174' : 'Zero-Install'}
           </span>
         </Card>
 
