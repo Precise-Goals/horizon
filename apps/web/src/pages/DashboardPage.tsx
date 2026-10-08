@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MetricWidget } from '../components/dashboard/MetricWidget';
+import { CommandBar } from '../components/copilot/CommandBar';
 import { SystemHealthOverview } from '../components/dashboard/SystemHealthOverview';
 import { RecentActivityWidget } from '../components/dashboard/RecentActivityWidget';
 import { Button } from '../components/common/Button';
@@ -76,6 +77,9 @@ export const DashboardPage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Sarvam AI SRE Copilot Command Bar */}
+      <CommandBar />
 
       {/* KPI Metric Bento Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

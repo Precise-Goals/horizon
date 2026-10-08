@@ -19,7 +19,7 @@ export interface AuditLogEntry {
   id: string
   timestamp: string
   action: string
-  actor: 'system' | 'human'
+  actor: 'system' | 'human' | 'llm_agent' | string
   details: string
-  severity: 'info' | 'warning' | 'critical'
+  severity: 'info' | 'warning' | 'critical' | string
 }

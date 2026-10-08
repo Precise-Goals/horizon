@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router';
 import { Button } from '../common/Button';
 import { AuthModal } from '../auth/AuthModal';
-import { useAuth } from '../../context/AuthContext';
+import { MSTWalletModal } from '../wallet/MSTWalletModal';
+import { useAuth } from '../../context/useAuth';
 import { fetchHealth, fetchNodes } from '../../lib/api';
+import { mstBlockchain } from '../../engine/mstBlockchain';
 import {
   Activity,
   LayoutDashboard,
@@ -21,12 +23,16 @@ import {
 export const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<string>('41.91 MST');
   const [healthStatus, setHealthStatus] = useState<'UP' | 'DEGRADED' | 'CHECKING'>('CHECKING');
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [incidentCount, setIncidentCount] = useState<number>(0);
   const location = useLocation();
+
+  useEffect(() => {
+    mstBlockchain.getBalance().then((bal) => setWalletBalance(`${bal} MST`));
+  }, []);
 
   // Poll real backend health and active nodes
   useEffect(() => {
@@ -59,15 +65,6 @@ export const Navbar: React.FC = () => {
     };
   }, []);
 
-  const handleWalletToggle = () => {
-    if (walletConnected) {
-      setWalletConnected(false);
-      setWalletAddress(null);
-    } else {
-      setWalletConnected(true);
-      setWalletAddress('0x71C...49A');
-    }
-  };
 
   const navLinks = [
     { to: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -194,22 +191,17 @@ export const Navbar: React.FC = () => {
               <ExternalLink className="w-3 h-3 text-[#A3ADC2]" />
             </a>
 
-            {/* Web3 Wallet Trigger */}
+            {/* MST Testnet Web3 Wallet Trigger */}
             <button
-              onClick={handleWalletToggle}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
-                walletConnected
-                  ? 'bg-blue-500/15 border-blue-500/30 text-blue-300 shadow-sm shadow-blue-500/15'
-                  : 'bg-white/[0.04] border-white/10 text-[#FFF8F0] hover:bg-white/[0.08] hover:border-white/20'
-              }`}
+              onClick={() => setIsWalletModalOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium transition-all border bg-blue-500/15 border-blue-500/30 text-blue-300 hover:bg-blue-500/25 hover:border-blue-500/50 cursor-pointer shadow-sm shadow-blue-500/15"
+              title="MST Testnet Commander Signer"
             >
               <Wallet className="w-3.5 h-3.5 text-[#1E6BFF]" />
-              <span className="font-mono">
-                {walletConnected ? walletAddress : 'Connect Wallet'}
+              <span className="font-mono text-[11px]">
+                {walletBalance} (MST Testnet)
               </span>
-              {walletConnected && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#10B981]" />
-              )}
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#10B981]" />
             </button>
 
             {/* User Auth Profile Trigger */}
@@ -243,6 +235,7 @@ export const Navbar: React.FC = () => {
       </header>
 
       <AuthModal isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+      <MSTWalletModal isOpen={isWalletModalOpen} onClose={() => setIsWalletModalOpen(false)} />
     </>
   );
 };

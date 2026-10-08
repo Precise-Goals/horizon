@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
+import { clusterState } from '../../engine/state';
 import {
   RotateCcw,
   Terminal,
@@ -80,11 +81,10 @@ export const RecoveryTimeline: React.FC = () => {
     },
   ];
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     setIsApproved(true);
-    setTimeout(() => {
-      setCurrentStepIndex(2);
-    }, 400);
+    await clusterState.approveGate();
+    setCurrentStepIndex(2);
   };
 
   const handleNextStep = () => {
@@ -96,6 +96,7 @@ export const RecoveryTimeline: React.FC = () => {
   };
 
   const handleReset = () => {
+    clusterState.resetRecovery();
     setCurrentStepIndex(0);
     setIsApproved(false);
     setIsCompleted(false);
