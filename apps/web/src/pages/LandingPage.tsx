@@ -62,16 +62,25 @@ export const LandingPage: React.FC = () => {
 
       {/* Ambient Celestial Horizon Lighting (Inspired by home.png) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[600px] bg-[radial-gradient(ellipse_75%_55%_at_50%_-10%,rgba(30,107,255,0.28),rgba(5,7,13,0))] pointer-events-none z-0" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[850px] h-[400px] bg-cyan-500/12 blur-[150px] rounded-full pointer-events-none z-0" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[850px] h-[400px] bg-cyan-500/10 blur-[150px] rounded-full pointer-events-none z-0" />
 
       {/* Subtle Grid Pattern Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293710_1px,transparent_1px),linear-gradient(to_bottom,#1f293710_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none z-0" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-10 sm:pt-16 pb-28 space-y-28">
-        
-        {/* ===================== MINIMAL HERO SECTION (Referencing home.png) ===================== */}
-        <section className=" homehero relative text-center max-w-5xl mx-auto space-y-8 pt-4">
-          <img src="horizon.jpg" className='horizon' alt="horizon" />
+      {/* ===================== MINIMAL HERO SECTION (Referencing home.png) ===================== */}
+      <section className="relative pt-28 sm:pt-36 md:pt-44 pb-24 sm:pb-32 overflow-hidden flex flex-col items-center justify-center text-center">
+        {/* Celestial Horizon Atmosphere Glow (Referencing home.png with horizon.jpg) */}
+        <div className="absolute inset-x-0 bottom-0 h-[320px] sm:h-[420px] md:h-[480px] pointer-events-none overflow-hidden select-none z-0">
+          <img
+            src="/horizon.jpg"
+            alt="Horizon Celestial Earth Curve"
+            className="w-full h-full object-cover object-top opacity-55 mix-blend-screen scale-105 transition-opacity duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#05070D] via-[#05070D]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#05070D] via-transparent to-transparent opacity-80" />
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
           {/* Minimal Status Pill */}
           <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl shadow-lg">
             <span className="relative flex h-2.5 w-2.5">
@@ -86,9 +95,9 @@ export const LandingPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Monumental Typography (Direct reference to home.png with bigger legible text) */}
+          {/* Monumental Typography (Direct reference to home.png) */}
           <div className="space-y-4">
-            <h1 className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tight text-[#FFF8F0] uppercase select-none leading-none drop-shadow-[0_15px_45px_rgba(30,107,255,0.3)]">
+            <h1 className="text-7xl sm:text-8xl md:text-9xl font-black tracking-tight text-[#FFF8F0] uppercase select-none leading-none drop-shadow-[0_15px_45px_rgba(30,107,255,0.35)]">
               Horizon
             </h1>
             <p className="text-sm sm:text-base md:text-lg font-mono tracking-widest uppercase text-[#8BA4D0] font-semibold">
@@ -117,11 +126,27 @@ export const LandingPage: React.FC = () => {
             </Link>
           </div>
 
-          
-        </section>
+          {/* Minimal Live Status Indicator */}
+          <div className="pt-4 flex items-center justify-center gap-6 text-xs font-mono text-[#8E9DB8]">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>7 Services Monitored</span>
+            </div>
+            <span>•</span>
+            <div>
+              Target MTTR: <span className="text-emerald-400 font-bold">&lt; 3.8m</span>
+            </div>
+            <span>•</span>
+            <div>
+              Consensus: <span className="text-blue-400 font-bold">MST Testnet (91562037)</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-        {/* ===================== ACETERNITY BENTO GRID FEATURES ===================== */}
-        <section className="space-y-10">
+      {/* ===================== ACETERNITY BENTO GRID FEATURES ===================== */}
+      <section className="relative py-20 sm:py-28 border-t border-white/[0.05] bg-gradient-to-b from-[#05070D] via-[#070A14] to-[#05070D]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-14">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-cyan-400">
               Core Architectural Pillars
@@ -284,10 +309,12 @@ export const LandingPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===================== 5-PHASE RESILIENCE LIFECYCLE ===================== */}
-        <section className="space-y-12 pt-6">
+      {/* ===================== 5-PHASE RESILIENCE LIFECYCLE & TECH SPECS ===================== */}
+      <section className="relative py-20 sm:py-28 border-t border-white/[0.05] bg-[#060912]/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
           <div className="text-center max-w-3xl mx-auto space-y-3">
             <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-purple-400">
               System Architecture & Methodology
@@ -399,10 +426,12 @@ export const LandingPage: React.FC = () => {
               ))}
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===================== FREQUENTLY ASKED QUESTIONS ===================== */}
-        <section className="space-y-9 max-w-4xl mx-auto">
+      {/* ===================== FREQUENTLY ASKED QUESTIONS ===================== */}
+      <section className="relative py-20 sm:py-28 border-t border-white/[0.05] bg-[#05070D]">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-12">
           <div className="text-center space-y-3">
             <span className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-blue-400">
               Technical Clarity
@@ -442,36 +471,46 @@ export const LandingPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===================== BOTTOM CTA BANNER ===================== */}
-        <section className="relative rounded-3xl overflow-hidden border border-blue-500/30 bg-gradient-to-r from-blue-900/30 via-[#090D18] to-purple-900/30 p-8 sm:p-14 text-center space-y-7 shadow-2xl shadow-blue-500/10">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(30,107,255,0.18),transparent_70%)] pointer-events-none" />
-          <div className="max-w-2xl mx-auto space-y-3 relative z-10">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#FFF8F0] tracking-tight">
-              Ready for Deterministic Self-Healing?
-            </h2>
-            <p className="text-sm sm:text-base text-[#A3ADC2] leading-relaxed">
-              Step into the command center, simulate outages across multi-tier topologies, and verify on-chain cryptographic audit anchoring live.
-            </p>
+      {/* ===================== BOTTOM CTA BANNER ===================== */}
+      <section className="relative py-20 sm:py-28 border-t border-white/[0.05] bg-gradient-to-b from-[#05070D] to-[#030408]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="relative rounded-3xl overflow-hidden border border-blue-500/30 bg-gradient-to-r from-blue-900/30 via-[#090D18] to-purple-900/30 p-8 sm:p-14 md:p-16 text-center space-y-7 shadow-2xl shadow-blue-500/10">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(30,107,255,0.18),transparent_70%)] pointer-events-none" />
+            <div className="max-w-2xl mx-auto space-y-3 relative z-10">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#FFF8F0] tracking-tight">
+                Ready for Deterministic Self-Healing?
+              </h2>
+              <p className="text-sm sm:text-base text-[#A3ADC2] leading-relaxed">
+                Step into the command center, simulate outages across multi-tier topologies, and verify on-chain cryptographic audit anchoring live.
+              </p>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-2">
+              <Link to="/dashboard">
+                <Button size="lg" className="w-full sm:w-auto text-base font-bold gap-2.5 px-9 py-4 rounded-full shadow-xl shadow-blue-500/30">
+                  <span>Enter Command Center</span>
+                  <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+              <Link to="/recovery">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto text-base px-7 py-4 rounded-full gap-2">
+                  <RotateCcw className="w-4 h-4 text-cyan-400" />
+                  <span>Simulate Chaos Incident</span>
+                </Button>
+              </Link>
+            </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 relative z-10 pt-2">
-            <Link to="/dashboard">
-              <Button size="lg" className="w-full sm:w-auto text-base font-bold gap-2.5 px-9 py-4 rounded-full shadow-xl shadow-blue-500/30">
-                <span>Enter Command Center</span>
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-            <Link to="/recovery">
-              <Button variant="secondary" size="lg" className="w-full sm:w-auto text-base px-7 py-4 rounded-full gap-2">
-                <RotateCcw className="w-4 h-4 text-cyan-400" />
-                <span>Simulate Chaos Incident</span>
-              </Button>
-            </Link>
-          </div>
-        </section>
+        </div>
+      </section>
 
-      </div>
+      {/* ===================== FOOTER ===================== */}
+      <footer className="border-t border-white/[0.08] py-12 px-4 sm:px-6 lg:px-8 bg-[#03050A] text-center text-xs text-[#6E7A94] space-y-2">
+        <p className="font-mono text-[#A3ADC2]">Horizon Autonomous Enterprise Infrastructure Recovery</p>
+        <p>Protected by BridgeKey Cryptographic Signatures &bull; Powered by MST Blockchain Testnet (Chain ID 91562037)</p>
+      </footer>
+
     </div>
   );
 };

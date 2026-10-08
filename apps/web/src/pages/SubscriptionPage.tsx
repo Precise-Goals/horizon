@@ -9,7 +9,7 @@ export const SubscriptionPage: React.FC = () => {
           Web3 Platform Subscriptions
         </h1>
         <p className="text-xs text-[#A3ADC2] mt-0.5">
-          Decentralized subscription passes minted as ERC-721 smart contract tokens on Sepolia / Ethereum for automated resilience access gating.
+          Decentralized subscription passes minted as ERC-721 smart contract tokens on MST Blockchain Testnet (Chain ID 91562037) with BridgeKey wallet verification.
         </p>
       </div>
       <SubscriptionPlans />
