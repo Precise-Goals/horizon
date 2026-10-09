@@ -17,6 +17,7 @@ import { cn } from '../../lib/utils';
 export const RootLayout: React.FC = () => {
   const location = useLocation();
   const isPatents = location.pathname.startsWith('/patents') || location.pathname === '/governance/patents';
+  const isArchitect = location.pathname.startsWith('/architect');
 
   return (
     <OnboardingGate>
@@ -41,7 +42,9 @@ export const RootLayout: React.FC = () => {
           <div
             className={cn(
               'horizon-content-wrapper mx-auto w-full transition-all',
-              isPatents
+              isArchitect
+                ? 'max-w-5xl px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col'
+                : isPatents
                 ? 'max-w-5xl px-3 sm:px-6 py-6 sm:py-8'
                 : 'max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12'
             )}
