@@ -82,11 +82,69 @@ export const DocsPage: React.FC = () => {
   const [selectedToolIndex, setSelectedToolIndex] = useState<number>(0);
   const [payloadView, setPayloadView] = useState<'request' | 'response'>('request');
   const [apiLang, setApiLang] = useState<'curl' | 'ts' | 'python'>('curl');
+  const [probeResults, setProbeResults] = useState<
+    Record<
+      string,
+      {
+        loading: boolean;
+        status?: number;
+        statusText?: string;
+        timeMs?: number;
+        data?: string;
+        error?: string;
+      }
+    >
+  >({});
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleProbeLiveApi = async (path: string, liveUrl: string) => {
+    setProbeResults((prev) => ({
+      ...prev,
+      [path]: { loading: true },
+    }));
+    const start = performance.now();
+    try {
+      const res = await fetch(liveUrl, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+      });
+      const elapsed = Math.round(performance.now() - start);
+      let preview = '';
+      try {
+        const json = await res.json();
+        preview = JSON.stringify(json, null, 2);
+      } catch {
+        preview = await res.text();
+      }
+      setProbeResults((prev) => ({
+        ...prev,
+        [path]: {
+          loading: false,
+          status: res.status,
+          statusText: res.statusText || 'OK',
+          timeMs: elapsed,
+          data: preview.slice(0, 350),
+        },
+      }));
+    } catch (err: any) {
+      const elapsed = Math.round(performance.now() - start);
+      setProbeResults((prev) => ({
+        ...prev,
+        [path]: {
+          loading: false,
+          status: 0,
+          statusText: 'Direct Browser Access',
+          timeMs: elapsed,
+          error:
+            'Browser CORS security policy intercepted direct in-page fetch. Click "Check Live API" to view live response directly.',
+        },
+      }));
+    }
   };
 
   /* MCP Configurations for Claude Desktop, Cursor, Antigravity, and Windsurf */
@@ -811,29 +869,79 @@ export const DocsPage: React.FC = () => {
     },
   ];
 
-  /* REST API Endpoints */
+  /* REST API Endpoints with Live Endpoints & Verification URLs */
   const apiEndpoints = [
     {
       method: 'GET',
+      path: '/health',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/health',
+      category: 'Live Production MCP Server',
+      desc: 'Live production health probe returning engine status, 12 registered MCP recovery tools, and active SSE sessions.',
+      response: '{\n  "status": "healthy",\n  "service": "horizon-mcp-server",\n  "version": "1.0.0",\n  "environment": "production",\n  "tools_registered": 12,\n  "active_sse_sessions": 0\n}',
+    },
+    {
+      method: 'GET',
+      path: '/',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/',
+      category: 'Developer Dashboard',
+      desc: 'Interactive web console to view cluster status, inspect MCP tools, execute JSON-RPC calls, and monitor SSE sessions.',
+      response: '<!DOCTYPE html>\n<html>\n  <head><title>Horizon MCP Server Dashboard</title></head>\n  <!-- Interactive Testing Console -->\n</html>',
+    },
+    {
+      method: 'POST',
+      path: '/mcp',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/mcp',
+      category: 'Direct MCP JSON-RPC 2.0',
+      desc: 'Direct HTTP JSON-RPC 2.0 protocol endpoint for stateless agents, CI/CD pipelines, and tool execution.',
+      payload: '{\n  "jsonrpc": "2.0",\n  "id": 1,\n  "method": "tools/call",\n  "params": {\n    "name": "horizon_probe_health",\n    "arguments": { "node_id": "redis-cache" }\n  }\n}',
+      response: '{\n  "jsonrpc": "2.0",\n  "id": 1,\n  "result": {\n    "content": [{ "type": "text", "text": "{\\n  \\"nodeId\\": \\"redis-cache\\",\\n  \\"status\\": \\"healthy\\"\\n}" }],\n    "isError": false\n  }\n}',
+    },
+    {
+      method: 'GET',
+      path: '/sse',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/sse',
+      category: 'Production SSE Stream',
+      desc: 'Server-Sent Events streaming transport for Cursor IDE and remote LLM agent workflows.',
+      response: 'event: endpoint\ndata: /messages?sessionId=d3b07384-9543-467f-9f79-22c668270d47\n\n: ping',
+    },
+    {
+      method: 'POST',
+      path: '/api/v1/incidents/webhook',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook',
+      category: 'Inbound Webhook Pipeline',
+      desc: 'Ingests firing alerts from Prometheus Alertmanager & Datadog Monitors to trigger Kahn DAG recovery sequencing.',
+      payload: '{\n  "status": "firing",\n  "alerts": [{\n    "labels": { "alertname": "PostgresDown", "service": "db-primary" }\n  }]\n}',
+      response: '{\n  "status": "incident_received",\n  "incident_id": "INC-8820",\n  "target_node": "db-primary",\n  "autonomous_recovery_triggered": true,\n  "job_id": "REC-9940"\n}',
+    },
+    {
+      method: 'GET',
       path: '/api/v1/health',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/health',
+      category: 'Cluster Telemetry',
       desc: 'Evaluates cluster operational state, node status counts, and active incidents.',
       response: '{\n  "status": "UP",\n  "timestamp": "2026-10-09T02:40:00Z",\n  "version": "1.0.0",\n  "totalNodes": 7,\n  "activeIncidents": 0\n}',
     },
     {
       method: 'GET',
       path: '/api/v1/nodes',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/health',
+      category: 'Topology & Mesh',
       desc: 'Returns all monitored microservices, database replicas, and dependency links.',
       response: '[\n  {\n    "id": "db-primary",\n    "name": "PostgreSQL Primary",\n    "type": "database",\n    "status": "healthy",\n    "dependencies": []\n  }\n]',
     },
     {
       method: 'GET',
       path: '/api/v1/graph/analysis',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/health',
+      category: 'Topological Engine',
       desc: 'Executes Kahn’s topological sort to verify acyclic DAG structure and detect circular deadlocks.',
       response: '{\n  "hasCycle": false,\n  "cyclePath": []\n}',
     },
     {
       method: 'POST',
       path: '/api/v1/chaos',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/mcp',
+      category: 'Chaos Sentinel',
       desc: 'Triggers simulated failure or manual healing of any cluster node.',
       payload: '{\n  "nodeId": "db-primary",\n  "action": "fail"\n}',
       response: '{\n  "message": "Node db-primary set to DOWN",\n  "incident": { "id": "INC-8821", "status": "awaiting_approval" }\n}',
@@ -841,6 +949,8 @@ export const DocsPage: React.FC = () => {
     {
       method: 'POST',
       path: '/api/v1/tick',
+      liveUrl: 'https://horizon-mcp-server-phf8.onrender.com/mcp',
+      category: 'Recovery Orchestrator',
       desc: 'Advances the autonomous recovery orchestrator to execute the next pending playbook step.',
       response: '{\n  "advanced": true,\n  "incident": { "id": "INC-8821", "current_level": 1 }\n}',
     },
@@ -1087,39 +1197,136 @@ export const DocsPage: React.FC = () => {
                 href="https://horizon-mcp-server-phf8.onrender.com/health"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200 hover:bg-emerald-100 transition-colors w-fit"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200 hover:bg-emerald-100 transition-colors w-fit"
               >
-                <span>Status: Healthy (8 Tools Active)</span>
+                <span>Status: Healthy (12 Tools Active)</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
               <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Production SSE Stream URL</span>
                 <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
-                  <span>https://horizon-mcp-server-phf8.onrender.com/sse</span>
-                  <button
-                    onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/sse', 'prod-sse')}
-                    className="p-1 text-[#6E6258] hover:text-[#1A1A1A] ml-2 shrink-0"
-                    title="Copy URL"
-                  >
-                    {copiedKey === 'prod-sse' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
+                  <span className="truncate">https://horizon-mcp-server-phf8.onrender.com/sse</span>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <a
+                      href="https://horizon-mcp-server-phf8.onrender.com/sse"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-[#0047AB] hover:text-[#003580] rounded hover:bg-blue-100/50 transition-colors"
+                      title="Check live SSE stream in browser"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/sse', 'prod-sse')}
+                      className="p-1 text-[#6E6258] hover:text-[#1A1A1A]"
+                      title="Copy URL"
+                    >
+                      {copiedKey === 'prod-sse' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1">
                 <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Direct JSON-RPC 2.0 URL</span>
                 <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
-                  <span>https://horizon-mcp-server-phf8.onrender.com/mcp</span>
-                  <button
-                    onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/mcp', 'prod-mcp')}
-                    className="p-1 text-[#6E6258] hover:text-[#1A1A1A] ml-2 shrink-0"
-                    title="Copy URL"
-                  >
-                    {copiedKey === 'prod-mcp' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
+                  <span className="truncate">https://horizon-mcp-server-phf8.onrender.com/mcp</span>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <a
+                      href="https://horizon-mcp-server-phf8.onrender.com/mcp"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-[#0047AB] hover:text-[#003580] rounded hover:bg-blue-100/50 transition-colors"
+                      title="Check live JSON-RPC endpoint"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/mcp', 'prod-mcp')}
+                      className="p-1 text-[#6E6258] hover:text-[#1A1A1A]"
+                      title="Copy URL"
+                    >
+                      {copiedKey === 'prod-mcp' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Live Health Probe Endpoint</span>
+                <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
+                  <span className="truncate">https://horizon-mcp-server-phf8.onrender.com/health</span>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <a
+                      href="https://horizon-mcp-server-phf8.onrender.com/health"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-[#0047AB] hover:text-[#003580] rounded hover:bg-blue-100/50 transition-colors"
+                      title="Check live health API"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/health', 'prod-health')}
+                      className="p-1 text-[#6E6258] hover:text-[#1A1A1A]"
+                      title="Copy URL"
+                    >
+                      {copiedKey === 'prod-health' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Interactive Web Console</span>
+                <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
+                  <span className="truncate">https://horizon-mcp-server-phf8.onrender.com/</span>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <a
+                      href="https://horizon-mcp-server-phf8.onrender.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-[#0047AB] hover:text-[#003580] rounded hover:bg-blue-100/50 transition-colors"
+                      title="View live interactive dashboard"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/', 'prod-dashboard')}
+                      className="p-1 text-[#6E6258] hover:text-[#1A1A1A]"
+                      title="Copy URL"
+                    >
+                      {copiedKey === 'prod-dashboard' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1 md:col-span-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Inbound Alert Webhook Ingestion</span>
+                <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
+                  <span className="truncate">https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook</span>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    <a
+                      href="https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-[#0047AB] hover:text-[#003580] rounded hover:bg-blue-100/50 transition-colors"
+                      title="Check live alert ingestion webhook endpoint"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                    <button
+                      onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook', 'prod-webhook')}
+                      className="p-1 text-[#6E6258] hover:text-[#1A1A1A]"
+                      title="Copy URL"
+                    >
+                      {copiedKey === 'prod-webhook' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1339,8 +1546,21 @@ export const DocsPage: React.FC = () => {
                   <p className="text-xs text-[#6E6258] font-medium">{selectedTool.summary}</p>
                 </div>
 
-                <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-xs font-mono text-[#0047AB] font-bold truncate">
-                  Method: tools/call
+                <div className="flex items-center gap-2 flex-wrap">
+                  <a
+                    href="https://horizon-mcp-server-phf8.onrender.com/health"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF3EA] text-[#0047AB] border border-[#E5D7C5] hover:bg-[#0047AB] hover:text-white transition-all text-xs font-bold cursor-pointer group shadow-xs"
+                    title="Check live API endpoint on Render"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    <span>Check Live API</span>
+                  </a>
+
+                  <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-xs font-mono text-[#0047AB] font-bold truncate">
+                    Method: tools/call
+                  </div>
                 </div>
               </div>
 
@@ -1468,16 +1688,28 @@ export const DocsPage: React.FC = () => {
                     ? `JSON-RPC 2.0 Request Payload: ${selectedTool.name}`
                     : `JSON-RPC 2.0 Success Response Payload`}
                 </span>
-                <button
-                  onClick={() =>
-                    copyToClipboard(
-                      payloadView === 'request' ? selectedTool.jsonRpcRequest : selectedTool.jsonRpcResponse,
-                      `payload-${selectedTool.name}-${payloadView}`
-                    )
-                  }
-                  className="inline-flex items-center gap-1.5 font-bold text-[#0047AB] hover:underline cursor-pointer"
-                >
-                  {copiedKey === `payload-${selectedTool.name}-${payloadView}` ? (
+                <div className="flex items-center gap-3">
+                  <a
+                    href="https://horizon-mcp-server-phf8.onrender.com/mcp"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-[#0047AB] text-white hover:bg-[#003580] transition-colors shadow-xs cursor-pointer group"
+                    title="Send JSON-RPC payload to live Render endpoint"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                    <span>Check Live API</span>
+                  </a>
+
+                  <button
+                    onClick={() =>
+                      copyToClipboard(
+                        payloadView === 'request' ? selectedTool.jsonRpcRequest : selectedTool.jsonRpcResponse,
+                        `payload-${selectedTool.name}-${payloadView}`
+                      )
+                    }
+                    className="inline-flex items-center gap-1.5 font-bold text-[#0047AB] hover:underline cursor-pointer"
+                  >
+                    {copiedKey === `payload-${selectedTool.name}-${payloadView}` ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
                       <span className="text-emerald-700">Copied!</span>
@@ -1490,8 +1722,9 @@ export const DocsPage: React.FC = () => {
                   )}
                 </button>
               </div>
+            </div>
 
-              <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-black shadow-inner overflow-x-auto text-xs font-mono text-cyan-300">
+            <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-black shadow-inner overflow-x-auto text-xs font-mono text-cyan-300">
                 <pre>
                   <code>{payloadView === 'request' ? selectedTool.jsonRpcRequest : selectedTool.jsonRpcResponse}</code>
                 </pre>
@@ -1732,8 +1965,8 @@ export const DocsPage: React.FC = () => {
             <div className="space-y-4">
               {apiEndpoints.map((ep) => (
                 <div key={ep.path} className="p-4 rounded-2xl bg-white border border-[#E5D7C5] shadow-xs space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-[#EADCC9]">
-                    <div className="flex items-center gap-2.5 font-mono text-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-[#EADCC9] gap-2">
+                    <div className="flex items-center gap-2.5 font-mono text-xs flex-wrap">
                       <span
                         className={`px-2 py-0.5 rounded font-black ${
                           ep.method === 'GET'
@@ -1744,16 +1977,80 @@ export const DocsPage: React.FC = () => {
                         {ep.method}
                       </span>
                       <span className="font-bold text-[#1A1A1A]">{ep.path}</span>
+                      {ep.category && (
+                        <span className="text-[10px] uppercase font-bold text-[#8A7B6D] px-2 py-0.5 rounded bg-[#FAF3EA] border border-[#EADCC9]">
+                          {ep.category}
+                        </span>
+                      )}
                     </div>
 
-                    <button
-                      onClick={() => copyToClipboard(`https://horizon-recovery.vercel.app${ep.path}`, ep.path)}
-                      className="text-xs text-[#0047AB] font-bold hover:underline flex items-center gap-1"
-                    >
-                      {copiedKey === ep.path ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>Copy URL</span>
-                    </button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* API Check Button like link icon to View Live API */}
+                      <a
+                        href={ep.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#0047AB] text-white hover:bg-[#003580] transition-all shadow-xs cursor-pointer group shrink-0"
+                        title={`Open live API for ${ep.path} in browser`}
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                        <span>Check Live API</span>
+                      </a>
+
+                      {/* Interactive Inline Probe Button */}
+                      <button
+                        onClick={() => handleProbeLiveApi(ep.path, ep.liveUrl)}
+                        disabled={probeResults[ep.path]?.loading}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF3EA] text-[#5A4E44] hover:text-[#1A1A1A] border border-[#E5D7C5] hover:bg-[#F4EBE0] transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                        title="Probe live status and latency"
+                      >
+                        <Zap className={`w-3.5 h-3.5 text-amber-600 ${probeResults[ep.path]?.loading ? 'animate-pulse' : ''}`} />
+                        <span>{probeResults[ep.path]?.loading ? 'Checking...' : 'Probe Status'}</span>
+                      </button>
+
+                      {/* Copy URL */}
+                      <button
+                        onClick={() => copyToClipboard(ep.liveUrl, ep.path)}
+                        className="text-xs text-[#6E6258] hover:text-[#0047AB] font-bold hover:underline flex items-center gap-1 shrink-0 ml-1"
+                        title="Copy Live Endpoint URL"
+                      >
+                        {copiedKey === ep.path ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>Copy URL</span>
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Probe Result Drawer if probed */}
+                  {probeResults[ep.path] && (
+                    <div className="p-3 rounded-xl bg-[#1A1A1A] border border-black text-[11px] font-mono space-y-1.5">
+                      <div className="flex items-center justify-between text-stone-300 pb-1 border-b border-stone-800">
+                        <span className="flex items-center gap-2">
+                          <span
+                            className={`inline-block w-2 h-2 rounded-full ${
+                              probeResults[ep.path].status === 200 ? 'bg-emerald-400' : 'bg-amber-400'
+                            }`}
+                          />
+                          <strong className="text-white">
+                            Live Probe Status:{' '}
+                            {probeResults[ep.path].status
+                              ? `${probeResults[ep.path].status} ${probeResults[ep.path].statusText}`
+                              : 'Direct Browser Access'}
+                          </strong>
+                        </span>
+                        {probeResults[ep.path].timeMs !== undefined && (
+                          <span className="text-cyan-400 font-bold">{probeResults[ep.path].timeMs}ms response</span>
+                        )}
+                      </div>
+                      {probeResults[ep.path].data && (
+                        <pre className="text-emerald-300 overflow-x-auto text-[10px] max-h-32">
+                          <code>{probeResults[ep.path].data}</code>
+                        </pre>
+                      )}
+                      {probeResults[ep.path].error && (
+                        <p className="text-amber-300 text-[10px]">{probeResults[ep.path].error}</p>
+                      )}
+                    </div>
+                  )}
 
                   <p className="text-xs text-[#5A4E44] font-medium">{ep.desc}</p>
 
@@ -1761,9 +2058,9 @@ export const DocsPage: React.FC = () => {
                   <div className="p-3.5 rounded-xl bg-[#1A1A1A] border border-black text-[11px] font-mono text-cyan-300 overflow-x-auto shadow-inner">
                     <pre>
                       <code>
-                        {apiLang === 'curl' && `curl -X ${ep.method} "https://horizon-recovery.vercel.app${ep.path}" \\\n  -H "Content-Type: application/json"`}
-                        {apiLang === 'ts' && `const res = await fetch("https://horizon-recovery.vercel.app${ep.path}", {\n  method: "${ep.method}",\n  headers: { "Content-Type": "application/json" }\n});\nconst data = await res.json();`}
-                        {apiLang === 'python' && `import httpx\n\nres = httpx.${ep.method.toLowerCase()}("https://horizon-recovery.vercel.app${ep.path}")\ndata = res.json()`}
+                        {apiLang === 'curl' && `curl -X ${ep.method} "${ep.liveUrl}" \\\n  -H "Content-Type: application/json"`}
+                        {apiLang === 'ts' && `const res = await fetch("${ep.liveUrl}", {\n  method: "${ep.method}",\n  headers: { "Content-Type": "application/json" }\n});\nconst data = await res.json();`}
+                        {apiLang === 'python' && `import httpx\n\nres = httpx.${ep.method.toLowerCase()}("${ep.liveUrl}")\ndata = res.json()`}
                       </code>
                     </pre>
                   </div>

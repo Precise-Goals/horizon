@@ -117,6 +117,8 @@ If your target databases, Kubernetes clusters, or private cloud VPCs require IP 
 ### 1. `horizon_get_topology`
 Inspects the current live infrastructure dependency topology, node health states, edge mappings, and Kahn topological levels.
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `status` (*string*, optional): Filter nodes by health status (`"all"`, `"healthy"`, `"degraded"`, `"down"`, `"recovering"`). Default: `"all"`.
 
@@ -166,6 +168,8 @@ Inspects the current live infrastructure dependency topology, node health states
 ### 2. `horizon_simulate_failure`
 Injects simulated outage or chaos fault into a target node and computes the cascaded blast radius using Kahn's algorithm and Breadth-First Search (BFS).
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `node_id` (*string*, required): ID of the node to fail (e.g. `"db-primary"`, `"redis-cache"`).
   - `reason` (*string*, optional): Operational context or drill description.
@@ -203,6 +207,8 @@ Injects simulated outage or chaos fault into a target node and computes the casc
 
 ### 3. `horizon_trigger_recovery`
 Executes autonomous multi-tier bottom-up recovery along Kahn topological order. Flags Human-in-the-Loop approval gates for stateful or high blast-radius infrastructure.
+
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
 
 - **Parameters:**
   - `target_node_id` (*string*, required): Target node ID to recover.
@@ -251,6 +257,8 @@ Executes autonomous multi-tier bottom-up recovery along Kahn topological order. 
 ### 4. `horizon_sign_approval_gate`
 Formats an EIP-712 structured cryptographic data payload for Human-in-the-Loop high blast-radius recovery actions on the MST Testnet smart contract (`0x3EDad...`).
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `incident_id` (*string*, required): Active incident ID (e.g. `"INC-8820"`).
   - `step_id` (*integer*, required): Recovery playbook step number (e.g. `1`).
@@ -291,6 +299,8 @@ Formats an EIP-712 structured cryptographic data payload for Human-in-the-Loop h
 ### 5. `horizon_verify_audit_proof`
 Queries and cryptographically verifies a SHA-256 Merkle root audit proof against immutable MST Testnet block logs.
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `log_id` (*string*, required): Incident or recovery audit identifier.
   - `expected_hash` (*string*, optional): Optional baseline hash for comparison.
@@ -323,6 +333,8 @@ Queries and cryptographically verifies a SHA-256 Merkle root audit proof against
 
 ### 6. `horizon_synthesize_yaml`
 Compiles production Kubernetes CRD (`AutonomousRecoveryPipeline`) and Terraform infrastructure recovery manifests from natural language using Sarvam AI (`sarvam-105b`).
+
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
 
 - **Parameters:**
   - `prompt` (*string*, required): Architecture description (e.g. `"E-commerce with MySQL, Redis, and Stripe worker"` or `"GenAI RAG with pgvector and Milvus"`).
@@ -359,6 +371,8 @@ Compiles production Kubernetes CRD (`AutonomousRecoveryPipeline`) and Terraform 
 ### 7. `horizon_ask_sre`
 Conversational multilingual SRE Copilot powered by Sarvam AI (`sarvam-105b`). Enforces strict technical domain guardrails and responds conversationally in the user's language (Hindi, English, Spanish, Tamil, etc.).
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `query` (*string*, required): Site reliability engineering or incident management question.
 
@@ -381,6 +395,8 @@ Conversational multilingual SRE Copilot powered by Sarvam AI (`sarvam-105b`). En
 
 ### 8. `horizon_diagnose_cluster`
 Audits cluster health, validates acyclic safety via Kahn topological sort, identifies Single Points of Failure (SPOFs), and evaluates downstream blast impact.
+
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
 
 - **Parameters:**
   - `detailed` (*boolean*, optional, default: `false`): Include latency, CPU, and error rate telemetry.
@@ -420,6 +436,8 @@ Audits cluster health, validates acyclic safety via Kahn topological sort, ident
 ### 9. `horizon_probe_health`
 Evaluates node or cluster health with sliding-window consecutive failure tracking. Prevents alert flapping by requiring **3 consecutive missed health probes** before transitioning a node to `down` and degrading downstream dependencies.
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `node_id` (*string*, optional): Target node to probe (e.g. `"redis-cache"`). If omitted, evaluates all cluster nodes.
   - `simulate_miss` (*boolean*, optional): Manually trigger a simulated probe miss (`true`) or successful probe recovery (`false`).
@@ -456,6 +474,8 @@ Evaluates node or cluster health with sliding-window consecutive failure trackin
 ### 10. `horizon_submit_gate_approval`
 Cryptographically unblocks a paused high-risk recovery job using an EIP-712 digital signature, executing remaining recovery tiers and updating MTTR history.
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `job_id` (*string*, required): Active recovery job ID (e.g. `"REC-9940"`).
   - `step_id` (*integer*, required): Playbook step ID to unblock (e.g. `1`).
@@ -491,6 +511,8 @@ Cryptographically unblocks a paused high-risk recovery job using an EIP-712 digi
 
 ### 11. `horizon_get_incident_timeline`
 Retrieves the real-time Recovery Time Objective (RTO) stopwatch, step execution milestones, audit log entries, and rolling Mean Time to Recovery (MTTR) metrics.
+
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
 
 - **Parameters:**
   - `job_id_or_incident_id` (*string*, required): Recovery Job ID (e.g. `"REC-9940"`) or Incident ID (e.g. `"INC-8820"`).
@@ -530,6 +552,8 @@ Retrieves the real-time Recovery Time Objective (RTO) stopwatch, step execution 
 ### 12. `horizon_broadcast_incident`
 Dispatches synchronized incident alerts and blast-radius summaries to War Room channels and external HTTP webhooks (Slack/Discord/PagerDuty).
 
+> 🔗 **[Check Live API (Health Probe) ↗](https://horizon-mcp-server-phf8.onrender.com/health)** • **[Interactive Web Console ↗](https://horizon-mcp-server-phf8.onrender.com/)** • **[Direct JSON-RPC ↗](https://horizon-mcp-server-phf8.onrender.com/mcp)**
+
 - **Parameters:**
   - `incident_id` (*string*, required): Active incident identifier (e.g. `"INC-8820"`).
   - `channels` (*array of strings*, optional): Target alert channels (default: `["#war-room-critical", "#sre-alerts", "#incident-response"]`).
@@ -568,6 +592,8 @@ Dispatches synchronized incident alerts and blast-radius summaries to War Room c
 ## ⚡ Inbound Alert Webhook Pipeline
 
 Horizon ingests firing alerts from monitoring systems to automatically trigger failure simulation and Kahn DAG recovery sequencing.
+
+> 🔗 **[Check Live Webhook Receiver ↗](https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook)** • **[Health Status Probe ↗](https://horizon-mcp-server-phf8.onrender.com/health)**
 
 ### `POST /api/v1/incidents/webhook` (Alias: `POST /incidents/webhook`)
 
