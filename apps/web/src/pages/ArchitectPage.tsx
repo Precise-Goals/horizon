@@ -31,7 +31,14 @@ import {
   MessageSquare,
   Database,
   Layers,
+  Loader2,
+  Wrench,
+  Brain,
 } from "lucide-react";
+import {
+  pipelineDeployer,
+  type DeploymentProgress,
+} from "../engine/pipelineDeployer";
 import { cn } from "../lib/utils";
 
 const containerVariants = {
@@ -161,6 +168,9 @@ export const ArchitectPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [thinkingStep, setThinkingStep] = useState<string>("");
   const [deployedArchName, setDeployedArchName] = useState<string | null>(null);
+  const [activeDeployingArch, setActiveDeployingArch] = useState<string | null>(null);
+  const [archDeployProgress, setArchDeployProgress] = useState<DeploymentProgress | null>(null);
+  const [autoRemediate, setAutoRemediate] = useState<boolean>(() => clusterState.isAutoRemediate());
 
   // Active tab per message: Record<messageId, 'dag' | 'yaml' | 'rollout'>
   const [activeTabs, setActiveTabs] = useState<
@@ -322,19 +332,36 @@ export const ArchitectPage: React.FC = () => {
     }
   };
 
-  const handleDeployToCluster = (architecture: DecodedArchitecture) => {
+  const handleDeployToCluster = async (architecture: DecodedArchitecture) => {
     if (architecture.cycleDetected) {
       alert(
         "Cannot deploy topology with circular dependency! Resolve deadlocks first.",
       );
       return;
     }
+
+    setActiveDeployingArch(architecture.architectureName);
+
+    // Synchronously verify each node's SHA-256 checksum and probe health
+    await pipelineDeployer.execute({
+      pipelineName: architecture.architectureName,
+      nodes: architecture.nodes,
+      topologicalLevels: architecture.topologicalLevels,
+      autoRemediate: autoRemediate,
+      onProgress: (progress) => {
+        setArchDeployProgress(progress);
+      },
+    });
+
     clusterState.setCustomTopology(
       architecture.nodes,
       architecture.architectureName,
     );
     setDeployedArchName(architecture.architectureName);
-    setTimeout(() => setDeployedArchName(null), 4000);
+    setTimeout(() => {
+      setDeployedArchName(null);
+      setActiveDeployingArch(null);
+    }, 4500);
   };
 
   const handleCopyYaml = (msgId: string, yamlContent: string) => {
@@ -604,7 +631,35 @@ export const ArchitectPage: React.FC = () => {
                               </div>
 
                               {/* Right side actions & Status */}
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
+                                {/* Auto-Remedy Toggle */}
+                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5]">
+                                  <span className="text-[10px] font-bold text-[#5A4E44]">Auto-Remedy:</span>
+                                  <button
+                                    onClick={() => {
+                                      const next = !autoRemediate;
+                                      setAutoRemediate(next);
+                                      clusterState.setAutoRemediate(next);
+                                      pipelineDeployer.setAutoRemediate(next);
+                                    }}
+                                    className={cn(
+                                      'w-7 h-4 rounded-full p-0.5 transition-colors cursor-pointer flex items-center',
+                                      autoRemediate ? 'bg-emerald-600' : 'bg-stone-300'
+                                    )}
+                                    title="Toggle auto-remediation during synchronous deployment"
+                                  >
+                                    <div
+                                      className={cn(
+                                        'w-3 h-3 rounded-full bg-white transition-transform shadow-xs',
+                                        autoRemediate ? 'translate-x-3' : 'translate-x-0'
+                                      )}
+                                    />
+                                  </button>
+                                  <span className={cn('text-[9px] font-mono font-bold', autoRemediate ? 'text-emerald-700' : 'text-stone-500')}>
+                                    {autoRemediate ? 'ON' : 'OFF'}
+                                  </span>
+                                </div>
+
                                 {decoded.cycleDetected ? (
                                   <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-red-50 text-red-800 border border-red-300 shadow-2xs flex items-center gap-1">
                                     <AlertTriangle className="w-3 h-3 text-red-600" />
@@ -620,26 +675,29 @@ export const ArchitectPage: React.FC = () => {
                                 {/* 1-Click Cluster Actuator */}
                                 <button
                                   onClick={() => handleDeployToCluster(decoded)}
-                                  disabled={decoded.cycleDetected}
+                                  disabled={decoded.cycleDetected || activeDeployingArch === decoded.architectureName}
                                   className={cn(
                                     "px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-[0_2px_6px_rgba(0,71,171,0.2),inset_0_1px_0_rgba(255,255,255,0.3)]",
-                                    deployedArchName ===
-                                      decoded.architectureName
+                                    deployedArchName === decoded.architectureName
                                       ? "bg-emerald-600 text-white border border-emerald-500"
+                                      : activeDeployingArch === decoded.architectureName
+                                      ? "bg-blue-600 text-white border border-blue-500"
                                       : "bg-[#0047AB] hover:bg-[#00388A] text-white border border-[#00388A]",
                                   )}
                                   title="Deploy topology directly to active Horizon cluster"
                                 >
-                                  {deployedArchName ===
-                                  decoded.architectureName ? (
-                                    <Check className="w-3.5 h-3.5" />
+                                  {activeDeployingArch === decoded.architectureName ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                                  ) : deployedArchName === decoded.architectureName ? (
+                                    <Check className="w-3.5 h-3.5 text-white" />
                                   ) : (
                                     <Rocket className="w-3.5 h-3.5" />
                                   )}
                                   <span>
-                                    {deployedArchName ===
-                                    decoded.architectureName
-                                      ? "Deployed!"
+                                    {activeDeployingArch === decoded.architectureName
+                                      ? `Verifying (${archDeployProgress ? `${archDeployProgress.currentIndex + 1}/${archDeployProgress.totalNodes}` : '...'})`
+                                      : deployedArchName === decoded.architectureName
+                                      ? "Deployed Green!"
                                       : "Deploy"}
                                   </span>
                                 </button>
@@ -668,6 +726,86 @@ export const ArchitectPage: React.FC = () => {
                                 </button>
                               </div>
                             </div>
+
+                            {/* Synchronous Deployment Stepper & Checksum Progress Banner */}
+                            {activeDeployingArch === decoded.architectureName && archDeployProgress && (
+                              <div className={cn(
+                                "m-4 p-3.5 rounded-2xl border-2 transition-all space-y-2.5",
+                                archDeployProgress.phase === 'paused_on_failure'
+                                  ? 'bg-red-50/90 border-red-500 shadow-md'
+                                  : archDeployProgress.phase === 'completed'
+                                  ? 'bg-emerald-50/90 border-emerald-500 shadow-md'
+                                  : 'bg-blue-50/80 border-blue-400 shadow-sm'
+                              )}>
+                                <div className="flex items-center justify-between text-xs font-mono font-bold border-b border-black/10 pb-2">
+                                  <div className="flex items-center gap-2">
+                                    {archDeployProgress.phase === 'running' && <div className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />}
+                                    {archDeployProgress.phase === 'completed' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                                    {archDeployProgress.phase === 'paused_on_failure' && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
+                                    <span>
+                                      {archDeployProgress.phase === 'running' && `SYNCHRONOUS NODE CHECKSUM VERIFICATION (${archDeployProgress.currentIndex + 1}/${archDeployProgress.totalNodes})`}
+                                      {archDeployProgress.phase === 'paused_on_failure' && `⚠️ DEPLOYMENT HALTED: Checksum Mismatch (Auto-Remedy OFF)`}
+                                      {archDeployProgress.phase === 'completed' && `🎉 ALL ${archDeployProgress.totalNodes} NODES VERIFIED & DEPLOYED (100% GREEN)`}
+                                    </span>
+                                  </div>
+                                  <span className="text-[11px] text-emerald-800 bg-white px-2 py-0.5 rounded-full border border-[#D8C7B4]">
+                                    {archDeployProgress.nodes.filter(n => n.status === 'verified_green').length} / {archDeployProgress.totalNodes} Green
+                                  </span>
+                                </div>
+
+                                {archDeployProgress.phase === 'paused_on_failure' && (
+                                  <div className="p-2.5 rounded-xl bg-white border border-red-300 flex items-center justify-between gap-2">
+                                    <span className="text-xs text-red-700">
+                                      Integrity probe failed. Auto-Remedy is OFF.
+                                    </span>
+                                    <button
+                                      onClick={() => pipelineDeployer.triggerManualRemedy()}
+                                      className="px-3 py-1 rounded-lg text-xs font-bold bg-[#0047AB] text-white hover:bg-blue-800 transition-colors"
+                                    >
+                                      Manually Fix & Resume
+                                    </button>
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                                  {archDeployProgress.nodes.map((node, nIdx) => {
+                                    const isGreen = node.status === 'verified_green';
+                                    const isChecking = node.status === 'verifying';
+                                    const isFailed = node.status === 'failed';
+
+                                    return (
+                                      <motion.div
+                                        key={node.nodeId}
+                                        animate={isGreen ? { scale: [0.95, 1.05, 1] } : { scale: 1 }}
+                                        className={cn(
+                                          "p-2 rounded-xl border text-[10px] font-mono transition-all flex flex-col justify-between",
+                                          isGreen
+                                            ? "bg-emerald-50 border-2 border-emerald-500 text-emerald-950 shadow-xs"
+                                            : isChecking
+                                            ? "bg-amber-50 border-2 border-amber-400 text-amber-950 animate-pulse"
+                                            : isFailed
+                                            ? "bg-red-50 border-2 border-red-500 text-red-950"
+                                            : "bg-white/90 border-[#E5D7C5] text-stone-500"
+                                        )}
+                                      >
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-[9px] text-[#6E6258]">#{nIdx + 1}</span>
+                                          {isGreen && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
+                                          {isChecking && <Loader2 className="w-3 h-3 text-amber-600 animate-spin" />}
+                                          {isFailed && <AlertTriangle className="w-3 h-3 text-red-600" />}
+                                        </div>
+                                        <div className="font-bold truncate mt-0.5" title={node.nodeName}>
+                                          {node.nodeName}
+                                        </div>
+                                        <div className="truncate text-[9px] opacity-80">
+                                          {isGreen ? `0x${node.checksum?.slice(2, 6)}...` : isChecking ? 'Hashing...' : 'Pending'}
+                                        </div>
+                                      </motion.div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
 
                             {/* ── Active Tab Content Area ── */}
                             <div className="p-4 sm:p-5">

@@ -38,6 +38,7 @@ class ClusterStateManager {
   private auditLogs: AuditLogEntry[] = [];
   private activeJob: RecoveryJobState | null = null;
   private listeners: Set<() => void> = new Set();
+  private autoRemediate: boolean = true;
 
   constructor() {
     this.seedInitialState();
@@ -114,6 +115,15 @@ class ClusterStateManager {
 
   public getActiveJob(): RecoveryJobState | null {
     return this.activeJob;
+  }
+
+  public isAutoRemediate(): boolean {
+    return this.autoRemediate;
+  }
+
+  public setAutoRemediate(val: boolean): void {
+    this.autoRemediate = val;
+    this.notify();
   }
 
   public setNodeStatus(id: string, status: 'healthy' | 'degraded' | 'down' | 'recovering'): void {

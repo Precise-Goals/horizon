@@ -41,7 +41,15 @@ import {
   ChevronDown,
   ChevronUp,
   Download,
+  AlertTriangle,
+  Loader2,
+  Wrench,
 } from 'lucide-react';
+import {
+  pipelineDeployer,
+  type DeploymentProgress,
+  type SynchronousNodeState,
+} from '../engine/pipelineDeployer';
 import {
   parseCustomDagYaml,
   validateAndCompilePipeline,
@@ -192,6 +200,8 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   const [isCustomPipelineActive, setIsCustomPipelineActive] = useState<boolean>(false);
   const [activePipelineName, setActivePipelineName] = useState<string>('Default Enterprise 7-Tier Mesh');
   const [isYamlEditorExpanded, setIsYamlEditorExpanded] = useState<boolean>(true);
+  const [deployProgress, setDeployProgress] = useState<DeploymentProgress | null>(null);
+  const [isDeploying, setIsDeploying] = useState<boolean>(false);
   const [customBlastRadiusMap, setCustomBlastRadiusMap] = useState<Record<string, string[]>>({
     'db-primary': ['redis-cache', 'auth-service', 'payment-worker'],
     'redis-cache': ['auth-service', 'api-gateway'],
@@ -251,43 +261,76 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     }
   };
 
-  // Handler for deploying custom pipeline to the live cluster
-  const handleApplyCustomPipeline = () => {
-    if (!pipelineValidation.isValid || pipelineValidation.nodes.length === 0) return;
+  // Handler for deploying custom pipeline to the live cluster with synchronous node-by-node SHA-256 verification
+  const handleApplyCustomPipeline = async () => {
+    if (!pipelineValidation.isValid || pipelineValidation.nodes.length === 0 || isDeploying) return;
 
-    const systemNodes = convertCustomNodesToSystemNodes(pipelineValidation.nodes);
-    clusterState.setCustomTopology(systemNodes, pipelineValidation.pipelineName);
+    setIsDeploying(true);
+    setRightPaneTab('terminal');
 
-    // Convert custom nodes to dynamic ServiceProbe entries
-    const newProbes: ServiceProbe[] = pipelineValidation.nodes.map((n) => {
+    // Initialize probes so the cluster recognizes the incoming nodes
+    const initialProbes: ServiceProbe[] = pipelineValidation.nodes.map((n) => {
       const isDb = n.type === 'database';
       const isCache = n.type === 'cache';
       const isGw = n.type === 'gateway';
+      const existingProbe = services.find((s) => s.id === n.id);
       return {
         id: n.id,
         name: n.name || n.id,
         type: n.type,
-        status: 'healthy',
-        latencyMs: isDb ? 4.2 : isCache ? 1.8 : isGw ? 8.5 : 14.0,
-        errorRate: 0.0,
-        consecutiveMisses: 0,
+        status: existingProbe ? existingProbe.status : 'healthy',
+        latencyMs: existingProbe ? existingProbe.latencyMs : (isDb ? 4.2 : isCache ? 1.8 : isGw ? 8.5 : 14.0),
+        errorRate: existingProbe ? existingProbe.errorRate : 0.0,
+        consecutiveMisses: existingProbe ? existingProbe.consecutiveMisses : 0,
       };
     });
+    setServices(initialProbes);
 
-    setServices(newProbes);
+    // Run synchronous node-by-node verification and deployment
+    await pipelineDeployer.execute({
+      pipelineName: pipelineValidation.pipelineName,
+      nodes: pipelineValidation.nodes,
+      topologicalLevels: pipelineValidation.topologicalLevels,
+      autoRemediate: autoRemediate,
+      isNodeFailing: (nodeId) => {
+        const probe = services.find((s) => s.id === nodeId);
+        return probe ? probe.status === 'down' : false;
+      },
+      onProgress: (progress) => {
+        setDeployProgress(progress);
+        // Synchronously update service probes so UI telemetry matrix turns green step-by-step
+        setServices((prev) =>
+          prev.map((s) => {
+            const nodeState = progress.nodes.find((n) => n.nodeId === s.id);
+            if (!nodeState) return s;
+            if (nodeState.status === 'verified_green') {
+              return { ...s, status: 'healthy', latencyMs: nodeState.latencyMs || 4.2, errorRate: 0.0, consecutiveMisses: 0 };
+            }
+            if (nodeState.status === 'failed') {
+              return { ...s, status: 'down', latencyMs: 999.0, errorRate: 1.0, consecutiveMisses: 3 };
+            }
+            if (nodeState.status === 'auto_remedying') {
+              return { ...s, status: 'degraded', latencyMs: 140.0, errorRate: 0.15 };
+            }
+            return s;
+          })
+        );
+      },
+      onLog: (msg) => {
+        setAiLogs((prev) => [...prev, msg]);
+      },
+    });
+
+    const systemNodes = convertCustomNodesToSystemNodes(pipelineValidation.nodes);
+    clusterState.setCustomTopology(systemNodes, pipelineValidation.pipelineName);
+
     setCustomBlastRadiusMap(pipelineValidation.blastRadiusMap);
     setActivePipelineName(pipelineValidation.pipelineName);
     setIsCustomPipelineActive(true);
     if (pipelineValidation.nodes[0]) {
       setActiveDrill(pipelineValidation.nodes[0].id);
     }
-
-    setAiLogs((prev) => [
-      ...prev,
-      `🚀 [CUSTOM DAG PIPELINE DEPLOYED] "${pipelineValidation.pipelineName}" mounted successfully.`,
-      `   Loaded ${pipelineValidation.nodes.length} nodes across ${pipelineValidation.topologicalLevels.length} topological recovery tiers O(V+E).`,
-      `   Acyclic Kahn verification: PASSED (0 circular deadlocks). Dynamic blast radius active.`,
-    ]);
+    setIsDeploying(false);
   };
 
   // Handler for resetting to the nominal baseline cluster
@@ -1431,20 +1474,59 @@ spec:
         {/* Pipeline Control Action Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Deploy Button */}
+            {/* Deploy Button with Live Progress State */}
             <button
               onClick={handleApplyCustomPipeline}
-              disabled={!pipelineValidation.isValid}
+              disabled={!pipelineValidation.isValid || isDeploying}
               className={cn(
                 'px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-md transition-all cursor-pointer flex items-center gap-2',
-                pipelineValidation.isValid
+                pipelineValidation.isValid && !isDeploying
                   ? 'bg-[#0047AB] hover:bg-blue-800 ring-2 ring-blue-400/40 active:scale-95'
                   : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
               )}
             >
-              <Upload className="w-4 h-4 text-white" />
-              <span>Deploy Pipeline to Live Cluster ({pipelineValidation.nodes.length} Nodes)</span>
+              {isDeploying ? (
+                <>
+                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                  <span>
+                    Verifying Checksums ({deployProgress ? `${deployProgress.currentIndex + 1}/${deployProgress.totalNodes}` : 'Starting...'})
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 text-white" />
+                  <span>Deploy Pipeline to Live Cluster ({pipelineValidation.nodes.length} Nodes)</span>
+                </>
+              )}
             </button>
+
+            {/* Quick Auto-Remedy Toggle on Deployment */}
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5] shadow-xs">
+              <span className="text-xs font-bold text-[#5A4E44]">Auto-Remedy:</span>
+              <button
+                onClick={() => {
+                  const nextVal = !autoRemediate;
+                  setAutoRemediate(nextVal);
+                  pipelineDeployer.setAutoRemediate(nextVal);
+                  clusterState.setAutoRemediate(nextVal);
+                }}
+                className={cn(
+                  'w-9 h-5 rounded-full p-0.5 transition-colors cursor-pointer flex items-center',
+                  autoRemediate ? 'bg-emerald-600' : 'bg-stone-300'
+                )}
+                title="Toggle autonomous AI self-healing if a node fails checksum verification"
+              >
+                <div
+                  className={cn(
+                    'w-4 h-4 rounded-full bg-white transition-transform shadow-xs',
+                    autoRemediate ? 'translate-x-4' : 'translate-x-0'
+                  )}
+                />
+              </button>
+              <span className={cn('text-[10px] font-mono font-black', autoRemediate ? 'text-emerald-700' : 'text-stone-500')}>
+                {autoRemediate ? 'ON' : 'OFF'}
+              </span>
+            </div>
 
             {/* Hidden File Input for Custom YAML Upload */}
             <input
@@ -1495,6 +1577,144 @@ spec:
           </div>
         </div>
 
+        {/* Synchronous Deployment Stepper & Checksum Audit Console */}
+        {deployProgress && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              'p-4 rounded-2xl border-2 transition-all space-y-3',
+              deployProgress.phase === 'paused_on_failure'
+                ? 'bg-red-50/80 border-red-500 shadow-md'
+                : deployProgress.phase === 'completed'
+                ? 'bg-emerald-50/90 border-emerald-500 shadow-md'
+                : deployProgress.phase === 'auto_remedying'
+                ? 'bg-purple-50/80 border-purple-500 shadow-md'
+                : 'bg-blue-50/80 border-blue-400 shadow-sm'
+            )}
+          >
+            {/* Header info */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-2.5">
+              <div className="flex items-center gap-2">
+                {deployProgress.phase === 'running' && (
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping" />
+                )}
+                {deployProgress.phase === 'auto_remedying' && (
+                  <Brain className="w-4 h-4 text-purple-700 animate-pulse" />
+                )}
+                {deployProgress.phase === 'paused_on_failure' && (
+                  <AlertTriangle className="w-4 h-4 text-red-600 animate-bounce" />
+                )}
+                {deployProgress.phase === 'completed' && (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                )}
+                <span className="text-xs sm:text-sm font-black font-mono tracking-tight text-[#1A1A1A]">
+                  {deployProgress.phase === 'running' && `SYNCHRONOUS PROBE IN PROGRESS: Step ${deployProgress.currentIndex + 1} of ${deployProgress.totalNodes}`}
+                  {deployProgress.phase === 'auto_remedying' && `🤖 AUTO-REMEDY ACTIVE: Diagnosing & Healing Failed Node...`}
+                  {deployProgress.phase === 'paused_on_failure' && `⚠️ DEPLOYMENT HALTED: Checksum Mismatch (Auto-Remedy is OFF)`}
+                  {deployProgress.phase === 'completed' && `🎉 ALL ${deployProgress.totalNodes} NODES VERIFIED WITH CRYPTOGRAPHIC CHECKSUMS (100% GREEN)`}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-mono">
+                <span className="font-bold text-[#5A4E44]">Verified Green:</span>
+                <span className="px-2.5 py-0.5 rounded-full bg-white border border-[#D8C7B4] font-bold text-emerald-700 shadow-xs">
+                  {deployProgress.nodes.filter((n) => n.status === 'verified_green').length} / {deployProgress.totalNodes}
+                </span>
+              </div>
+            </div>
+
+            {/* Paused Alert Banner when Auto-Remedy is OFF */}
+            {deployProgress.phase === 'paused_on_failure' && (
+              <div className="p-3.5 rounded-xl bg-white border border-red-300 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <div className="text-xs font-bold text-red-700 flex items-center gap-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
+                    <span>Integrity Breach on Node: "{deployProgress.nodes.find((n) => n.nodeId === deployProgress.failedNodeId)?.nodeName}"</span>
+                  </div>
+                  <p className="text-[11px] text-[#6E6258]">
+                    Auto-Remedy toggle is currently <strong>OFF</strong>. Deployment stopped synchronously to prevent cascading faults.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => pipelineDeployer.triggerManualRemedy()}
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#0047AB] hover:bg-blue-800 text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                  >
+                    <Wrench className="w-3.5 h-3.5 text-white" />
+                    <span>Manually Fix & Resume</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAutoRemediate(true);
+                      pipelineDeployer.setAutoRemediate(true);
+                      clusterState.setAutoRemediate(true);
+                    }}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition-all cursor-pointer"
+                  >
+                    <span>Switch Auto ON</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Synchronous Stepper Node Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2">
+              {deployProgress.nodes.map((node, idx) => {
+                const isGreen = node.status === 'verified_green';
+                const isVerifying = node.status === 'verifying';
+                const isFailed = node.status === 'failed';
+                const isRemedying = node.status === 'auto_remedying';
+
+                return (
+                  <motion.div
+                    key={node.nodeId}
+                    initial={{ scale: 0.95 }}
+                    animate={isGreen ? { scale: [0.95, 1.05, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className={cn(
+                      'p-2.5 rounded-xl border text-[11px] font-mono transition-all flex flex-col justify-between space-y-1',
+                      isGreen
+                        ? 'bg-emerald-50 border-2 border-emerald-500 text-emerald-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                        : isVerifying
+                        ? 'bg-amber-50 border-2 border-amber-400 text-amber-950 animate-pulse'
+                        : isFailed
+                        ? 'bg-red-50 border-2 border-red-500 text-red-950 ring-1 ring-red-400'
+                        : isRemedying
+                        ? 'bg-purple-50 border-2 border-purple-500 text-purple-950'
+                        : 'bg-white/90 border-[#E5D7C5] text-stone-500'
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[10px] text-[#6E6258]">#{idx + 1}</span>
+                      {isGreen && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                      {isVerifying && <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />}
+                      {isFailed && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
+                      {isRemedying && <Brain className="w-3.5 h-3.5 text-purple-600 animate-pulse" />}
+                    </div>
+                    <div className="font-bold text-xs truncate" title={node.nodeName}>
+                      {node.nodeName}
+                    </div>
+                    <div className="text-[10px] truncate opacity-90">
+                      {isGreen ? (
+                        <span className="text-emerald-700 font-bold">0x{node.checksum?.slice(2, 8)}...</span>
+                      ) : isVerifying ? (
+                        <span className="text-amber-800">Hashing...</span>
+                      ) : isFailed ? (
+                        <span className="text-red-700 font-bold">FAILED</span>
+                      ) : isRemedying ? (
+                        <span className="text-purple-700">Self-Healing</span>
+                      ) : (
+                        <span>Queued</span>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
         {/* Dynamic Topology Preview & 1-Click Failure Injection Cards */}
         {pipelineValidation.isValid && pipelineValidation.nodes.length > 0 && (
           <div className="space-y-3 pt-2 border-t border-[#EADCC9]">
@@ -1512,15 +1732,26 @@ spec:
                 const tierIdx = pipelineValidation.topologicalLevels.findIndex((lvl) => lvl.includes(node.id));
                 const blast = pipelineValidation.blastRadiusMap[node.id] || [];
                 const isSelectedDrill = activeDrill === node.id;
-                const isDown = services.find((s) => s.id === node.id)?.status === 'down';
-                const isDegraded = services.find((s) => s.id === node.id)?.status === 'degraded';
+                const deployNodeState = deployProgress?.nodes.find((n) => n.nodeId === node.id);
+                const isVerifiedGreen = deployNodeState?.status === 'verified_green';
+                const isVerifying = deployNodeState?.status === 'verifying';
+                const isDeployFailed = deployNodeState?.status === 'failed';
+                const isAutoRemedying = deployNodeState?.status === 'auto_remedying';
+                const isDown = services.find((s) => s.id === node.id)?.status === 'down' || isDeployFailed;
+                const isDegraded = services.find((s) => s.id === node.id)?.status === 'degraded' || isAutoRemedying;
 
                 return (
-                  <div
+                  <motion.div
                     key={node.id}
+                    animate={isVerifiedGreen ? { scale: [0.97, 1.03, 1] } : { scale: 1 }}
+                    transition={{ duration: 0.3 }}
                     className={cn(
                       'p-3.5 rounded-2xl border transition-all space-y-2.5 flex flex-col justify-between',
-                      isDown
+                      isVerifiedGreen
+                        ? 'bg-emerald-50/90 border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] ring-2 ring-emerald-400/50 text-emerald-950'
+                        : isVerifying
+                        ? 'bg-amber-50/90 border-2 border-amber-400 ring-2 ring-amber-300 animate-pulse'
+                        : isDown
                         ? 'bg-red-50 border-red-500 ring-2 ring-red-400'
                         : isDegraded
                         ? 'bg-amber-50 border-amber-400'
@@ -1531,9 +1762,17 @@ spec:
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1">
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-[#D8C7B4] text-[#0047AB]">
-                          Tier {tierIdx >= 0 ? tierIdx : 0}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-[#D8C7B4] text-[#0047AB]">
+                            Tier {tierIdx >= 0 ? tierIdx : 0}
+                          </span>
+                          {isVerifiedGreen && (
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>0x{deployNodeState?.checksum?.slice(2, 8)}...</span>
+                            </span>
+                          )}
+                        </div>
                         <span
                           className={cn(
                             'text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full',
@@ -1585,7 +1824,7 @@ spec:
                         <span>{isDown ? 'Outage Active' : 'Simulate Failure'}</span>
                       </button>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
