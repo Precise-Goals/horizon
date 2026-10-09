@@ -373,6 +373,9 @@ export class MSTBlockchainService {
     contractAddress: string;
     tokenUrl: string;
     explorerUrl: string;
+    autologgingRateLimit?: number;
+    imageUrl?: string;
+    metadataUrl?: string;
   } | null> {
     if (!userAddress) return null;
     try {
@@ -391,16 +394,34 @@ export class MSTBlockchainService {
         'latest',
       ])) as string;
 
+      const tierRateLimits: Record<number, number> = {
+        1: 5,
+        2: 10,
+        3: 15,
+        4: 20,
+      };
+
+      const tierNames: Record<number, string> = {
+        1: 'Explorer Pass',
+        2: 'Guardian Pass',
+        3: 'Sentinel Pass',
+        4: 'Enterprise Pass',
+      };
+
       if (!passRes || passRes === '0x' || passRes.length < 130) {
         if (tier > 0) {
+          const t = Math.min(Math.max(tier, 1), 4);
           return {
             hasPass: true,
-            tier,
-            tierName: tier === 1 ? 'Explorer Pass' : 'Guardian Pass',
+            tier: t,
+            tierName: tierNames[t] || 'Explorer Pass',
+            autologgingRateLimit: tierRateLimits[t] || 5,
             tokenId: 1,
             expiresAt: Math.floor(Date.now() / 1000) + 86400 * 30,
             isActive: true,
             contractAddress: MST_CONFIG.subscriptionContractAddress,
+            imageUrl: 'https://horizon-aiops.vercel.app/horizon.jpg',
+            metadataUrl: `/nft/metadata/${t}.json`,
             tokenUrl: `${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}/instance/1`,
             explorerUrl: `${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}`,
           };
@@ -409,25 +430,23 @@ export class MSTBlockchainService {
       }
 
       const passData = passRes.replace('0x', '');
-      const passTier = parseInt(passData.slice(0, 64), 16) || tier || 1;
+      const rawTier = parseInt(passData.slice(0, 64), 16) || tier || 1;
+      const passTier = Math.min(Math.max(rawTier, 1), 4);
       const expiresAt = parseInt(passData.slice(64, 128), 16);
       const tokenId = parseInt(passData.slice(128, 192), 16) || 1;
       const nowSec = Math.floor(Date.now() / 1000);
-
-      const tierNames: Record<number, string> = {
-        1: 'Explorer Pass',
-        2: 'Guardian Pass',
-        3: 'Sentinel Pass',
-      };
 
       return {
         hasPass: passTier > 0,
         tier: passTier,
         tierName: tierNames[passTier] || `Tier ${passTier}`,
+        autologgingRateLimit: tierRateLimits[passTier] || 5,
         tokenId,
         expiresAt,
         isActive: expiresAt > nowSec,
         contractAddress: MST_CONFIG.subscriptionContractAddress,
+        imageUrl: 'https://horizon-aiops.vercel.app/horizon.jpg',
+        metadataUrl: `/nft/metadata/${passTier}.json`,
         tokenUrl: `${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}/instance/${tokenId}`,
         explorerUrl: `${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}`,
       };
@@ -458,7 +477,7 @@ export class MSTBlockchainService {
             tokenId: tokenId.toString(),
             symbol: 'ZXPASS',
             decimals: 0,
-            image: `${window.location.origin}/vault.jpg`,
+            image: 'https://horizon-aiops.vercel.app/horizon.jpg',
           },
         },
       });
@@ -482,16 +501,17 @@ export class MSTBlockchainService {
     tokenId: number;
     blockNumber: number;
     tier: string;
+    autologgingRateLimit: number;
     contractAddress: string;
     explorerUrl: string;
     tokenUrl: string;
     addedToWallet: boolean;
   }> {
-    const tierMap: Record<string, { id: number; priceMst: string; priceWeiHex: string }> = {
-      explorer: { id: 1, priceMst: '5.0', priceWeiHex: '0x4563918244f40000' },     // 5.0 MST
-      guardian: { id: 2, priceMst: '15.0', priceWeiHex: '0xd0cf4b50cfe20000' },   // 15.0 MST
-      sentinel: { id: 2, priceMst: '15.0', priceWeiHex: '0xd0cf4b50cfe20000' },   // 15.0 MST
-      enterprise: { id: 2, priceMst: '15.0', priceWeiHex: '0xd0cf4b50cfe20000' }, // 15.0 MST
+    const tierMap: Record<string, { id: number; priceMst: string; priceWeiHex: string; rateLimit: number }> = {
+      explorer: { id: 1, priceMst: '5.0', priceWeiHex: '0x4563918244f40000', rateLimit: 5 },     // 5.0 MST, Rate limit 5
+      guardian: { id: 2, priceMst: '15.0', priceWeiHex: '0xd0cf4b50cfe20000', rateLimit: 10 },   // 15.0 MST, Rate limit 10
+      sentinel: { id: 3, priceMst: '25.0', priceWeiHex: '0x15af1d78b58c40000', rateLimit: 15 },  // 25.0 MST, Rate limit 15
+      enterprise: { id: 4, priceMst: '50.0', priceWeiHex: '0x2b5e3af16b1880000', rateLimit: 20 }, // 50.0 MST, Rate limit 20
     };
 
     const target = tierMap[tierKey] || tierMap.explorer;
@@ -562,6 +582,7 @@ export class MSTBlockchainService {
       tokenId: nextTokenId,
       blockNumber: confirmedBlock,
       tier: tierKey.toUpperCase(),
+      autologgingRateLimit: target.rateLimit,
       contractAddress: contract,
       explorerUrl: `${MST_CONFIG.explorerUrl}/tx/${txHash}`,
       tokenUrl: `${MST_CONFIG.explorerUrl}/token/${contract}/instance/${nextTokenId}`,

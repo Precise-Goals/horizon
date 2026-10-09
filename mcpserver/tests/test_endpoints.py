@@ -10,7 +10,7 @@ async def test_health_check(async_client: AsyncClient):
     data = res.json()
     assert data["status"] == "healthy"
     assert data["service"] == "horizon-mcp-server"
-    assert data["tools_registered"] == 12
+    assert data["tools_registered"] == 13
     assert "timestamp" in data
 
     # Verify alias /api/v1/health
@@ -80,7 +80,7 @@ async def test_direct_mcp_tools_list(async_client: AsyncClient):
     data = res.json()
     assert "tools" in data["result"]
     tools = data["result"]["tools"]
-    assert len(tools) == 12
+    assert len(tools) == 13
     tool_names = [t["name"] for t in tools]
     expected_tools = [
         "horizon_get_topology",
@@ -95,6 +95,7 @@ async def test_direct_mcp_tools_list(async_client: AsyncClient):
         "horizon_submit_gate_approval",
         "horizon_get_incident_timeline",
         "horizon_broadcast_incident",
+        "horizon_get_nft_rate_limits",
     ]
     for exp in expected_tools:
         assert exp in tool_names
@@ -179,13 +180,14 @@ async def test_rest_tools_catalogue_endpoint(async_client: AsyncClient):
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "success"
-    assert data["count"] == 12
-    assert len(data["tools"]) == 12
+    assert data["count"] == 13
+    assert len(data["tools"]) == 13
     tool_names = [t["name"] for t in data["tools"]]
     assert "horizon_probe_health" in tool_names
     assert "horizon_submit_gate_approval" in tool_names
     assert "horizon_get_incident_timeline" in tool_names
     assert "horizon_broadcast_incident" in tool_names
+    assert "horizon_get_nft_rate_limits" in tool_names
 
 
 @pytest.mark.asyncio

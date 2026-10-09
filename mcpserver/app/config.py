@@ -72,6 +72,12 @@ class Settings(BaseModel):
             os.getenv("VITE_NFT_SUBSCRIPTION_CONTRACT", "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7")
         )
     )
+    HORIZON_SUBSCRIPTION_CONTRACT: str = Field(
+        default_factory=lambda: os.getenv(
+            "HORIZON_SUBSCRIPTION_CONTRACT",
+            os.getenv("VITE_NFT_SUBSCRIPTION_CONTRACT", "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7")
+        )
+    )
 
 
 settings = Settings()

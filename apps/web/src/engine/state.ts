@@ -5,6 +5,7 @@
 import type { SystemNode, AuditLogEntry } from '@/types';
 import { DependencyGraph } from './dependencyGraph';
 import { mstBlockchain, MST_CONFIG } from './mstBlockchain';
+import { autoLoggingRateLimiter } from './nftMetadata';
 
 export interface RecoveryJobStep {
   id: number;
@@ -134,8 +135,17 @@ class ClusterStateManager {
     this.notify();
   }
 
-  public addAuditLog(entry: AuditLogEntry): void {
-    this.auditLogs.unshift(entry);
+  public addAuditLog(entry: AuditLogEntry, tierKey?: string | number): void {
+    const rateStatus = autoLoggingRateLimiter.recordLog(tierKey);
+    const enrichedEntry: AuditLogEntry = {
+      ...entry,
+      rateLimitStatus: {
+        limit: rateStatus.limit,
+        remaining: rateStatus.remaining,
+        tier: rateStatus.tier,
+      },
+    };
+    this.auditLogs.unshift(enrichedEntry);
     if (this.auditLogs.length > 200) this.auditLogs.pop();
     this.notify();
   }

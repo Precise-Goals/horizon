@@ -1,0 +1,14 @@
+{
+  "name": "Horizon ZXPASS Subscription Collection",
+  "description": "Horizon Autonomous Enterprise Infrastructure Recovery Platform — Token-Gated Subscription Pass Collection on MST Blockchain Testnet (Chain ID 91562037). Autonomous failure detection, bottom-up Kahn DAG recovery sequencing, EIP-712 cryptographic commander approval gates, and tamper-evident Merkle audit vault anchoring. Subscription tiers feature tiered AutoLogging rate limits (5, 10, 15, and 20 events/min).",
+  "image": "https://horizon-aiops.vercel.app/horizon.jpg",
+  "external_link": "https://horizon-aiops.vercel.app/subscription",
+  "collaborators": [
+    "0x73595081334A18D4298A160b162faB4Fb4B3c85B",
+    "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7"
+  ],
+  "theme_color": "#0047AB",
+  "background_color": "0047AB",
+  "fee_recipient": "0x73595081334A18D4298A160b162faB4Fb4B3c85B",
+  "seller_fee_basis_points": 0
+}

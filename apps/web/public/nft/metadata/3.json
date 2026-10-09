@@ -1,0 +1,85 @@
+{
+  "name": "Horizon ZXPASS — Sentinel Tier #3",
+  "description": "Enterprise Autonomous Infrastructure Recovery Platform NFT Subscription Pass (Sentinel Tier). Autonomous orchestration with cryptographic commander gates on MST Blockchain Testnet (Chain ID 91562037). Features EIP-712 human approval gates, 30-day immutable Merkle audit vault, and dedicated AutoLogging rate limit of 15 events/minute.",
+  "image": "https://horizon-aiops.vercel.app/horizon.jpg",
+  "external_url": "https://horizon-aiops.vercel.app/subscription",
+  "background_color": "0047AB",
+  "theme_color": "#0047AB",
+  "attributes": [
+    {
+      "trait_type": "Subscription Tier",
+      "value": "Sentinel"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 3,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "AutoLogging Rate Limit",
+      "value": 15,
+      "display_type": "number",
+      "max_value": 20
+    },
+    {
+      "trait_type": "Rate Limit Unit",
+      "value": "events/min"
+    },
+    {
+      "trait_type": "Monitored Systems Cap",
+      "value": 250,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Theme Color",
+      "value": "Cobalt Blue"
+    },
+    {
+      "trait_type": "Theme Hex",
+      "value": "#0047AB"
+    },
+    {
+      "trait_type": "Design System",
+      "value": "Neo-Brutalism Cobalt & Cream"
+    },
+    {
+      "trait_type": "Network",
+      "value": "MST Blockchain Testnet"
+    },
+    {
+      "trait_type": "Chain ID",
+      "value": 91562037,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Standard",
+      "value": "ERC-721 / EIP-747"
+    },
+    {
+      "trait_type": "AI Engine",
+      "value": "Sarvam AI SRE Copilot (sarvam-105b)"
+    },
+    {
+      "trait_type": "Governance Standard",
+      "value": "EIP-712 Cryptographic Signature"
+    },
+    {
+      "trait_type": "Audit Ledger",
+      "value": "On-Chain Merkle Root Hash"
+    }
+  ],
+  "properties": {
+    "category": "SaaS Subscription Pass",
+    "platform": "Horizon Autonomous Recovery",
+    "rate_limits": {
+      "autologging_events_per_minute": 15,
+      "burst_allowance": 15,
+      "window_seconds": 60
+    },
+    "branding": {
+      "theme_color": "#0047AB",
+      "secondary_color": "#FFF8F0",
+      "accent_style": "Neo-Brutalist Cobalt & Cream"
+    }
+  }
+}

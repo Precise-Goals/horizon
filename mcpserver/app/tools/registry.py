@@ -232,6 +232,22 @@ MCP_TOOLS: List[McpToolDefinition] = [
             required=["incident_id"]
         )
     ),
+    McpToolDefinition(
+        name="horizon_get_nft_rate_limits",
+        description="Inspects Web3 NFT subscription plans, AutoLogging rate limits (5, 10, 15, 20 events/min), Cobalt Blue (#0047AB) theme configuration, canonical image URL, and complete OpenSea/ERC-721 metadata schemas.",
+        inputSchema=McpToolParameter(
+            type="object",
+            properties={
+                "tier": {
+                    "type": "string",
+                    "description": "Optional tier name ('explorer', 'guardian', 'sentinel', 'enterprise') or token ID (1, 2, 3, 4)",
+                    "enum": ["all", "explorer", "guardian", "sentinel", "enterprise", "1", "2", "3", "4"],
+                    "default": "all"
+                }
+            },
+            required=[]
+        )
+    ),
 ]
 
 
@@ -461,6 +477,60 @@ async def execute_tool(name: str, arguments: Optional[Dict[str, Any]] = None) ->
             )
             return McpToolResult(
                 content=[McpTextContent(type="text", text=json.dumps(result, indent=2))],
+                isError=False,
+            )
+
+        elif name == "horizon_get_nft_rate_limits":
+            tier = str(args.get("tier", "all")).lower()
+            limits = {
+                "explorer": {
+                    "tier_number": 1,
+                    "name": "Explorer Tier",
+                    "autologging_rate_limit": 5,
+                    "unit": "events/min",
+                    "price": "5.0 MST",
+                    "monitored_nodes_cap": 10,
+                },
+                "guardian": {
+                    "tier_number": 2,
+                    "name": "Guardian Tier",
+                    "autologging_rate_limit": 10,
+                    "unit": "events/min",
+                    "price": "15.0 MST",
+                    "monitored_nodes_cap": 50,
+                },
+                "sentinel": {
+                    "tier_number": 3,
+                    "name": "Sentinel Tier",
+                    "autologging_rate_limit": 15,
+                    "unit": "events/min",
+                    "price": "25.0 MST",
+                    "monitored_nodes_cap": 250,
+                },
+                "enterprise": {
+                    "tier_number": 4,
+                    "name": "Enterprise Tier",
+                    "autologging_rate_limit": 20,
+                    "unit": "events/min",
+                    "price": "50.0 MST",
+                    "monitored_nodes_cap": "Unlimited",
+                },
+            }
+            output_payload = {
+                "status": "success",
+                "design_theme": {
+                    "color_name": "Cobalt Blue",
+                    "hex": "#0047AB",
+                    "bg_hex": "0047AB",
+                    "secondary_color": "#FFF8F0",
+                },
+                "canonical_image_url": "https://horizon-aiops.vercel.app/horizon.jpg",
+                "rate_limits": limits,
+                "metadata_standard": "ERC-721 / EIP-747 / OpenSea",
+                "requested_tier": tier,
+            }
+            return McpToolResult(
+                content=[McpTextContent(type="text", text=json.dumps(output_payload, indent=2))],
                 isError=False,
             )
 

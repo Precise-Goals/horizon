@@ -170,6 +170,153 @@ async def list_tools_direct():
     }
 
 
+@app.get("/api/v1/nft/rate-limits", tags=["Web3 & NFT Subscriptions"])
+@app.get("/nft/rate-limits", tags=["Web3 & NFT Subscriptions"])
+async def get_nft_rate_limits():
+    """Returns AutoLogging rate limits (5, 10, 15, 20) with respect to NFT subscription tiers."""
+    return {
+        "status": "success",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "design_theme": {
+            "name": "Cobalt Blue",
+            "hex": "#0047AB",
+            "bg_hex": "0047AB",
+            "secondary": "#FFF8F0",
+        },
+        "canonical_image_url": "https://horizon-aiops.vercel.app/horizon.jpg",
+        "rate_limits": {
+            "explorer": {
+                "tier_number": 1,
+                "name": "Explorer Tier",
+                "autologging_rate_limit": 5,
+                "unit": "events/min",
+                "price": "5.0 MST",
+                "monitored_nodes_cap": 10,
+            },
+            "guardian": {
+                "tier_number": 2,
+                "name": "Guardian Tier",
+                "autologging_rate_limit": 10,
+                "unit": "events/min",
+                "price": "15.0 MST",
+                "monitored_nodes_cap": 50,
+            },
+            "sentinel": {
+                "tier_number": 3,
+                "name": "Sentinel Tier",
+                "autologging_rate_limit": 15,
+                "unit": "events/min",
+                "price": "25.0 MST",
+                "monitored_nodes_cap": 250,
+            },
+            "enterprise": {
+                "tier_number": 4,
+                "name": "Enterprise Tier",
+                "autologging_rate_limit": 20,
+                "unit": "events/min",
+                "price": "50.0 MST",
+                "monitored_nodes_cap": "Unlimited",
+            },
+        },
+        "blockchain": {
+            "chain_id": settings.MST_CHAIN_ID,
+            "chain_name": "MST Blockchain Testnet",
+            "contract_address": settings.HORIZON_SUBSCRIPTION_CONTRACT,
+            "standard": "ERC-721 / EIP-747",
+        },
+    }
+
+
+@app.get("/api/v1/nft/metadata/{tier_or_token_id}", tags=["Web3 & NFT Subscriptions"])
+@app.get("/nft/metadata/{tier_or_token_id}", tags=["Web3 & NFT Subscriptions"])
+async def get_nft_tier_metadata(tier_or_token_id: str):
+    """Returns complete OpenSea/ERC-721 compliant metadata JSON for the requested NFT tier or token ID."""
+    clean_key = tier_or_token_id.lower().replace(".json", "")
+
+    tier_map = {
+        "1": "explorer",
+        "explorer": "explorer",
+        "2": "guardian",
+        "guardian": "guardian",
+        "3": "sentinel",
+        "sentinel": "sentinel",
+        "4": "enterprise",
+        "enterprise": "enterprise",
+    }
+
+    selected_tier = tier_map.get(clean_key, "explorer")
+
+    tier_info = {
+        "explorer": {
+            "tier_num": 1,
+            "name": "Explorer",
+            "rate_limit": 5,
+            "cap": 10,
+            "desc": "Entry-level resilience for single cluster environments. Features AutoLogging rate limit of 5 events/minute.",
+        },
+        "guardian": {
+            "tier_num": 2,
+            "name": "Guardian",
+            "rate_limit": 10,
+            "cap": 50,
+            "desc": "Production self-healing for multi-tier microservices. Features AutoLogging rate limit of 10 events/minute.",
+        },
+        "sentinel": {
+            "tier_num": 3,
+            "name": "Sentinel",
+            "rate_limit": 15,
+            "cap": 250,
+            "desc": "Autonomous orchestration with cryptographic commander gates. Features AutoLogging rate limit of 15 events/minute.",
+        },
+        "enterprise": {
+            "tier_num": 4,
+            "name": "Enterprise",
+            "rate_limit": 20,
+            "cap": 999999,
+            "desc": "Dedicated smart contracts, private subnets, and bespoke SLAs. Features maximum AutoLogging rate limit of 20 events/minute.",
+        },
+    }[selected_tier]
+
+    return {
+        "name": f"Horizon ZXPASS — {tier_info['name']} Tier #{tier_info['tier_num']}",
+        "description": f"Enterprise Autonomous Infrastructure Recovery Platform NFT Subscription Pass ({tier_info['name']} Tier). Token-gated SRE recovery orchestration on MST Blockchain Testnet (Chain ID 91562037). {tier_info['desc']}",
+        "image": "https://horizon-aiops.vercel.app/horizon.jpg",
+        "external_url": "https://horizon-aiops.vercel.app/subscription",
+        "background_color": "0047AB",
+        "theme_color": "#0047AB",
+        "attributes": [
+            {"trait_type": "Subscription Tier", "value": tier_info["name"]},
+            {"trait_type": "Tier Level", "value": tier_info["tier_num"], "display_type": "number"},
+            {"trait_type": "AutoLogging Rate Limit", "value": tier_info["rate_limit"], "display_type": "number", "max_value": 20},
+            {"trait_type": "Rate Limit Unit", "value": "events/min"},
+            {"trait_type": "Monitored Systems Cap", "value": tier_info["cap"], "display_type": "number"},
+            {"trait_type": "Theme Color", "value": "Cobalt Blue"},
+            {"trait_type": "Theme Hex", "value": "#0047AB"},
+            {"trait_type": "Design System", "value": "Neo-Brutalism Cobalt & Cream"},
+            {"trait_type": "Network", "value": "MST Blockchain Testnet"},
+            {"trait_type": "Chain ID", "value": 91562037, "display_type": "number"},
+            {"trait_type": "Standard", "value": "ERC-721 / EIP-747"},
+            {"trait_type": "AI Engine", "value": "Sarvam AI SRE Copilot"},
+            {"trait_type": "Governance Standard", "value": "EIP-712 Cryptographic Signature"},
+            {"trait_type": "Audit Ledger", "value": "On-Chain Merkle Root Hash"},
+        ],
+        "properties": {
+            "category": "SaaS Subscription Pass",
+            "platform": "Horizon Autonomous Recovery",
+            "rate_limits": {
+                "autologging_events_per_minute": tier_info["rate_limit"],
+                "burst_allowance": tier_info["rate_limit"],
+                "window_seconds": 60,
+            },
+            "branding": {
+                "theme_color": "#0047AB",
+                "secondary_color": "#FFF8F0",
+                "accent_style": "Neo-Brutalist Cobalt & Cream",
+            },
+        },
+    }
+
+
 @app.get("/api/v1/nodes", tags=["Topology"])
 async def get_nodes_endpoint():
     """Returns cluster topology nodes with status and latency metrics."""

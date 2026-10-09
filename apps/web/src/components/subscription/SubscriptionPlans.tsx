@@ -1,10 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { useAuth } from '../../context/useAuth';
 import { mstBlockchain, MST_CONFIG } from '../../engine/mstBlockchain';
 import { clusterState } from '../../engine/state';
+import {
+  NFT_PLANS_LIST,
+  CANONICAL_NFT_IMAGE_URL,
+  COBALT_BLUE_THEME_HEX,
+  buildNFTMetadata,
+  type NFTPlanDefinition,
+  type NFTTierKey,
+} from '../../engine/nftMetadata';
 import {
   Check,
   Gem,
@@ -17,6 +25,10 @@ import {
   PlusCircle,
   Copy,
   Sparkles,
+  Activity,
+  FileCode,
+  X,
+  Eye,
 } from 'lucide-react';
 import { Link } from 'react-router';
 
@@ -25,6 +37,7 @@ interface MintReceipt {
   tokenId: number;
   blockNumber: number;
   tier: string;
+  autologgingRateLimit?: number;
   contractAddress: string;
   explorerUrl: string;
   tokenUrl: string;
@@ -39,6 +52,8 @@ export const SubscriptionPlans: React.FC = () => {
   const [userPass, setUserPass] = useState<Awaited<ReturnType<typeof mstBlockchain.getUserPass>>>(null);
   const [walletStatus, setWalletStatus] = useState<string | null>(null);
   const [copiedContract, setCopiedContract] = useState(false);
+  const [copiedMetadata, setCopiedMetadata] = useState(false);
+  const [inspectedPlan, setInspectedPlan] = useState<NFTPlanDefinition | null>(null);
 
   const fetchUserPass = async () => {
     try {
@@ -53,72 +68,9 @@ export const SubscriptionPlans: React.FC = () => {
     fetchUserPass();
   }, [wallet?.address]);
 
-  const plans = [
-    {
-      id: 'explorer' as const,
-      name: 'Explorer Tier',
-      tagline: 'Entry-level resilience for single cluster environments',
-      price: '5.0 MST',
-      mstPrice: '5.0 MST / 30 Days (On-Chain)',
-      features: [
-        'Up to 10 Monitored Services & Nodes',
-        'Topological DAG Blast Radius Mapping',
-        'Standard Restart Playbooks (PostgreSQL & Redis)',
-        '24h In-Memory Telemetry History',
-        'MST Blockchain Audit Anchoring',
-      ],
-      isPopular: false,
-    },
-    {
-      id: 'guardian' as const,
-      name: 'Guardian Tier',
-      tagline: 'Production self-healing for multi-tier microservices',
-      price: '15.0 MST',
-      mstPrice: '15.0 MST / 30 Days (On-Chain)',
-      features: [
-        'Up to 50 Monitored Microservices & Pods',
-        'Dynamic Multi-Tier Blast Radius Calculation',
-        'Automated Standby Failover & Cache Reheat',
-        '7-Day On-Chain Merkle Audit Vault',
-        'BridgeKey Cryptographic Authorization',
-        'Sarvam AI Incident Copilot (sarvam-105b)',
-      ],
-      isPopular: true,
-    },
-    {
-      id: 'sentinel' as const,
-      name: 'Sentinel Tier',
-      tagline: 'Autonomous orchestration with cryptographic commander gates',
-      price: '15.0 MST',
-      mstPrice: '15.0 MST / 30 Days (On-Chain)',
-      features: [
-        'Unlimited Monitored Infrastructure Nodes',
-        'Multi-Region Replica Failover Sequences',
-        'Cryptographic Human Approval Gates via BridgeKey',
-        '30-Day Immutable On-Chain Audit Vault',
-        'Sub-4m Autonomous MTTR SLA Guarantee',
-        'Priority SRE Emergency Escalation',
-      ],
-      isPopular: false,
-    },
-    {
-      id: 'enterprise' as const,
-      name: 'Enterprise Tier',
-      tagline: 'Dedicated smart contracts, private subnets & bespoke SLAs',
-      price: 'Bespoke',
-      mstPrice: 'Custom Contract Deployment',
-      features: [
-        'Custom Smart Contract Deployment on MST Testnet',
-        'Air-Gapped Private VPC & Kubernetes Integration',
-        'Custom Playbook DSL Engineering',
-        'Permanent On-Chain Archival Vault',
-        'Dedicated SRE Command Center SLA & Support',
-      ],
-      isPopular: false,
-    },
-  ];
+  const plans = NFT_PLANS_LIST;
 
-  const handleMint = async (tierKey: 'explorer' | 'guardian' | 'sentinel' | 'enterprise') => {
+  const handleMint = async (tierKey: NFTTierKey) => {
     setMintError(null);
     setActiveReceipt(null);
     setWalletStatus(null);
@@ -237,8 +189,12 @@ export const SubscriptionPlans: React.FC = () => {
         <div className="p-6 rounded-3xl skeuo-card border-[#E5D7C5] space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EADCC9]">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/25">
-                <ShieldCheck className="w-6 h-6" />
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[#0047AB] shadow-sm shrink-0">
+                <img
+                  src={CANONICAL_NFT_IMAGE_URL}
+                  alt="Horizon ZXPASS NFT"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
@@ -274,10 +230,16 @@ export const SubscriptionPlans: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
             <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
               <span className="text-[#8A7B6D] text-[11px] font-bold">Token ID</span>
               <div className="text-sm font-bold text-[#1A1A1A]">#ZXPASS-{userPass.tokenId}</div>
+            </div>
+            <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
+              <span className="text-[#8A7B6D] text-[11px] font-bold">AutoLogging Rate Limit</span>
+              <div className="text-sm font-black text-[#0047AB] flex items-center gap-1">
+                <span>{userPass.autologgingRateLimit || 5} events/min</span>
+              </div>
             </div>
             <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
               <span className="text-[#8A7B6D] text-[11px] font-bold">Contract Address</span>
@@ -296,8 +258,12 @@ export const SubscriptionPlans: React.FC = () => {
         <div className="p-6 rounded-3xl bg-emerald-50 border border-emerald-300 shadow-md space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-200">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-300">
-                <CheckCircle2 className="w-6 h-6" />
+              <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[#0047AB] shadow-sm shrink-0">
+                <img
+                  src={CANONICAL_NFT_IMAGE_URL}
+                  alt="Minted Horizon NFT"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-emerald-950">
@@ -324,7 +290,7 @@ export const SubscriptionPlans: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
             <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
               <span className="text-emerald-700 text-[11px] font-bold">Token ID</span>
               <div className="text-sm font-bold text-emerald-950">#ZXPASS-{activeReceipt.tokenId}</div>
@@ -332,6 +298,10 @@ export const SubscriptionPlans: React.FC = () => {
             <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
               <span className="text-emerald-700 text-[11px] font-bold">Active Tier</span>
               <div className="text-sm font-bold text-emerald-700">{activeReceipt.tier}</div>
+            </div>
+            <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
+              <span className="text-emerald-700 text-[11px] font-bold">AutoLogging Rate Limit</span>
+              <div className="text-sm font-bold text-[#0047AB]">{activeReceipt.autologgingRateLimit || 5} events/min</div>
             </div>
             <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
               <span className="text-emerald-700 text-[11px] font-bold">Network</span>
@@ -402,7 +372,7 @@ export const SubscriptionPlans: React.FC = () => {
                     {plan.tagline}
                   </p>
 
-                  <div className={`my-5 pb-5 border-b ${isPopular ? 'border-white/20' : 'border-[#EADCC9]'}`}>
+                  <div className={`my-4 pb-4 border-b ${isPopular ? 'border-white/20' : 'border-[#EADCC9]'}`}>
                     <div className={`text-3xl sm:text-4xl font-black font-mono ${isPopular ? 'text-white' : 'text-[#1A1A1A]'}`}>
                       {plan.price}
                     </div>
@@ -411,7 +381,28 @@ export const SubscriptionPlans: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-6">
+                  {/* AutoLogging Rate Limit Badge */}
+                  <div
+                    className={`flex items-center justify-between p-2.5 rounded-xl border font-mono text-xs mb-4 ${
+                      isPopular
+                        ? 'bg-white/10 border-white/20 text-white'
+                        : 'bg-blue-50/80 border-blue-200 text-[#0047AB]'
+                    }`}
+                  >
+                    <span className="font-bold flex items-center gap-1.5">
+                      <Activity className="w-3.5 h-3.5" />
+                      AutoLogging Rate Limit:
+                    </span>
+                    <span
+                      className={`font-black px-2 py-0.5 rounded text-[11px] shadow-xs ${
+                        isPopular ? 'bg-white text-[#0047AB]' : 'bg-[#0047AB] text-white'
+                      }`}
+                    >
+                      {plan.autologgingRateLimit} events/min
+                    </span>
+                  </div>
+
+                  <div className="space-y-3 mb-5">
                     <span className={`text-xs font-bold uppercase tracking-wider block ${isPopular ? 'text-white/70' : 'text-[#8A7B6D]'}`}>
                       Plan Capabilities
                     </span>
@@ -424,6 +415,20 @@ export const SubscriptionPlans: React.FC = () => {
                       ))}
                     </ul>
                   </div>
+
+                  {/* View Complete NFT Metadata Button */}
+                  <button
+                    type="button"
+                    onClick={() => setInspectedPlan(plan)}
+                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 mb-4 border ${
+                      isPopular
+                        ? 'bg-white/10 hover:bg-white/20 text-white border-white/20'
+                        : 'bg-[#FAF3EA] hover:bg-[#F2E5D5] text-[#0047AB] border-[#E5D7C5]'
+                    }`}
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Inspect NFT Metadata & Schema</span>
+                  </button>
                 </div>
 
                 <div>
@@ -456,6 +461,106 @@ export const SubscriptionPlans: React.FC = () => {
           );
         })}
       </div>
+
+      {/* ERC-721 Metadata Inspector Modal */}
+      <AnimatePresence>
+        {inspectedPlan && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border-2 border-[#0047AB] shadow-2xl p-6 space-y-5"
+            >
+              <div className="flex items-center justify-between border-b border-[#EADCC9] pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-[#0047AB] shrink-0">
+                    <img src={CANONICAL_NFT_IMAGE_URL} alt="NFT Thumbnail" className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-black text-[#1A1A1A]">
+                      ERC-721 / OpenSea Metadata: {inspectedPlan.name}
+                    </h3>
+                    <p className="text-xs text-[#6E6258]">
+                      Standard JSON metadata format with Cobalt Blue theme (<code className="text-[#0047AB] font-bold">#0047AB</code>)
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setInspectedPlan(null)}
+                  className="p-1.5 rounded-lg text-[#6E6258] hover:bg-stone-100 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Trait Summary Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Rate Limit</span>
+                  <span className="text-sm font-black text-[#0047AB]">{inspectedPlan.autologgingRateLimit} / min</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Theme Color</span>
+                  <span className="text-sm font-black text-[#0047AB]">#0047AB</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Tier Level</span>
+                  <span className="text-sm font-black text-[#1A1A1A]">{inspectedPlan.tierNumber} / 4</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Standard</span>
+                  <span className="text-sm font-black text-emerald-800">ERC-721</span>
+                </div>
+              </div>
+
+              {/* Complete JSON Metadata Viewer */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono text-[#6E6258]">
+                  <span className="font-bold flex items-center gap-1.5">
+                    <FileCode className="w-3.5 h-3.5 text-[#0047AB]" />
+                    Complete Metadata JSON Payload:
+                  </span>
+                  <button
+                    onClick={() => {
+                      const jsonText = JSON.stringify(buildNFTMetadata(inspectedPlan.id), null, 2);
+                      navigator.clipboard.writeText(jsonText);
+                      setCopiedMetadata(true);
+                      setTimeout(() => setCopiedMetadata(false), 2000);
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1 text-[#0047AB] font-bold"
+                  >
+                    {copiedMetadata ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedMetadata ? 'Copied!' : 'Copy JSON'}</span>
+                  </button>
+                </div>
+
+                <pre className="p-4 rounded-2xl bg-[#1A1A1A] text-cyan-300 font-mono text-[11px] overflow-x-auto max-h-[300px] border border-black shadow-inner leading-relaxed">
+                  {JSON.stringify(buildNFTMetadata(inspectedPlan.id), null, 2)}
+                </pre>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-[#EADCC9] text-xs">
+                <a
+                  href={`/nft/metadata/${inspectedPlan.id}.json`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#0047AB] font-bold hover:underline flex items-center gap-1"
+                >
+                  <span>Open Public JSON Endpoint (/nft/metadata/{inspectedPlan.id}.json)</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <button
+                  onClick={() => setInspectedPlan(null)}
+                  className="px-4 py-2 rounded-xl bg-[#0047AB] hover:bg-blue-800 text-white font-bold cursor-pointer"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* BridgeKey NFT Display & Import Guide */}
       <Card className="p-6 skeuo-card border-[#E5D7C5] space-y-4">
@@ -503,7 +608,7 @@ export const SubscriptionPlans: React.FC = () => {
                   className="text-[#0047AB] font-bold hover:underline flex items-center gap-1"
                 >
                   <span>MSTScan Token #1</span>
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
             </div>

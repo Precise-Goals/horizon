@@ -81,41 +81,51 @@ export const SubscriptionPage: React.FC = () => {
       </motion.div>
 
       {/* Bento Metric Summary Strip */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
           <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Smart Contract</span>
             <Gem className="w-4 h-4 text-[#0047AB]" />
           </div>
           <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">ZXPASS</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Zentrix Pass ERC-721</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">ERC-721 on MST Testnet ({MST_CONFIG.chainId})</div>
         </Card>
 
         <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
           <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>Blockchain Network</span>
-            <ShieldCheck className="w-4 h-4 text-[#0047AB]" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#1A1A1A]">MST Testnet</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Chain ID: {MST_CONFIG.chainId}</div>
-        </Card>
-
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>Verification Standard</span>
+            <span>AutoLogging Rate Limits</span>
             <ShieldCheck className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">EIP-747</div>
-          <div className="text-[11px] text-emerald-800 font-mono font-bold">BridgeKey Asset Watching</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">5 → 20 /min</div>
+          <div className="text-[11px] text-emerald-800 font-mono font-bold">Tiered: 5, 10, 15, 20 events/min</div>
         </Card>
 
         <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
           <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>Operator Requirement</span>
+            <span>Design Theme Color</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-[#0047AB] border border-white shadow-xs" />
+          </div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">#0047AB</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Cobalt Blue &bull; Cream #FFF8F0</div>
+        </Card>
+
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
+            <span>NFT Canonical Image</span>
             <Wallet className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-amber-700">&ge; 0.05 MST</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Testnet Gas Collateral</div>
+          <div className="text-base sm:text-lg font-black font-mono text-[#1A1A1A] truncate">
+            horizon.jpg
+          </div>
+          <a
+            href="https://horizon-aiops.vercel.app/horizon.jpg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[#0047AB] font-mono font-bold hover:underline flex items-center gap-1"
+          >
+            <span>View Image Asset</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </Card>
       </motion.div>
 

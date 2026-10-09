@@ -25,4 +25,9 @@ export interface AuditLogEntry {
   actor: 'system' | 'human' | 'llm_agent' | string;
   details: string;
   severity: 'info' | 'warning' | 'critical' | string;
+  rateLimitStatus?: {
+    limit: number;
+    remaining: number;
+    tier: string;
+  };
 }

@@ -1,0 +1,85 @@
+{
+  "name": "Horizon ZXPASS — Explorer Tier #1",
+  "description": "Enterprise Autonomous Infrastructure Recovery Platform NFT Subscription Pass (Explorer Tier). Provides automated failure detection, Kahn DAG recovery sequencing, and tamper-evident audit logging on MST Blockchain Testnet (Chain ID 91562037). Includes dedicated AutoLogging rate limit of 5 events/minute.",
+  "image": "https://horizon-aiops.vercel.app/horizon.jpg",
+  "external_url": "https://horizon-aiops.vercel.app/subscription",
+  "background_color": "0047AB",
+  "theme_color": "#0047AB",
+  "attributes": [
+    {
+      "trait_type": "Subscription Tier",
+      "value": "Explorer"
+    },
+    {
+      "trait_type": "Tier Level",
+      "value": 1,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "AutoLogging Rate Limit",
+      "value": 5,
+      "display_type": "number",
+      "max_value": 20
+    },
+    {
+      "trait_type": "Rate Limit Unit",
+      "value": "events/min"
+    },
+    {
+      "trait_type": "Monitored Systems Cap",
+      "value": 10,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Theme Color",
+      "value": "Cobalt Blue"
+    },
+    {
+      "trait_type": "Theme Hex",
+      "value": "#0047AB"
+    },
+    {
+      "trait_type": "Design System",
+      "value": "Neo-Brutalism Cobalt & Cream"
+    },
+    {
+      "trait_type": "Network",
+      "value": "MST Blockchain Testnet"
+    },
+    {
+      "trait_type": "Chain ID",
+      "value": 91562037,
+      "display_type": "number"
+    },
+    {
+      "trait_type": "Standard",
+      "value": "ERC-721 / EIP-747"
+    },
+    {
+      "trait_type": "AI Engine",
+      "value": "Sarvam AI SRE Copilot"
+    },
+    {
+      "trait_type": "Governance Standard",
+      "value": "EIP-712 Cryptographic Signature"
+    },
+    {
+      "trait_type": "Audit Ledger",
+      "value": "On-Chain Merkle Root Hash"
+    }
+  ],
+  "properties": {
+    "category": "SaaS Subscription Pass",
+    "platform": "Horizon Autonomous Recovery",
+    "rate_limits": {
+      "autologging_events_per_minute": 5,
+      "burst_allowance": 5,
+      "window_seconds": 60
+    },
+    "branding": {
+      "theme_color": "#0047AB",
+      "secondary_color": "#FFF8F0",
+      "accent_style": "Neo-Brutalist Cobalt & Cream"
+    }
+  }
+}
