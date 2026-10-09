@@ -314,3 +314,4 @@ Explain the primary root cause and state whether high-risk human approval is req
 }
 
 export const sarvamAgent = new SarvamAgentService();
+export const askSreAdvisor = (query: string): Promise<string> => sarvamAgent.askSreAdvisor(query);

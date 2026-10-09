@@ -23,6 +23,7 @@ import {
   Terminal,
   BookOpen,
   Scale,
+  Activity,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -93,7 +94,7 @@ export const Navbar: React.FC = () => {
     setOpenDropdown((prev) => (prev === name ? null : name));
   };
 
-  const isPlatformActive = ['/dashboard', '/topology', '/recovery'].includes(location.pathname);
+  const isPlatformActive = ['/dashboard', '/observability', '/detection', '/monitoring', '/topology', '/recovery'].includes(location.pathname);
   const isAgentActive = location.pathname === '/architect';
   const isDocsActive = ['/docs', '/mcp'].includes(location.pathname);
   const isGovernanceActive = ['/audit', '/subscription', '/patents', '/policies', '/governance/patents', '/governance/policies'].includes(location.pathname);
@@ -170,7 +171,7 @@ export const Navbar: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.96 }}
                     transition={{ duration: 0.16, ease: 'easeOut' }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 w-64 rounded-2xl p-2 bg-white border border-[rgba(26,26,26,0.14)] shadow-[0_12px_32px_rgba(26,26,26,0.12),inset_0_1px_0_#FFFFFF] z-50"
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2.5 w-68 rounded-2xl p-2 bg-white border border-[rgba(26,26,26,0.14)] shadow-[0_12px_32px_rgba(26,26,26,0.12),inset_0_1px_0_#FFFFFF] z-50"
                   >
                     <Link
                       to="/dashboard"
@@ -182,6 +183,22 @@ export const Navbar: React.FC = () => {
                       <div>
                         <div className="text-xs font-bold text-[#1A1A1A]">Dashboard</div>
                         <div className="text-[10px] text-[#666666]">Telemetry & MTTR metrics</div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/observability"
+                      className="flex items-start gap-2.5 p-2 rounded-xl hover:bg-[#F7EFE5] transition-colors"
+                    >
+                      <div className="p-1.5 rounded-lg bg-[#FEE2E2] text-[#DC2626] border border-[#DC2626]/20">
+                        <Activity className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-[#1A1A1A] flex items-center gap-1.5">
+                          <span>Live Observability</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                        </div>
+                        <div className="text-[10px] text-[#666666]">Datadog APM & PagerDuty Alerts</div>
                       </div>
                     </Link>
 
@@ -520,6 +537,14 @@ export const Navbar: React.FC = () => {
               className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
               Resilience Dashboard
+            </Link>
+            <Link
+              to="/observability"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA] flex items-center justify-between"
+            >
+              <span>Live Observability & PagerDuty</span>
+              <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
             </Link>
             <Link
               to="/topology"

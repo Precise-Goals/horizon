@@ -129,6 +129,13 @@ export const DashboardPage: React.FC = () => {
             {watchdogMetrics.isSentinelActive ? 'Sentinel Active' : 'Chaos Sentinel'}
           </Button>
 
+          <Link to="/observability">
+            <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100 shadow-xs">
+              <Activity className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+              Observability & PagerDuty
+            </Button>
+          </Link>
+
           <Link to="/architect">
             <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-[#0047AB] border-[#0047AB]/20">
               <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />

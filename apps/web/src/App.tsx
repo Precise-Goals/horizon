@@ -8,6 +8,7 @@ import { RecoveryPage } from './pages/RecoveryPage';
 import { AuditPage } from './pages/AuditPage';
 import { SubscriptionPage } from './pages/SubscriptionPage';
 import { ArchitectPage } from './pages/ArchitectPage';
+import { ObservabilityPage } from './pages/ObservabilityPage';
 
 import { DocsPage } from './pages/DocsPage';
 import { PatentsPage } from './pages/PatentsPage';
@@ -21,6 +22,9 @@ export function App() {
           <Route path="/" element={<LandingPage />} />
           <Route element={<RootLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/observability" element={<ObservabilityPage />} />
+            <Route path="/detection" element={<ObservabilityPage />} />
+            <Route path="/monitoring" element={<ObservabilityPage />} />
             <Route path="/architect" element={<ArchitectPage />} />
             <Route path="/topology" element={<TopologyPage />} />
             <Route path="/recovery" element={<RecoveryPage />} />
