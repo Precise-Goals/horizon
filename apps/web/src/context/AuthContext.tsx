@@ -32,6 +32,7 @@ export interface AuthContextType {
   connectBridgeKey: () => Promise<void>;
   connectOperatorKeypair: () => Promise<void>;
   disconnectWallet: () => void;
+  syncWallet: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -52,6 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const isSyncingRef = React.useRef<boolean>(false);
 
   // Compute current onboarding step strictly:
   // 1. Must have real Firebase Auth User
@@ -61,6 +63,57 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     : !wallet || !wallet.isAuthorized
     ? 'BRIDGEKEY_WALLET'
     : 'COMPLETED';
+
+  // Silent sync to verify and connect wallet on mount, window focus, and tab switch
+  const syncWallet = useCallback(async (): Promise<void> => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+    try {
+      // 1. Silent non-intrusive probe on active provider (eth_accounts)
+      const activeInjected = await mstBlockchain.checkActiveConnection();
+
+      if (activeInjected) {
+        setWallet((prev) => {
+          if (
+            !prev ||
+            prev.address.toLowerCase() !== activeInjected.address.toLowerCase() ||
+            prev.balanceMst !== activeInjected.balanceMst ||
+            prev.isAuthorized !== activeInjected.isAuthorized
+          ) {
+            try {
+              localStorage.setItem(STORAGE_KEY_WALLET, JSON.stringify(activeInjected));
+            } catch {}
+            return activeInjected;
+          }
+          return prev;
+        });
+        return;
+      }
+
+      // 2. Check localStorage for operator credentials
+      const savedStr = localStorage.getItem(STORAGE_KEY_WALLET);
+      if (savedStr) {
+        try {
+          const saved: WalletState = JSON.parse(savedStr);
+          if (saved.mode === 'commander_signer' && saved.isAuthorized) {
+            const operatorState = await mstBlockchain.getOperatorWalletState();
+            setWallet(operatorState);
+            localStorage.setItem(STORAGE_KEY_WALLET, JSON.stringify(operatorState));
+          } else if (saved.mode === 'bridgekey_injected' && saved.address) {
+            // Re-verify balance on MST Testnet RPC
+            const freshBalance = await mstBlockchain.getBalance(saved.address).catch(() => saved.balanceMst);
+            const refreshed = { ...saved, balanceMst: freshBalance };
+            setWallet(refreshed);
+            localStorage.setItem(STORAGE_KEY_WALLET, JSON.stringify(refreshed));
+          }
+        } catch {}
+      }
+    } catch (err) {
+      console.warn('[AuthContext] Wallet focus sync error:', err);
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, []);
 
   // Listen to live Firebase authentication state
   useEffect(() => {
@@ -89,6 +142,62 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return () => unsubscribe();
   }, []);
+
+  // Window focus & tab visibility listener for Mac browsers auto-sync
+  useEffect(() => {
+    // Initial sync
+    syncWallet();
+
+    const handleFocus = () => {
+      syncWallet();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        syncWallet();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('pageshow', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Setup live Web3 provider event listeners
+    const cleanupListeners = mstBlockchain.setupProviderListeners({
+      onAccountsChanged: (accounts: string[]) => {
+        if (accounts.length > 0) {
+          syncWallet();
+        } else {
+          setWallet((prev) => {
+            if (prev?.mode === 'bridgekey_injected') {
+              localStorage.removeItem(STORAGE_KEY_WALLET);
+              return null;
+            }
+            return prev;
+          });
+        }
+      },
+      onChainChanged: () => {
+        syncWallet();
+      },
+      onDisconnect: () => {
+        setWallet((prev) => {
+          if (prev?.mode === 'bridgekey_injected') {
+            localStorage.removeItem(STORAGE_KEY_WALLET);
+            return null;
+          }
+          return prev;
+        });
+      },
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('pageshow', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      cleanupListeners();
+    };
+  }, [syncWallet]);
 
   const clearError = useCallback(() => {
     setErrorMessage(null);
@@ -233,6 +342,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         connectBridgeKey,
         connectOperatorKeypair,
         disconnectWallet,
+        syncWallet,
         logout,
         clearError,
       }}

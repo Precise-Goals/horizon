@@ -3,6 +3,7 @@ import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { Badge } from '../common/Badge';
 import { mstBlockchain, type WalletState, MST_CONFIG } from '../../engine/mstBlockchain';
+import { useAuth } from '../../context/useAuth';
 import {
   Wallet,
   ShieldCheck,
@@ -23,7 +24,8 @@ interface MSTWalletModalProps {
 }
 
 export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose }) => {
-  const [walletState, setWalletState] = useState<WalletState | null>(null);
+  const { wallet, connectBridgeKey, syncWallet } = useAuth();
+  const [walletState, setWalletState] = useState<WalletState | null>(wallet);
   const [userPass, setUserPass] = useState<Awaited<ReturnType<typeof mstBlockchain.getUserPass>>>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -35,7 +37,9 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
     setLoading(true);
     setErrorStatus(null);
     try {
-      const state = await mstBlockchain.getOperatorWalletState();
+      await syncWallet();
+      const active = (await mstBlockchain.checkActiveConnection()) || wallet;
+      const state = active || (await mstBlockchain.getOperatorWalletState());
       setWalletState(state);
 
       // Query on-chain pass for this address
@@ -52,7 +56,7 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
     if (isOpen) {
       loadWallet();
     }
-  }, [isOpen]);
+  }, [isOpen, wallet?.address]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -64,7 +68,9 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
     try {
       setLoading(true);
       setErrorStatus(null);
-      const state = await mstBlockchain.connectBridgeKeyWallet();
+      await connectBridgeKey();
+      await syncWallet();
+      const state = (await mstBlockchain.checkActiveConnection()) || wallet || (await mstBlockchain.getOperatorWalletState());
       setWalletState(state);
 
       const pass = await mstBlockchain.getUserPass(state.address);

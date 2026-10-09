@@ -13,9 +13,21 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '../common/Button';
-import { Link } from 'react-router';
+import { Link, useLocation } from 'react-router';
+
+// Public routes accessible without onboarding
+const PUBLIC_PATHS = [
+  '/',
+  '/patents',
+  '/policies',
+  '/governance/patents',
+  '/governance/policies',
+  '/docs',
+  '/mcp',
+];
 
 export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
   const {
     user,
     wallet,
@@ -36,8 +48,13 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  // If onboarding is completely finished, render the protected children
-  if (onboardingStep === 'COMPLETED') {
+  // Keep Patents, Policies, and Documentation pages accessible throughout the website
+  const isPublic = PUBLIC_PATHS.some(
+    (path) => location.pathname === path || location.pathname.startsWith(`${path}/`)
+  );
+
+  // If on a public route or onboarding is completely finished, render children directly
+  if (isPublic || onboardingStep === 'COMPLETED') {
     return <>{children}</>;
   }
 
@@ -105,7 +122,7 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] pointer-events-none rounded-full" />
       <div className="absolute bottom-10 right-1/4 w-[300px] h-[200px] bg-indigo-600/10 blur-[100px] pointer-events-none rounded-full" />
 
-      {/* Return to Homepage Link */}
+      {/* Return to Homepage & Public Policy Links */}
       <div className="relative z-10 w-full max-w-xl mb-4 flex items-center justify-between">
         <Link
           to="/"
@@ -113,7 +130,21 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         >
           <span>&larr; Return to Homepage</span>
         </Link>
-        <span className="text-xs font-mono text-[#8E9DB8]">Horizon Security Gate</span>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/patents"
+            className="text-xs text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors underline-offset-4 hover:underline"
+          >
+            Patents &amp; Research
+          </Link>
+          <span className="text-[#6E7A94] text-xs">&bull;</span>
+          <Link
+            to="/policies"
+            className="text-xs text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors underline-offset-4 hover:underline"
+          >
+            Privacies &amp; Policies
+          </Link>
+        </div>
       </div>
 
       {/* Main Glassmorphic Onboarding Card */}

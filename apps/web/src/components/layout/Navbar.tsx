@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, wallet, logout } = useAuth();
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
   const [walletBalance, setWalletBalance] = useState<string>('...');
@@ -55,12 +55,16 @@ export const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
-  // Fetch live MST balance
+  // Fetch and sync live MST balance with AuthContext wallet state
   useEffect(() => {
-    mstBlockchain.getBalance()
-      .then((bal) => setWalletBalance(`${bal} MST`))
-      .catch(() => setWalletBalance('0.00 MST'));
-  }, []);
+    if (wallet?.balanceMst) {
+      setWalletBalance(`${wallet.balanceMst} MST`);
+    } else {
+      mstBlockchain.getBalance()
+        .then((bal) => setWalletBalance(`${bal} MST`))
+        .catch(() => setWalletBalance('0.00 MST'));
+    }
+  }, [wallet?.balanceMst]);
 
   // Incident polling for Platform badge
   useEffect(() => {

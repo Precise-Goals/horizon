@@ -28,6 +28,77 @@ export interface WalletState {
   mode: 'commander_signer' | 'bridgekey_injected' | 'disconnected';
 }
 
+/**
+ * Detects injected Web3 provider (BridgeKey or EIP-1193 window.ethereum).
+ * Supports delayed provider injection on Mac browsers (Safari extension companion,
+ * Brave Shields, macOS Chrome/Arc extensions) and handles multiple wallet extensions cleanly.
+ */
+export async function getInjectedProvider(timeoutMs: number = 800): Promise<any> {
+  if (typeof window === 'undefined') return null;
+
+  const findProvider = (): any => {
+    const win = window as any;
+    if (win.bridgekey) return win.bridgekey;
+
+    if (win.ethereum) {
+      if (Array.isArray(win.ethereum.providers) && win.ethereum.providers.length > 0) {
+        return (
+          win.ethereum.providers.find((p: any) => p.isBridgeKey) ||
+          win.ethereum.providers.find((p: any) => p.isMetaMask) ||
+          win.ethereum.selectedProvider ||
+          win.ethereum.providers[0]
+        );
+      }
+      return win.ethereum;
+    }
+    return null;
+  };
+
+  const direct = findProvider();
+  if (direct) return direct;
+
+  // Wait for late injection (common in macOS Safari extension companion & Brave)
+  return new Promise((resolve) => {
+    let resolved = false;
+
+    const cleanup = () => {
+      window.removeEventListener('ethereum#initialized', onInit);
+      window.removeEventListener('eip6963:announceProvider', onAnnounce);
+      clearInterval(pollInterval);
+      clearTimeout(timer);
+    };
+
+    const finish = (provider: any) => {
+      if (!resolved) {
+        resolved = true;
+        cleanup();
+        resolve(provider);
+      }
+    };
+
+    const onInit = () => finish(findProvider());
+    const onAnnounce = (event: any) => {
+      if (event?.detail?.provider) {
+        finish(event.detail.provider);
+      } else {
+        finish(findProvider());
+      }
+    };
+
+    window.addEventListener('ethereum#initialized', onInit, { once: true });
+    window.addEventListener('eip6963:announceProvider', onAnnounce, { once: true });
+
+    const pollInterval = setInterval(() => {
+      const p = findProvider();
+      if (p) finish(p);
+    }, 50);
+
+    const timer = setTimeout(() => {
+      finish(findProvider());
+    }, timeoutMs);
+  });
+}
+
 export class MSTBlockchainService {
   private rpcUrl: string;
 
@@ -96,18 +167,113 @@ export class MSTBlockchainService {
   }
 
   /**
+   * Non-intrusive check for an already-connected wallet session.
+   * Uses eth_accounts (zero popup prompts), verifies balance on MST Testnet,
+   * and returns WalletState if an account is authorized.
+   * Ensures wallet stays actively connected on Mac browser window focus / tab re-sync.
+   */
+  public async checkActiveConnection(): Promise<WalletState | null> {
+    if (typeof window === 'undefined') return null;
+    try {
+      const provider = await getInjectedProvider(400);
+      if (!provider || typeof provider.request !== 'function') {
+        return null;
+      }
+
+      const accounts = (await provider.request({
+        method: 'eth_accounts',
+      })) as string[];
+
+      if (!accounts || accounts.length === 0) {
+        return null;
+      }
+
+      const userAddress = accounts[0];
+      const balance = await this.getBalance(userAddress).catch(() => '0.0000');
+      const isAuth = MST_CONFIG.authorizedAddresses
+        .map((a) => a.toLowerCase())
+        .includes(userAddress.toLowerCase());
+
+      let currentChainId = MST_CONFIG.chainId;
+      try {
+        const hex = (await provider.request({ method: 'eth_chainId' })) as string;
+        if (hex) currentChainId = parseInt(hex, 16);
+      } catch {
+        // default to configured chainId
+      }
+
+      return {
+        address: userAddress,
+        balanceMst: balance,
+        isAuthorized: isAuth,
+        networkName: MST_CONFIG.chainName,
+        chainId: currentChainId,
+        mode: 'bridgekey_injected',
+      };
+    } catch (err) {
+      console.warn('[MST Blockchain] Silent connection check:', err);
+      return null;
+    }
+  }
+
+  /**
+   * Attach robust listeners to active provider for accountsChanged,
+   * chainChanged, and disconnect. Returns cleanup function.
+   */
+  public setupProviderListeners(callbacks: {
+    onAccountsChanged?: (accounts: string[]) => void;
+    onChainChanged?: (chainId: string) => void;
+    onDisconnect?: () => void;
+  }): () => void {
+    if (typeof window === 'undefined') return () => {};
+
+    let activeProvider: any = null;
+    let accountsHandler: any = null;
+    let chainHandler: any = null;
+    let disconnectHandler: any = null;
+
+    getInjectedProvider(500).then((provider) => {
+      if (!provider || typeof provider.on !== 'function') return;
+      activeProvider = provider;
+
+      if (callbacks.onAccountsChanged) {
+        accountsHandler = (accounts: string[]) => callbacks.onAccountsChanged!(accounts);
+        provider.on('accountsChanged', accountsHandler);
+      }
+
+      if (callbacks.onChainChanged) {
+        chainHandler = (chainId: string) => callbacks.onChainChanged!(chainId);
+        provider.on('chainChanged', chainHandler);
+      }
+
+      if (callbacks.onDisconnect) {
+        disconnectHandler = () => callbacks.onDisconnect!();
+        provider.on('disconnect', disconnectHandler);
+      }
+    });
+
+    return () => {
+      if (activeProvider && typeof activeProvider.removeListener === 'function') {
+        if (accountsHandler) activeProvider.removeListener('accountsChanged', accountsHandler);
+        if (chainHandler) activeProvider.removeListener('chainChanged', chainHandler);
+        if (disconnectHandler) activeProvider.removeListener('disconnect', disconnectHandler);
+      }
+    };
+  }
+
+  /**
    * Connect via BridgeKey Web3 Wallet
-   * Detects BridgeKey provider (window.bridgekey or injected EIP-1193 window.ethereum).
+   * Detects BridgeKey provider with Mac-resilient injection retry.
    */
   public async connectBridgeKeyWallet(): Promise<WalletState> {
     if (typeof window === 'undefined') {
       throw new Error('BridgeKey wallet requires browser environment.');
     }
 
-    const bridgeKeyProvider = (window as any).bridgekey || (window as any).ethereum;
+    const bridgeKeyProvider = await getInjectedProvider(800);
     if (!bridgeKeyProvider) {
       throw new Error(
-        'BridgeKey Wallet extension not detected. Please install or enable BridgeKey Wallet to connect to MST Testnet.'
+        'BridgeKey Wallet extension not detected. If running in Safari or Chrome on macOS, please ensure the wallet extension is allowed in browser settings and active.'
       );
     }
 
@@ -128,7 +294,7 @@ export class MSTBlockchainService {
         params: [{ chainId: MST_CONFIG.chainIdHex }],
       });
     } catch (switchError: any) {
-      if (switchError.code === 4902) {
+      if (switchError.code === 4902 || switchError?.data?.originalError?.code === 4902) {
         await bridgeKeyProvider.request({
           method: 'wallet_addEthereumChain',
           params: [
@@ -137,6 +303,7 @@ export class MSTBlockchainService {
               chainName: MST_CONFIG.chainName,
               nativeCurrency: { name: 'MST', symbol: 'MST', decimals: 18 },
               rpcUrls: [MST_CONFIG.rpcUrl],
+              blockExplorerUrls: [MST_CONFIG.explorerUrl],
             },
           ],
         });
@@ -276,7 +443,7 @@ export class MSTBlockchainService {
    */
   public async watchAssetInWallet(tokenId: number = 1): Promise<boolean> {
     if (typeof window === 'undefined') return false;
-    const provider = (window as any).bridgekey || (window as any).ethereum;
+    const provider = await getInjectedProvider(500);
     if (!provider || !provider.request) {
       throw new Error('BridgeKey Wallet extension not detected in browser.');
     }
@@ -335,7 +502,7 @@ export class MSTBlockchainService {
     const callData = `${selector}${param}`;
 
     const contract = MST_CONFIG.subscriptionContractAddress;
-    const provider = typeof window !== 'undefined' ? ((window as any).bridgekey || (window as any).ethereum) : null;
+    const provider = typeof window !== 'undefined' ? await getInjectedProvider(500) : null;
 
     let txHash: string;
     let nextTokenId = 3; // Token 1 and 2 already minted on chain
