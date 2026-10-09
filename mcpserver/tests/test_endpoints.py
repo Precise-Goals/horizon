@@ -13,6 +13,11 @@ async def test_health_check(async_client: AsyncClient):
     assert data["tools_registered"] == 12
     assert "timestamp" in data
 
+    # Verify alias /api/v1/health
+    res_alias = await async_client.get("/api/v1/health")
+    assert res_alias.status_code == 200
+    assert res_alias.json()["status"] == "healthy"
+
 
 @pytest.mark.asyncio
 async def test_dashboard_html(async_client: AsyncClient):
@@ -165,3 +170,48 @@ async def test_inbound_webhook_datadog(async_client: AsyncClient):
     assert data["targetNode"] == "redis-cache"
     assert data["recoveryJobId"].startswith("REC-")
     assert data["requiresGateApproval"] is False
+
+
+@pytest.mark.asyncio
+async def test_rest_tools_catalogue_endpoint(async_client: AsyncClient):
+    """Verifies that GET /api/v1/mcp/tools returns clean JSON for direct browser verification."""
+    res = await async_client.get("/api/v1/mcp/tools")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert data["count"] == 12
+    assert len(data["tools"]) == 12
+    tool_names = [t["name"] for t in data["tools"]]
+    assert "horizon_probe_health" in tool_names
+    assert "horizon_submit_gate_approval" in tool_names
+    assert "horizon_get_incident_timeline" in tool_names
+    assert "horizon_broadcast_incident" in tool_names
+
+
+@pytest.mark.asyncio
+async def test_cors_headers(async_client: AsyncClient):
+    """Verifies that CORS middleware permits browser origins and returns CORS headers."""
+    headers = {
+        "Origin": "http://localhost:5173",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
+    }
+    res = await async_client.options("/api/v1/incidents/webhook", headers=headers)
+    assert res.status_code == 200
+    assert "access-control-allow-origin" in res.headers
+    assert res.headers["access-control-allow-origin"] in ["*", "http://localhost:5173"]
+
+
+@pytest.mark.asyncio
+async def test_rest_nodes_and_graph(async_client: AsyncClient):
+    """Verifies that GET /api/v1/nodes and GET /api/v1/graph/analysis return valid JSON."""
+    res_nodes = await async_client.get("/api/v1/nodes")
+    assert res_nodes.status_code == 200
+    nodes = res_nodes.json()
+    assert len(nodes) >= 7
+
+    res_graph = await async_client.get("/api/v1/graph/analysis")
+    assert res_graph.status_code == 200
+    graph = res_graph.json()
+    assert graph["hasCycle"] is False
+    assert len(graph["topologicalLevels"]) >= 3

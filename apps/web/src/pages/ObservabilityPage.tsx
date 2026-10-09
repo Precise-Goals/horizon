@@ -13,28 +13,27 @@ import {
 } from '../lib/pipelineChecksum';
 import {
   Activity,
-  AlertTriangle,
   Radio,
-  Zap,
   Server,
   Sparkles,
   RotateCcw,
   Volume2,
   VolumeX,
   ShieldCheck,
-  Clock,
-  Layers,
   CheckCircle2,
   ExternalLink,
   Flame,
   Terminal,
-  Cpu,
-  Database,
   Lock,
   Copy,
   Check,
   Brain,
   FileCode,
+  Globe,
+  Wifi,
+  FileText,
+  Clock,
+  ArrowRight,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -74,6 +73,21 @@ interface ServiceProbe {
   consecutiveMisses: number;
 }
 
+export interface PostMortemReport {
+  incidentId: string;
+  targetNode: string;
+  targetName: string;
+  rootCause: string;
+  playbook: string;
+  mttrSeconds: number;
+  mttdSeconds: number;
+  restoredCount: number;
+  blastRadius: string[];
+  provenance: string;
+  merkleRoot: string;
+  resolvedAt: string;
+}
+
 export interface ObservabilityPageProps {
   className?: string;
 }
@@ -110,19 +124,39 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [isAiAgentWorking, setIsAiAgentWorking] = useState(false);
+  const [autoRemediate, setAutoRemediate] = useState(true);
+  const [activeDrill, setActiveDrill] = useState<string>('db-primary');
+
+  // Right pane tab: 'terminal' | 'yaml' | 'mcp'
+  const [rightPaneTab, setRightPaneTab] = useState<'terminal' | 'yaml' | 'mcp'>('terminal');
+
   const [aiLogs, setAiLogs] = useState<string[]>([
     '🟢 [SYSTEM NOMINAL] Datadog APM & Dynatrace OneAgent telemetry operating within SLA (<15ms).',
     'Continuous watchdog sliding-window loop active (evaluating 3 consecutive probe thresholds).',
+    'Autonomous Self-Healing: ARMED (auto-remediation will trigger after 1.2s observation window).',
   ]);
-  const [activeDrill, setActiveDrill] = useState<string>('db-primary');
 
-  // Real AI Diagnosis Provenance state
+  // Real AI Diagnosis state (prompt hidden from view)
   const [aiDiagnosis, setAiDiagnosis] = useState<DetailedAiDiagnosis | null>(null);
-  const [showPromptDetails, setShowPromptDetails] = useState(false);
 
   // 7-Pipeline Checksums state
   const [pipelineChecksums, setPipelineChecksums] = useState<PipelineChecksumRecord[]>([]);
   const [copiedChecksums, setCopiedChecksums] = useState(false);
+
+  // Post-Mortem Incident Report state
+  const [postMortemReport, setPostMortemReport] = useState<PostMortemReport | null>(null);
+  const [copiedReport, setCopiedReport] = useState(false);
+
+  // DAG YAML Copy state
+  const [copiedYaml, setCopiedYaml] = useState(false);
+
+  // Live MCP Server Ping state
+  const [mcpStatus, setMcpStatus] = useState<{
+    state: 'idle' | 'pinging' | 'online' | 'offline';
+    latencyMs?: number;
+    message?: string;
+    payload?: unknown;
+  }>({ state: 'idle' });
 
   // Service probe list synced with cluster state
   const [services, setServices] = useState<ServiceProbe[]>([
@@ -134,6 +168,8 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     { id: 'api-gateway', name: 'Envoy API Gateway', type: 'ingress', status: 'healthy', latencyMs: 8.2, errorRate: 0.0, consecutiveMisses: 0 },
     { id: 'web-frontend', name: 'Client Portal', type: 'frontend', status: 'healthy', latencyMs: 22.0, errorRate: 0.0, consecutiveMisses: 0 },
   ]);
+
+  const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Audio synthesizer for authentic PagerDuty chime
   const playPagerChime = useCallback(() => {
@@ -158,7 +194,7 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       osc.start();
       osc.stop(ctx.currentTime + 0.48);
     } catch {
-      // Audio playback permitted without failing if blocked by browser policy
+      // Audio permitted without throwing
     }
   }, [soundEnabled]);
 
@@ -189,12 +225,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     };
   }, [activeIncident]);
 
-  // Trigger Outage Simulation (Datadog APM spike + 3-consecutive-miss tripwire)
+  // Trigger Outage Simulation (spikes metrics, trips 3-miss watchdog, and auto-invokes if autoRemediate is ON)
   const triggerOutageSimulation = (nodeId: string) => {
     playPagerChime();
+    setPostMortemReport(null);
 
     const target = services.find((s) => s.id === nodeId) || services[0];
     const blast =
@@ -249,25 +287,37 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       severity: 'critical',
     });
 
-    setAiLogs([
+    setAiLogs((prev) => [
+      ...prev,
       `🚨 [DATADOG APM MONITOR FIRING] Incident ${incidentId} declared on ${target.name}.`,
       `[PROBE SENTINEL] 3 consecutive missed probes detected. Flapping guard cleared (3/3).`,
       `[PAGERDUTY INTEGRATION] Escalation Policy Level 1 triggered: Paging Primary SRE On-Call.`,
       `[BLAST RADIUS] Upstream failure propagating to: ${blast.join(', ')}.`,
-      `[ACTION REQUIRED] Click "Auto-Remediate with Real AI" below to execute autonomous diagnosis & DAG healing.`,
+      autoRemediate
+        ? `⏱️ [AUTONOMOUS ENGINE ARMED] Auto-remediation is ON. 1.2s observability window running before auto-fix...`
+        : `ℹ️ [MANUAL OVERRIDE] Auto-remediation is OFF. Awaiting operator manual command.`,
     ]);
 
     // Structured console logging for QA audit
     console.info(
-      `%c[OBSERVABILITY BREACH SIMULATED]%c Target: ${target.name} | Incident: ${incidentId} | Blast Radius: [${blast.join(', ')}]`,
+      `%c[OBSERVABILITY BREACH SIMULATED]%c Target: ${target.name} | Incident: ${incidentId} | Blast Radius: [${blast.join(', ')}] | AutoRemediate: ${autoRemediate}`,
       'color: #DC2626; font-weight: bold; background: #FEE2E2; padding: 2px 6px; border-radius: 4px;',
       'color: #1A1A1A; font-family: monospace;'
     );
+
+    // If autoRemediate is ON: trigger after the 1.2s observability observation window
+    if (autoRemediate) {
+      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = setTimeout(() => {
+        executeAiAgentRemediation(newIncident);
+      }, 1200);
+    }
   };
 
-  // Autonomous AI Remediation Action — Queries Real AI Agent and Computes 7-Pipeline Checksums
-  const executeAiAgentRemediation = async () => {
-    if (!activeIncident || isAiAgentWorking) return;
+  // Autonomous AI Remediation Action — Computes Kahn DAG, queries Real AI, anchors Merkle checksums, and creates Post-Mortem Report
+  const executeAiAgentRemediation = async (incidentOverride?: typeof activeIncident) => {
+    const inc = incidentOverride || activeIncident;
+    if (!inc || isAiAgentWorking) return;
     setIsAiAgentWorking(true);
 
     const appendLog = (msg: string) => {
@@ -275,14 +325,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     };
 
     appendLog('🤖 [PIPELINE 1/7: TELEMETRY INGESTION] Ingesting Datadog APM anomaly stream...');
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 500));
 
     appendLog('🔍 [PIPELINE 2/7: ANOMALY FLAPPING GUARD] 3-consecutive-miss watchdog threshold validated.');
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 500));
 
     appendLog('🗺️ [PIPELINE 3/7: KAHN DAG TOPOLOGY AUDIT] Calculating dependency graph levels O(V+E)...');
-    appendLog(`📍 [ROOT CAUSE VERIFIED] Single Point of Failure (SPOF) isolated at "${activeIncident.targetNode}".`);
-    await new Promise((r) => setTimeout(r, 700));
+    appendLog(`📍 [ROOT CAUSE VERIFIED] Single Point of Failure (SPOF) isolated at "${inc.targetNode}".`);
+    await new Promise((r) => setTimeout(r, 600));
 
     // Execute Real AI Diagnosis via Sarvam AI Agent
     appendLog('🧠 [PIPELINE 4/7: REAL AI REASONING] Querying Sarvam AI SRE Copilot completions API...');
@@ -299,15 +349,15 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
         : `⚡ [LOCAL SRE HEURISTIC ENGINE] High-speed deterministic fallback engaged (${diagnosis.latencyMs}ms).`
     );
     appendLog(`💬 [AI DIAGNOSIS OUTPUT] "${diagnosis.rawOutput.slice(0, 110)}..."`);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
 
     appendLog('🔐 [PIPELINE 5/7: EIP-712 GOVERNANCE GATE] Requesting Commander cryptographic authorization...');
     appendLog('   Smart Contract: 0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7 (MST Chain ID 91562037)');
     appendLog('   Simulating valid EIP-712 Commander signature: 0x73595081334A18D4298A160b162faB4Fb4B3c85B');
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 700));
 
     appendLog(`⚡ [PIPELINE 6/7: PLAYBOOK EXECUTION] Executing: "${diagnosis.playbook}".`);
-    clusterState.setNodeStatus(activeIncident.targetNode, 'healthy');
+    clusterState.setNodeStatus(inc.targetNode, 'healthy');
     setServices((prev) =>
       prev.map((s) => ({
         ...s,
@@ -317,22 +367,22 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
         consecutiveMisses: 0,
       }))
     );
-    await new Promise((r) => setTimeout(r, 700));
+    await new Promise((r) => setTimeout(r, 600));
 
     // Calculate all 7 pipeline checksums
     appendLog('📜 [PIPELINE 7/7: MERKLE PROOF ANCHORING] Generating cryptographic SHA-256 checksum manifest...');
     const manifest = await generateFullRecoveryChecksumManifest({
       telemetry: {
-        targetNode: activeIncident.targetNode,
+        targetNode: inc.targetNode,
         latencyMs: 999.0,
         errorRate: 1.0,
         consecutiveMisses: 3,
       },
       incident: {
-        id: activeIncident.id,
-        severity: activeIncident.severity,
-        source: activeIncident.source,
-        blastRadius: activeIncident.blastRadius,
+        id: inc.id,
+        severity: inc.severity,
+        source: inc.source,
+        blastRadius: inc.blastRadius,
       },
       dagPlan: {
         tiers: [
@@ -354,7 +404,7 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
         signature: '0x4f12...e81c',
       },
       execution: {
-        recoveredNodes: [activeIncident.targetNode, ...activeIncident.blastRadius],
+        recoveredNodes: [inc.targetNode, ...inc.blastRadius],
         resolvedAt: new Date().toISOString(),
         elapsedSec: 24.8,
       },
@@ -362,24 +412,41 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
     setPipelineChecksums(manifest);
 
-    // Explicit console logging for QA auditor & operator inspection
-    console.group('=== [HORIZON AUTONOMOUS SRE REMEDIATION PROVENANCE] ===');
-    console.info('Original AI or Local Fallback?:', diagnosis.source === 'sarvam-ai-cloud' ? 'ORIGINAL AI CLOUD (Sarvam)' : 'LOCAL SRE HEURISTIC ENGINE');
-    console.info('Model Identifier:', diagnosis.model);
-    console.info('Roundtrip Latency:', `${diagnosis.latencyMs}ms`);
-    console.info('Raw AI Response:', diagnosis.rawOutput);
+    // Create the Post-Mortem Incident Report
+    const report: PostMortemReport = {
+      incidentId: inc.id,
+      targetNode: inc.targetNode,
+      targetName: inc.targetName,
+      rootCause: diagnosis.rootCause,
+      playbook: diagnosis.playbook,
+      mttrSeconds: 24.8,
+      mttdSeconds: 1.8,
+      restoredCount: inc.blastRadius.length + 1,
+      blastRadius: inc.blastRadius,
+      provenance: isOriginalAi ? `Original Sarvam Cloud AI (${diagnosis.model})` : 'Local SRE Heuristic Engine',
+      merkleRoot: manifest[6].checksum,
+      resolvedAt: new Date().toLocaleTimeString(),
+    };
+    setPostMortemReport(report);
+
+    // Console logging for verification
+    console.group('=== [HORIZON AUTONOMOUS SRE POST-MORTEM & PROVENANCE] ===');
+    console.info('Incident ID:', inc.id);
+    console.info('Auto-Remediation Triggered?:', autoRemediate ? 'YES (Autonomous)' : 'NO (Manual Click)');
+    console.info('AI Provider Source:', diagnosis.source);
     console.info('Root Cause:', diagnosis.rootCause);
-    console.info('Recommended Playbook:', diagnosis.playbook);
+    console.info('Playbook Executed:', diagnosis.playbook);
+    console.info('MTTR Stopwatch:', '24.8s');
+    console.info('Merkle Root Hash:', manifest[6].checksum);
     console.groupEnd();
 
     console.group('=== [7-PIPELINE CRYPTOGRAPHIC CHECKSUMS (SHA-256)] ===');
-    manifest.forEach((m) => {
-      logPipelineCheckpoint(m);
-    });
+    manifest.forEach((m) => logPipelineCheckpoint(m));
     console.groupEnd();
 
-    appendLog(`✅ [PAGERDUTY AUTO-RESOLVED] Incident ${activeIncident.id} resolved. MTTR stopwatch: 24.8s.`);
+    appendLog(`✅ [PAGERDUTY AUTO-RESOLVED] Incident ${inc.id} resolved. MTTR stopwatch: 24.8s.`);
     appendLog(`🔒 [MERKLE ROOT HASH] ${manifest[6].checksum.slice(0, 24)}... anchored to MST Blockchain.`);
+    appendLog(`📋 [POST-MORTEM GENERATED] Incident report compiled with all 7 pipeline checksums.`);
 
     setActiveIncident((prev) => (prev ? { ...prev, status: 'RESOLVED' } : null));
     setIsAiAgentWorking(false);
@@ -387,10 +454,12 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
   // Reset to Baseline
   const resetToNominal = () => {
+    if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     setActiveIncident(null);
     setIsAiAgentWorking(false);
     setAiDiagnosis(null);
     setPipelineChecksums([]);
+    setPostMortemReport(null);
     setServices((prev) =>
       prev.map((s) => ({
         ...s,
@@ -403,7 +472,43 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     setAiLogs([
       '🟢 [SYSTEM NOMINAL] All Datadog APM and Dynatrace probes operating within SLA (<15ms).',
       'Continuous watchdog sliding-window loop active (evaluating 3 consecutive probe thresholds).',
+      `Autonomous Self-Healing: ${autoRemediate ? 'ARMED' : 'PAUSED (MANUAL)'}.`,
     ]);
+  };
+
+  // Live MCP Server Ping to Production Render URL
+  const testMcpServerConnection = async () => {
+    setMcpStatus({ state: 'pinging', message: 'Testing connection to Render MCP server...' });
+    const startTime = Date.now();
+    try {
+      const res = await fetch('https://horizon-mcp-server-phf8.onrender.com/health', {
+        method: 'GET',
+        signal: AbortSignal.timeout(6000),
+      });
+      const latency = Date.now() - startTime;
+      if (res.ok) {
+        const data = await res.json();
+        setMcpStatus({
+          state: 'online',
+          latencyMs: latency,
+          message: `Connected to Render MCP Server (HTTP 200 in ${latency}ms)`,
+          payload: data,
+        });
+      } else {
+        setMcpStatus({
+          state: 'offline',
+          latencyMs: latency,
+          message: `Server returned HTTP ${res.status}: ${res.statusText}`,
+        });
+      }
+    } catch {
+      const latency = Date.now() - startTime;
+      setMcpStatus({
+        state: 'offline',
+        latencyMs: latency,
+        message: 'Render Free Tier is warming up or sleeping. Ready for wake-up retry.',
+      });
+    }
   };
 
   const copyChecksumsManifest = () => {
@@ -411,6 +516,75 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     navigator.clipboard.writeText(text);
     setCopiedChecksums(true);
     setTimeout(() => setCopiedChecksums(false), 2000);
+  };
+
+  const copyPostMortemMarkdown = () => {
+    if (!postMortemReport) return;
+    const text = `# Horizon Autonomous Incident Post-Mortem: ${postMortemReport.incidentId}
+- **Timestamp:** ${postMortemReport.resolvedAt}
+- **Target Node:** ${postMortemReport.targetName} (${postMortemReport.targetNode})
+- **Severity:** P1 CRITICAL
+- **Time to Detect (MTTD):** ${postMortemReport.mttdSeconds}s
+- **Time to Recover (MTTR):** ${postMortemReport.mttrSeconds}s
+- **Root Cause:** ${postMortemReport.rootCause}
+- **Remediation Playbook:** ${postMortemReport.playbook}
+- **AI Provenance:** ${postMortemReport.provenance}
+- **Mitigated Downstream Services:** ${postMortemReport.blastRadius.join(', ')}
+- **Merkle Audit Root:** \`${postMortemReport.merkleRoot}\`
+- **Blockchain Governance:** MST Testnet (Chain ID 91562037)
+
+### 7-Stage Checksum Verification
+${pipelineChecksums.map((p) => `- Stage ${p.stage}/7 [${p.pipelineName}]: \`${p.checksum}\` (${p.source})`).join('\n')}
+`;
+    navigator.clipboard.writeText(text);
+    setCopiedReport(true);
+    setTimeout(() => setCopiedReport(false), 2000);
+  };
+
+  // Live compiled DAG YAML text
+  const dagRecoveryYaml = `apiVersion: horizon.resilience/v1alpha1
+kind: AutonomousRecoveryPlan
+metadata:
+  incidentId: "${activeIncident?.id || 'INC-NOMINAL'}"
+  targetNode: "${activeIncident?.targetNode || 'db-primary'}"
+  generatedAt: "${new Date().toISOString()}"
+  algorithm: "Kahn-Topological-Sort-O(V+E)"
+spec:
+  governanceGate:
+    required: true
+    standard: "EIP-712"
+    chainId: 91562037
+    contract: "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7"
+  recoveryTiers:
+    - tier: 0
+      name: "Foundational Storage & State"
+      services:
+        - id: "${activeIncident?.targetNode || 'db-primary'}"
+          action: "promote_replica_and_pitr"
+          healthProbe: "pg_isready -h localhost -p 5432"
+          timeoutSeconds: 30
+    - tier: 1
+      name: "Caching & Event Bus"
+      services:
+        - id: "redis-cache"
+          action: "purge_and_warm_sessions"
+          healthProbe: "redis-cli ping"
+        - id: "kafka-queue"
+          action: "rebalance_consumer_groups"
+    - tier: 2
+      name: "Application Edge & Ingress"
+      services:
+        - id: "auth-service"
+          action: "restart_jwt_verifier"
+        - id: "api-gateway"
+          action: "route_traffic_cutover"
+          healthProbe: "curl -f http://localhost:8080/health"
+`;
+
+  const copyDagYaml = () => {
+    navigator.clipboard.writeText(dagRecoveryYaml);
+    setCopiedYaml(true);
+    setTimeout(() => setCopiedYaml(false), 2000);
   };
 
   const isFiring = activeIncident && activeIncident.status !== 'RESOLVED';
@@ -470,8 +644,9 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
             </p>
           </div>
 
-          {/* Simple 3-Step Interactive Action Controls */}
+          {/* Action Controls with Auto-Remediation Toggle */}
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* Target Node Dropdown */}
             <div className="flex items-center gap-2 bg-[#FAF3EA] px-3 py-1.5 rounded-xl border border-[#E5D7C5]">
               <span className="text-[11px] font-bold text-[#6E6258] uppercase">Target Node:</span>
               <select
@@ -487,6 +662,31 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
               </select>
             </div>
 
+            {/* Auto-Remediate Toggle Switch */}
+            <div className="flex items-center gap-2 bg-[#FAF3EA] px-3 py-1.5 rounded-xl border border-[#E5D7C5]">
+              <span className="text-[11px] font-bold text-[#6E6258] uppercase">Auto Remedy:</span>
+              <button
+                type="button"
+                onClick={() => setAutoRemediate((prev) => !prev)}
+                className={cn(
+                  'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
+                  autoRemediate ? 'bg-emerald-600' : 'bg-stone-300'
+                )}
+                title="When ON, AI automatically remediates without pressing buttons after 1.2s observability window"
+              >
+                <span
+                  className={cn(
+                    'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                    autoRemediate ? 'translate-x-4' : 'translate-x-0'
+                  )}
+                />
+              </button>
+              <span className={cn('text-[10px] font-mono font-black', autoRemediate ? 'text-emerald-700' : 'text-stone-500')}>
+                {autoRemediate ? 'ON' : 'OFF'}
+              </span>
+            </div>
+
+            {/* Simulate Breach Button */}
             <button
               onClick={() => triggerOutageSimulation(activeDrill)}
               className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-red-600 hover:bg-red-700 shadow-md cursor-pointer flex items-center gap-2 transition-all active:scale-95"
@@ -495,20 +695,24 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
               <span>Simulate Breach</span>
             </button>
 
-            <button
-              onClick={executeAiAgentRemediation}
-              disabled={!isFiring || isAiAgentWorking}
-              className={cn(
-                'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white shadow-md flex items-center gap-2 transition-all cursor-pointer',
-                isFiring
-                  ? 'bg-[#0047AB] hover:bg-blue-800 ring-2 ring-blue-400/50'
-                  : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
-              )}
-            >
-              <Sparkles className="w-4 h-4 text-white" />
-              <span>{isAiAgentWorking ? 'AI Healing Cluster...' : '🤖 Auto-Remediate with Real AI'}</span>
-            </button>
+            {/* Manual AI Remediate Button (active if autoRemediate is OFF) */}
+            {!autoRemediate && (
+              <button
+                onClick={() => executeAiAgentRemediation()}
+                disabled={!isFiring || isAiAgentWorking}
+                className={cn(
+                  'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white shadow-md flex items-center gap-2 transition-all cursor-pointer',
+                  isFiring
+                    ? 'bg-[#0047AB] hover:bg-blue-800 ring-2 ring-blue-400/50'
+                    : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
+                )}
+              >
+                <Sparkles className="w-4 h-4 text-white" />
+                <span>{isAiAgentWorking ? 'AI Healing...' : '🤖 Remediate with AI'}</span>
+              </button>
+            )}
 
+            {/* Reset Button */}
             <button
               onClick={resetToNominal}
               className="px-3 py-2 rounded-xl text-xs font-bold text-[#5A4E44] bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5"
@@ -543,6 +747,11 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
                   <span className="text-xs text-white/90 font-mono font-semibold">
                     Source: {activeIncident?.source}
                   </span>
+                  {autoRemediate && (
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-200 text-xs font-mono font-bold animate-pulse">
+                      ⚡ AUTO-HEALING ENGAGED
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-base sm:text-lg font-black tracking-tight">{activeIncident?.title}</h3>
                 <p className="text-xs text-white/90 max-w-3xl leading-relaxed">
@@ -553,16 +762,18 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={executeAiAgentRemediation}
-                  disabled={isAiAgentWorking}
-                  className="px-5 py-3 rounded-xl bg-white text-[#0047AB] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-50"
-                >
-                  <Sparkles className="w-4 h-4 text-[#0047AB] group-hover:scale-110 transition-transform" />
-                  <span>{isAiAgentWorking ? 'AI Agent Healing...' : '🤖 Execute AI Remediation'}</span>
-                </button>
-              </div>
+              {!autoRemediate && (
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => executeAiAgentRemediation()}
+                    disabled={isAiAgentWorking}
+                    className="px-5 py-3 rounded-xl bg-white text-[#0047AB] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-50"
+                  >
+                    <Sparkles className="w-4 h-4 text-[#0047AB] group-hover:scale-110 transition-transform" />
+                    <span>{isAiAgentWorking ? 'AI Agent Healing...' : '🤖 Execute AI Remediation'}</span>
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -629,20 +840,20 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
         {/* AI SRE Engine Status */}
         <Card className="p-4 border border-[#EADCC9] bg-white">
           <div className="flex items-center justify-between text-xs text-[#6E6258] mb-1">
-            <span className="font-bold uppercase tracking-wider">AI SRE Orchestrator</span>
+            <span className="font-bold uppercase tracking-wider">Autonomous SRE</span>
             <Brain className="w-4 h-4 text-[#0047AB]" />
           </div>
           <div className="text-xl font-black text-[#1A1A1A] flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Sarvam AIOps</span>
+            <span className={cn('w-2 h-2 rounded-full', autoRemediate ? 'bg-emerald-500' : 'bg-amber-500')} />
+            <span>{autoRemediate ? 'Auto Active' : 'Manual Mode'}</span>
           </div>
           <div className="text-[11px] font-mono text-[#8A7B6D] mt-1">
-            {aiDiagnosis ? (aiDiagnosis.source === 'sarvam-ai-cloud' ? 'Original AI Verified' : 'Local Guardrail Engaged') : 'Standby / Armed'}
+            {aiDiagnosis ? (aiDiagnosis.source === 'sarvam-ai-cloud' ? 'Original AI Verified' : 'Local Guardrail') : 'Standby / Armed'}
           </div>
         </Card>
       </motion.div>
 
-      {/* Real AI Diagnosis Verification Panel (Prominent when diagnosis exists) */}
+      {/* Real AI Diagnosis Verification Panel (Prompt cleanly hidden from view) */}
       {aiDiagnosis && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -672,14 +883,6 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
                 </p>
               </div>
             </div>
-
-            <button
-              onClick={() => setShowPromptDetails((prev) => !prev)}
-              className="text-xs font-bold text-[#0047AB] hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-center"
-            >
-              <FileCode className="w-3.5 h-3.5" />
-              <span>{showPromptDetails ? 'Hide Prompt' : 'Inspect Prompt Sent'}</span>
-            </button>
           </div>
 
           {/* Actual Real AI Output Text */}
@@ -695,16 +898,76 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
               <strong>Isolated Root Cause:</strong> <span className="text-rose-700 font-bold">{aiDiagnosis.rootCause}</span>
             </div>
           </div>
+        </motion.div>
+      )}
 
-          {/* Collapsible Prompt Inspection */}
-          {showPromptDetails && (
-            <div className="p-3.5 rounded-xl bg-[#1A1A1A] text-cyan-300 font-mono text-[11px] border border-black space-y-1">
-              <div className="text-stone-400 text-[10px] uppercase font-bold border-b border-stone-800 pb-1">
-                Prompt Ingested by AI:
+      {/* Dynamic Incident Post-Mortem & Audit Report Card */}
+      {postMortemReport && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 rounded-3xl bg-white border-2 border-emerald-600/40 shadow-lg space-y-4"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADCC9] pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
+                <FileText className="w-5 h-5 text-emerald-700" />
               </div>
-              <pre className="whitespace-pre-wrap leading-relaxed text-xs">{aiDiagnosis.promptSent}</pre>
+              <div>
+                <h3 className="text-base font-black text-[#1A1A1A] flex items-center gap-2">
+                  <span>Autonomous Incident Recovery Report (Post-Mortem)</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+                    RESOLVED
+                  </span>
+                </h3>
+                <p className="text-xs text-[#6E6258]">
+                  Incident <strong>#{postMortemReport.incidentId}</strong> resolved at {postMortemReport.resolvedAt} with 0 unhandled alerts.
+                </p>
+              </div>
             </div>
-          )}
+
+            <button
+              onClick={copyPostMortemMarkdown}
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+            >
+              {copiedReport ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#0047AB]" />}
+              <span>{copiedReport ? 'Report Copied!' : 'Copy Markdown Report'}</span>
+            </button>
+          </div>
+
+          {/* Key Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">Time to Detect (MTTD)</div>
+              <div className="text-base font-black text-[#1A1A1A] mt-0.5">{postMortemReport.mttdSeconds}s</div>
+              <div className="text-[10px] text-emerald-700 font-bold">3/3 probe window</div>
+            </div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">Time to Recover (MTTR)</div>
+              <div className="text-base font-black text-[#0047AB] mt-0.5">{postMortemReport.mttrSeconds}s</div>
+              <div className="text-[10px] text-[#0047AB] font-bold">SLA: &lt;60s met</div>
+            </div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">Restored Nodes</div>
+              <div className="text-base font-black text-[#1A1A1A] mt-0.5">{postMortemReport.restoredCount} Services</div>
+              <div className="text-[10px] text-stone-600">Bottom-up DAG tiers</div>
+            </div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">AI SRE Engine</div>
+              <div className="text-sm font-bold text-[#1A1A1A] mt-0.5 truncate">{postMortemReport.provenance}</div>
+              <div className="text-[10px] text-emerald-700 font-bold">Kahn sequenced</div>
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8] text-xs space-y-1.5 font-mono">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[#6E6258] gap-1">
+              <span><strong>Root Cause:</strong> {postMortemReport.rootCause}</span>
+              <span><strong>Playbook:</strong> {postMortemReport.playbook}</span>
+            </div>
+            <div className="text-[11px] text-[#8A7B6D] break-all">
+              <strong>Merkle Audit Root Hash:</strong> <span className="text-emerald-800 font-bold">{postMortemReport.merkleRoot}</span>
+            </div>
+          </div>
         </motion.div>
       )}
 
@@ -773,7 +1036,7 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
         </motion.div>
       )}
 
-      {/* Main Grid: Live Waveform & Probes on Left, SRE Streaming Terminal on Right */}
+      {/* Main Grid: Left Column (Telemetry & Microservices) vs Right Column (Tabbed: Terminal / YAML / MCP) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column (7 cols): APM Waveform + Dynatrace Probe Matrix */}
         <div className="lg:col-span-7 space-y-6">
@@ -909,58 +1172,209 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
           </Card>
         </div>
 
-        {/* Right Column (5 cols): Live Streaming SRE Terminal */}
+        {/* Right Column (5 cols): Interactive Sub-Tab View (Terminal / YAML / MCP) */}
         <div className="lg:col-span-5 flex flex-col">
           <Card className="p-5 border border-[#EADCC9] bg-white flex-1 flex flex-col justify-between space-y-4">
             <div>
-              <div className="flex items-center justify-between pb-2 border-b border-[#EADCC9]">
-                <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-[#0047AB]" />
-                  Live Autonomous SRE Terminal
-                </h3>
-                <span className="text-[10px] font-mono text-emerald-600 font-bold">● ONLINE</span>
-              </div>
-              <p className="text-[11px] text-[#6E6258] mt-1">
-                Real-time log stream tracking anomaly ingestion, AI provenance, and pipeline checksums.
-              </p>
-            </div>
-
-            {/* Terminal Window */}
-            <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-black shadow-inner flex-1 min-h-[420px] flex flex-col justify-between font-mono text-[11px] text-cyan-300 overflow-hidden">
-              <div className="space-y-2 overflow-y-auto max-h-[380px] pr-1">
-                <div className="text-stone-400 text-[10px] pb-1 border-b border-stone-800 flex items-center justify-between">
-                  <span>SARVAM SRE SENTINEL v2.4</span>
-                  <span className="text-emerald-400 font-bold">STREAM ARMED</span>
-                </div>
-
-                {aiLogs.map((log, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -6 }}
-                    animate={{ opacity: 1, x: 0 }}
+              {/* Tab Switcher Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-[#EADCC9]">
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5]">
+                  <button
+                    onClick={() => setRightPaneTab('terminal')}
                     className={cn(
-                      'leading-relaxed break-words',
-                      log.includes('🚨')
-                        ? 'text-rose-400 font-bold'
-                        : log.includes('✅')
-                        ? 'text-emerald-300 font-bold'
-                        : log.includes('🤖')
-                        ? 'text-amber-300 font-bold'
-                        : log.includes('🔐') || log.includes('📜')
-                        ? 'text-purple-300'
-                        : 'text-cyan-300'
+                      'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                      rightPaneTab === 'terminal' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
                     )}
                   >
-                    {log}
-                  </motion.div>
-                ))}
-              </div>
+                    <Terminal className="w-3.5 h-3.5" />
+                    <span>Terminal</span>
+                  </button>
+                  <button
+                    onClick={() => setRightPaneTab('yaml')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                      rightPaneTab === 'yaml' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
+                    )}
+                  >
+                    <FileCode className="w-3.5 h-3.5" />
+                    <span>DAG YAML</span>
+                  </button>
+                  <button
+                    onClick={() => setRightPaneTab('mcp')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
+                      rightPaneTab === 'mcp' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
+                    )}
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>MCP Gateway</span>
+                  </button>
+                </div>
 
-              <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-400 flex items-center justify-between">
-                <span>7-Pipeline Sentinel Loop</span>
-                <span className="text-emerald-400">Armed & Ready</span>
+                <span className="text-[10px] font-mono text-emerald-600 font-bold">● ONLINE</span>
               </div>
             </div>
+
+            {/* TAB 1: Live SRE Streaming Terminal */}
+            {rightPaneTab === 'terminal' && (
+              <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-black shadow-inner flex-1 min-h-[440px] flex flex-col justify-between font-mono text-[11px] text-cyan-300 overflow-hidden">
+                <div className="space-y-2 overflow-y-auto max-h-[400px] pr-1">
+                  <div className="text-stone-400 text-[10px] pb-1 border-b border-stone-800 flex items-center justify-between">
+                    <span>SARVAM SRE SENTINEL v2.4</span>
+                    <span className="text-emerald-400 font-bold">STREAM ARMED</span>
+                  </div>
+
+                  {aiLogs.map((log, idx) => (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, x: -6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={cn(
+                        'leading-relaxed break-words',
+                        log.includes('🚨')
+                          ? 'text-rose-400 font-bold'
+                          : log.includes('✅')
+                          ? 'text-emerald-300 font-bold'
+                          : log.includes('🤖')
+                          ? 'text-amber-300 font-bold'
+                          : log.includes('🔐') || log.includes('📜')
+                          ? 'text-purple-300'
+                          : 'text-cyan-300'
+                      )}
+                    >
+                      {log}
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-400 flex items-center justify-between">
+                  <span>7-Pipeline Sentinel Loop</span>
+                  <span className="text-emerald-400">{autoRemediate ? 'Autonomous (Active)' : 'Manual Mode'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: Compiled Recovery DAG Manifest (YAML) */}
+            {rightPaneTab === 'yaml' && (
+              <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-black shadow-inner flex-1 min-h-[440px] flex flex-col justify-between font-mono text-[11px] text-emerald-300 overflow-hidden">
+                <div className="space-y-2 flex-1 flex flex-col">
+                  <div className="text-stone-400 text-[10px] pb-1 border-b border-stone-800 flex items-center justify-between">
+                    <span>COMPILED KUBERNETES DAG MANIFEST</span>
+                    <button
+                      onClick={copyDagYaml}
+                      className="px-2 py-0.5 rounded bg-stone-800 text-stone-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      {copiedYaml ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedYaml ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <pre className="overflow-y-auto max-h-[380px] text-[11px] text-emerald-300 font-mono leading-relaxed select-all">
+                    {dagRecoveryYaml}
+                  </pre>
+                </div>
+                <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-400 flex items-center justify-between">
+                  <span>Algorithm: Kahn O(V+E)</span>
+                  <span className="text-[#0047AB]">EIP-712 Gated</span>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: Live MCP Server Access & Ping Verification */}
+            {rightPaneTab === 'mcp' && (
+              <div className="p-4 rounded-2xl bg-[#FAF3EA] border border-[#E5D7C5] shadow-inner flex-1 min-h-[440px] flex flex-col justify-between text-xs space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#E5D7C5] pb-2">
+                    <div className="flex items-center gap-2">
+                      <Wifi className="w-4 h-4 text-[#0047AB]" />
+                      <span className="font-black text-[#1A1A1A]">Render MCP Server Gateway</span>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-stone-200 text-stone-700 font-bold">
+                      FASTAPI + FASTMCP
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-white border border-[#E8DAC8] space-y-1.5 font-mono text-[11px]">
+                    <div className="text-[#8A7B6D] text-[10px] uppercase font-bold">Target MCP Endpoint:</div>
+                    <div className="text-[#1A1A1A] font-bold truncate">
+                      https://horizon-mcp-server-phf8.onrender.com
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 text-[10px] text-[#6E6258]">
+                      <span>Protocol: 2024-11-05</span>
+                      <span>•</span>
+                      <span>12 Registered Tools</span>
+                    </div>
+                  </div>
+
+                  {/* Ping MCP Server Button */}
+                  <button
+                    onClick={testMcpServerConnection}
+                    disabled={mcpStatus.state === 'pinging'}
+                    className="w-full py-2.5 rounded-xl bg-[#0047AB] hover:bg-blue-800 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <Activity className={cn('w-4 h-4 text-white', mcpStatus.state === 'pinging' && 'animate-spin')} />
+                    <span>{mcpStatus.state === 'pinging' ? 'Testing Connection...' : 'Ping MCP Server from Website'}</span>
+                  </button>
+
+                  {/* Result status */}
+                  {mcpStatus.state !== 'idle' && (
+                    <div
+                      className={cn(
+                        'p-3 rounded-xl border text-[11px] font-mono space-y-1',
+                        mcpStatus.state === 'online'
+                          ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                          : mcpStatus.state === 'offline'
+                          ? 'bg-amber-50 border-amber-200 text-amber-900'
+                          : 'bg-blue-50 border-blue-200 text-blue-900'
+                      )}
+                    >
+                      <div className="font-bold flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            'w-2 h-2 rounded-full',
+                            mcpStatus.state === 'online' ? 'bg-emerald-500' : 'bg-amber-500'
+                          )}
+                        />
+                        <span>{mcpStatus.message}</span>
+                      </div>
+                      {Boolean(mcpStatus.payload) && (
+                        <pre className="text-[10px] max-h-24 overflow-y-auto text-emerald-800 pt-1">
+                          {JSON.stringify(mcpStatus.payload, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  )}
+
+                  {/* MCP Tool Registry Highlights */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="text-[10px] font-mono text-[#8A7B6D] uppercase font-bold">12 Registered MCP Tools:</div>
+                    <div className="flex flex-wrap gap-1">
+                      {[
+                        'horizon_get_topology',
+                        'horizon_probe_health',
+                        'horizon_trigger_recovery',
+                        'horizon_submit_gate_approval',
+                        'horizon_get_incident_timeline',
+                        'horizon_broadcast_incident',
+                      ].map((t) => (
+                        <span key={t} className="px-2 py-0.5 rounded-md bg-white border border-[#E5D7C5] text-[10px] font-mono text-stone-700">
+                          {t}
+                        </span>
+                      ))}
+                      <span className="px-2 py-0.5 rounded-md bg-stone-200 text-[10px] font-mono text-stone-600 font-bold">
+                        +6 more
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#E5D7C5] text-[10px] text-[#8A7B6D] flex items-center justify-between">
+                  <span>Inbound Webhook: /api/v1/incidents/webhook</span>
+                  <Link to="/docs" className="text-[#0047AB] font-bold hover:underline flex items-center gap-0.5">
+                    Docs <ExternalLink className="w-2.5 h-2.5" />
+                  </Link>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </div>

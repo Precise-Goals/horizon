@@ -35,13 +35,15 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Enable CORS for external agents and web clients
+# Enable CORS for external agents and web clients (permits all origins, methods, and headers)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_origin_regex=".*",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # In-Memory Active SSE Sessions Map: session_id -> asyncio.Queue
@@ -134,8 +136,9 @@ async def handle_jsonrpc(payload: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 # ==============================================================================
 
 @app.get("/health", tags=["Monitoring"])
+@app.get("/api/v1/health", tags=["Monitoring"])
 async def health_check():
-    """Liveness and readiness probe for Render Free Tier orchestrator."""
+    """Liveness and readiness probe for Render Free Tier orchestrator and web frontends."""
     return {
         "status": "healthy",
         "service": "horizon-mcp-server",
@@ -145,6 +148,69 @@ async def health_check():
         "tools_registered": len(get_tool_definitions()),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+# ==============================================================================
+# REST Endpoints for Web Frontend & Browser Verification (apps/web)
+# ==============================================================================
+
+@app.get("/api/v1/mcp/tools", tags=["MCP Tools"])
+@app.get("/mcp/tools", tags=["MCP Tools"])
+@app.get("/tools", tags=["MCP Tools"])
+async def list_tools_direct():
+    """
+    Direct REST GET endpoint returning registered MCP tools catalogue for browser clients.
+    Permits web frontends (apps/web) to inspect available autonomous recovery tools without JSON-RPC wrapping.
+    """
+    tools = get_tool_definitions()
+    return {
+        "status": "success",
+        "count": len(tools),
+        "tools": tools,
+    }
+
+
+@app.get("/api/v1/nodes", tags=["Topology"])
+async def get_nodes_endpoint():
+    """Returns cluster topology nodes with status and latency metrics."""
+    nodes = topology_engine.get_nodes()
+    return [n.model_dump() for n in nodes]
+
+
+@app.get("/api/v1/graph/analysis", tags=["Topology"])
+async def get_graph_analysis_endpoint():
+    """Executes Kahn's topological sort and returns recovery tiers."""
+    levels, has_cycle = topology_engine.kahn_topological_sort()
+    return {
+        "hasCycle": has_cycle,
+        "cycleDetected": has_cycle,
+        "topologicalLevels": levels,
+        "totalNodes": len(topology_engine.get_nodes()),
+    }
+
+
+@app.post("/api/v1/chaos", tags=["Chaos"])
+async def trigger_chaos_endpoint(request: Request):
+    """Triggers simulated node failure or reset for chaos drills."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    node_id = body.get("nodeId") or body.get("node_id") or "db-primary"
+    action = body.get("action", "fail")
+    if action == "fail":
+        res = topology_engine.simulate_failure(node_id, reason=body.get("reason", "Chaos engineering drill"))
+        return {
+            "message": f"Node {node_id} set to DOWN",
+            "incident": res,
+        }
+    else:
+        node = topology_engine.get_node(node_id)
+        if node:
+            node.status = "healthy"
+            node.latency_ms = 12.0
+            node.error_rate = 0.0
+        return {"message": f"Node {node_id} restored to HEALTHY"}
 
 
 # ==============================================================================
@@ -179,8 +245,6 @@ async def inbound_incident_webhook(request: Request):
             target_node_id = body["target_node_id"]
         elif body.get("node_id"):
             target_node_id = body["node_id"]
-        elif body.get("service"):
-            target_node_id = body["service"]
 
         if body.get("strategy"):
             strategy = body["strategy"]
@@ -489,6 +553,10 @@ async def dashboard():
                 <div class="card">
                     <div class="card-title">Direct JSON-RPC Endpoint</div>
                     <div class="card-value">POST /mcp</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">REST Tools Catalogue</div>
+                    <div class="card-value">GET /api/v1/mcp/tools</div>
                 </div>
                 <div class="card">
                     <div class="card-title">Inbound Webhook Pipeline</div>

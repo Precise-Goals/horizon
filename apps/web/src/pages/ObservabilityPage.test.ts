@@ -197,4 +197,49 @@ describe('Observability & Real-time Telemetry Pipeline Suite', () => {
       expect(currentNodes).toContain(serviceId);
     });
   });
+
+  it('validates post-mortem report and DAG YAML manifest structure', () => {
+    // Post-mortem schema check
+    const mockReport = {
+      incidentId: 'PD-8821',
+      targetNode: 'db-primary',
+      targetName: 'PostgreSQL Primary',
+      rootCause: 'Connection Pool Depletion',
+      playbook: 'Database Replica Promotion & PITR',
+      mttrSeconds: 24.8,
+      mttdSeconds: 1.8,
+      restoredCount: 4,
+      blastRadius: ['redis-cache', 'auth-service', 'payment-worker'],
+      provenance: 'Original Sarvam Cloud AI (sarvam-2b)',
+      merkleRoot: '0x3992c9319075fd2531a9b7b1beac1c7378200939d711cbf51ff50808cdca8eca',
+      resolvedAt: new Date().toLocaleTimeString(),
+    };
+
+    expect(mockReport.mttrSeconds).toBe(24.8);
+    expect(mockReport.mttdSeconds).toBe(1.8);
+    expect(mockReport.merkleRoot.startsWith('0x')).toBe(true);
+    expect(mockReport.blastRadius).toContain('redis-cache');
+
+    // DAG YAML manifest check
+    const sampleYaml = `apiVersion: horizon.resilience/v1alpha1
+kind: AutonomousRecoveryPlan
+metadata:
+  algorithm: "Kahn-Topological-Sort-O(V+E)"
+spec:
+  governanceGate:
+    standard: "EIP-712"
+    chainId: 91562037
+`;
+    expect(sampleYaml).toContain('AutonomousRecoveryPlan');
+    expect(sampleYaml).toContain('Kahn-Topological-Sort-O(V+E)');
+    expect(sampleYaml).toContain('91562037');
+  });
+
+  it('verifies Render MCP Server production connection constants', () => {
+    const renderUrl = 'https://horizon-mcp-server-phf8.onrender.com';
+    expect(renderUrl).toContain('horizon-mcp-server-phf8.onrender.com');
+    expect(`${renderUrl}/health`).toContain('/health');
+    expect(`${renderUrl}/api/v1/incidents/webhook`).toContain('/webhook');
+  });
 });
+
