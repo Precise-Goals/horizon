@@ -89,7 +89,7 @@ export const LandingPage: React.FC = () => {
           HERO SECTION — DOMINATING CREAM WITH TACTILE DEPTH
           ============================================================ */}
       <section
-        className="horizon-hero relative pt-24 sm:pt-36 md:pt-44 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center z-10"
+        className="horizon-hero relative  sm:pt-36 md:pt-44 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center z-10"
         aria-label="Horizon Hero"
       >
         <div className="max-w-5xl mx-auto px-5 sm:px-8 space-y-7">
@@ -116,6 +116,9 @@ export const LandingPage: React.FC = () => {
 
           {/* Tactile Buttons */}
           <motion.div
+          style={{
+            paddingBottom:"6%"
+          }}
             {...fadeUpProps(0.18)}
             className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2"
           >
@@ -418,7 +421,7 @@ export const LandingPage: React.FC = () => {
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
               System Architecture & Methodology
             </span>
-            <h2 id="lifecycle-heading" className="text-hero-hi text-white">
+            <h2 id="lifecycle-heading" className="text-hero-hioli text-white">
               The 5-Phase Autonomous Recovery Lifecycle
             </h2>
             <p className="text-sm sm:text-base text-[#D0E2FF]">
