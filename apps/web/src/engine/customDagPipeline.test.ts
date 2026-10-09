@@ -6,6 +6,9 @@ import {
   serializePipelineToYaml,
   PIPELINE_TEMPLATES,
   ECOMMERCE_TEMPLATE_YAML,
+  STREAMING_TEMPLATE_YAML,
+  TICKET_BOOKING_TEMPLATE_YAML,
+  BLOGGING_CMS_TEMPLATE_YAML,
   GENAI_RAG_TEMPLATE_YAML,
   FINTECH_TRADING_TEMPLATE_YAML,
   MINIMAL_3TIER_TEMPLATE_YAML,
@@ -14,10 +17,13 @@ import {
 
 describe('Custom DAG YAML Pipeline & Simulator Engine', () => {
   it('parses and validates all pre-built templates without errors', () => {
-    expect(PIPELINE_TEMPLATES.length).toBe(5);
+    expect(PIPELINE_TEMPLATES.length).toBe(8);
 
     const templates = [
       ECOMMERCE_TEMPLATE_YAML,
+      STREAMING_TEMPLATE_YAML,
+      TICKET_BOOKING_TEMPLATE_YAML,
+      BLOGGING_CMS_TEMPLATE_YAML,
       GENAI_RAG_TEMPLATE_YAML,
       FINTECH_TRADING_TEMPLATE_YAML,
       MINIMAL_3TIER_TEMPLATE_YAML,

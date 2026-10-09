@@ -507,6 +507,296 @@ spec:
         requiresApproval: false
 `;
 
+export const STREAMING_TEMPLATE_YAML = `apiVersion: horizon.recovery.io/v1alpha1
+kind: AutonomousRecoveryPipeline
+metadata:
+  name: live-streaming-ott-mesh
+  environment: production
+  description: High-throughput live video streaming & GPU transcoding mesh with CDN edge ingress
+spec:
+  governanceGate:
+    required: true
+    standard: EIP-712
+    chainId: 91562037
+    contract: "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7"
+  nodes:
+    - id: scylla-video-db
+      name: ScyllaDB Video Metadata Store
+      type: database
+      dependencies: []
+      healthProbe:
+        protocol: TCP_PING
+        port: 9042
+        timeoutMs: 1200
+      recoveryPolicy:
+        playbook: database_failover
+        requiresApproval: true
+
+    - id: redis-manifest-cache
+      name: Redis HLS/DASH Manifest Cache
+      type: cache
+      dependencies:
+        - scylla-video-db
+      healthProbe:
+        protocol: TCP_PING
+        port: 6379
+        timeoutMs: 400
+      recoveryPolicy:
+        playbook: cache_purge
+        requiresApproval: false
+
+    - id: kafka-live-stream
+      name: Kafka Live Video Chunk Event Bus
+      type: cache
+      dependencies:
+        - scylla-video-db
+      healthProbe:
+        protocol: TCP_PING
+        port: 9092
+        timeoutMs: 800
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: ffmpeg-transcoder-pool
+      name: FFmpeg GPU Transcoder Worker Pool
+      type: application
+      dependencies:
+        - redis-manifest-cache
+        - kafka-live-stream
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /health
+        port: 8080
+        timeoutMs: 2000
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: recommendation-api
+      name: Video Recommendation & Live Chat API
+      type: application
+      dependencies:
+        - redis-manifest-cache
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /status
+        port: 8000
+        timeoutMs: 1200
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: cloudflare-cdn-ingress
+      name: Cloudflare Video Edge Ingress Gateway
+      type: gateway
+      dependencies:
+        - ffmpeg-transcoder-pool
+        - recommendation-api
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /healthz
+        port: 443
+        timeoutMs: 500
+      recoveryPolicy:
+        playbook: dynamic_traffic_shift
+        requiresApproval: false
+`;
+
+export const TICKET_BOOKING_TEMPLATE_YAML = `apiVersion: horizon.recovery.io/v1alpha1
+kind: AutonomousRecoveryPipeline
+metadata:
+  name: live-ticket-booking-flash-sale
+  environment: production
+  description: High-concurrency live concert ticket booking mesh with distributed seat locks & queue workers
+spec:
+  governanceGate:
+    required: true
+    standard: EIP-712
+    chainId: 91562037
+    contract: "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7"
+  nodes:
+    - id: cockroach-ledger
+      name: CockroachDB Seating Inventory Ledger
+      type: database
+      dependencies: []
+      healthProbe:
+        protocol: SQL_PING
+        port: 26257
+        timeoutMs: 1500
+      recoveryPolicy:
+        playbook: database_failover
+        requiresApproval: true
+
+    - id: redis-inventory-locks
+      name: Redis Distributed Seat Lock Cluster
+      type: cache
+      dependencies:
+        - cockroach-ledger
+      healthProbe:
+        protocol: TCP_PING
+        port: 6379
+        timeoutMs: 300
+      recoveryPolicy:
+        playbook: cache_purge
+        requiresApproval: false
+
+    - id: rabbitmq-booking-queue
+      name: RabbitMQ High-Throughput Booking Queue
+      type: cache
+      dependencies:
+        - cockroach-ledger
+      healthProbe:
+        protocol: TCP_PING
+        port: 5672
+        timeoutMs: 800
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: seat-allocator-worker
+      name: Seat Allocation & Ticket Issuer Worker
+      type: application
+      dependencies:
+        - redis-inventory-locks
+        - rabbitmq-booking-queue
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /health
+        port: 8080
+        timeoutMs: 1000
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: payment-gateway-svc
+      name: Stripe Checkout & Payment Processing Svc
+      type: application
+      dependencies:
+        - cockroach-ledger
+        - seat-allocator-worker
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /api/health
+        port: 8443
+        timeoutMs: 1200
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: cloudfront-edge-gateway
+      name: AWS CloudFront & WAF Rate Limiter Ingress
+      type: gateway
+      dependencies:
+        - payment-gateway-svc
+        - seat-allocator-worker
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /healthz
+        port: 443
+        timeoutMs: 400
+      recoveryPolicy:
+        playbook: dynamic_traffic_shift
+        requiresApproval: false
+`;
+
+export const BLOGGING_CMS_TEMPLATE_YAML = `apiVersion: horizon.recovery.io/v1alpha1
+kind: AutonomousRecoveryPipeline
+metadata:
+  name: high-traffic-blogging-publishing-mesh
+  environment: production
+  description: Highly scalable digital blogging & publication mesh with Varnish caching, S3 vault, and full-text search
+spec:
+  governanceGate:
+    required: true
+    standard: EIP-712
+    chainId: 91562037
+    contract: "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7"
+  nodes:
+    - id: pg-articles-db
+      name: PostgreSQL Article & Author Primary DB
+      type: database
+      dependencies: []
+      healthProbe:
+        protocol: SQL_PING
+        port: 5432
+        timeoutMs: 1500
+      recoveryPolicy:
+        playbook: database_failover
+        requiresApproval: true
+
+    - id: redis-feed-cache
+      name: Redis Article Feed & RSS Cache
+      type: cache
+      dependencies:
+        - pg-articles-db
+      healthProbe:
+        protocol: TCP_PING
+        port: 6379
+        timeoutMs: 400
+      recoveryPolicy:
+        playbook: cache_purge
+        requiresApproval: false
+
+    - id: s3-media-vault
+      name: Cloudflare R2 / S3 Media Asset Vault
+      type: application
+      dependencies:
+        - pg-articles-db
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /health
+        port: 9000
+        timeoutMs: 1200
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: algolia-search-indexer
+      name: Algolia Article Full-Text Search Indexer
+      type: application
+      dependencies:
+        - pg-articles-db
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /status
+        port: 8080
+        timeoutMs: 1000
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: cms-content-api
+      name: Next.js Ghost / WordPress Headless API
+      type: application
+      dependencies:
+        - redis-feed-cache
+        - s3-media-vault
+        - algolia-search-indexer
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /api/health
+        port: 3000
+        timeoutMs: 1000
+      recoveryPolicy:
+        playbook: service_restart
+        requiresApproval: false
+
+    - id: varnish-edge-gateway
+      name: Varnish Cache & Cloudflare CDN Ingress
+      type: gateway
+      dependencies:
+        - cms-content-api
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: /healthz
+        port: 443
+        timeoutMs: 400
+      recoveryPolicy:
+        playbook: dynamic_traffic_shift
+        requiresApproval: false
+`;
+
 export const PIPELINE_TEMPLATES: PipelineTemplate[] = [
   {
     id: 'ecommerce',
@@ -516,6 +806,33 @@ export const PIPELINE_TEMPLATES: PipelineTemplate[] = [
     nodeCount: 7,
     tierCount: 4,
     yaml: ECOMMERCE_TEMPLATE_YAML,
+  },
+  {
+    id: 'streaming',
+    name: 'Live Video Streaming Mesh (6 Tiers)',
+    category: 'OTT / Streaming',
+    description: 'ScyllaDB → Redis Manifest & Kafka Stream → FFmpeg Transcoder Pool → Cloudflare CDN Ingress',
+    nodeCount: 6,
+    tierCount: 4,
+    yaml: STREAMING_TEMPLATE_YAML,
+  },
+  {
+    id: 'ticket-booking',
+    name: 'Live Ticket Booking & Flash Sale (6 Tiers)',
+    category: 'High Concurrency',
+    description: 'CockroachDB → Redis Seat Locks & RabbitMQ → Seat Allocator & Stripe → CloudFront WAF',
+    nodeCount: 6,
+    tierCount: 4,
+    yaml: TICKET_BOOKING_TEMPLATE_YAML,
+  },
+  {
+    id: 'blogging-cms',
+    name: 'Blogging & Content Publishing Mesh (6 Tiers)',
+    category: 'Content / CMS',
+    description: 'PostgreSQL → Redis Feeds & S3 Vault → Algolia Search & Headless CMS → Varnish Edge Gateway',
+    nodeCount: 6,
+    tierCount: 4,
+    yaml: BLOGGING_CMS_TEMPLATE_YAML,
   },
   {
     id: 'genai',

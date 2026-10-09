@@ -36,6 +36,9 @@ import {
   Wrench,
   Brain,
   ExternalLink,
+  Video,
+  Ticket,
+  FileText,
 } from "lucide-react";
 import {
   pipelineDeployer,
@@ -62,6 +65,30 @@ interface PromptSuggestion {
 
 const AGENT_SUGGESTIONS: PromptSuggestion[] = [
   {
+    id: "streaming",
+    title: "Live Video Streaming & CDN Mesh",
+    category: "OTT Streaming",
+    prompt:
+      "High-scale live video streaming platform with ScyllaDB video catalog, Redis manifest cache, Kafka live ingestion stream, FFmpeg GPU transcoding worker pool, Recommendation AI service, and Cloudflare Video CDN edge ingress.",
+    icon: Video,
+  },
+  {
+    id: "ticket-booking",
+    title: "Live Ticket Booking Flash-Sale",
+    category: "High Concurrency",
+    prompt:
+      "High-concurrency live ticket booking system with CockroachDB seating ledger, Redis distributed inventory locks, RabbitMQ booking queue, Seat Allocation Worker, Stripe checkout service, and AWS CloudFront edge ingress with bot mitigation.",
+    icon: Ticket,
+  },
+  {
+    id: "blogging-cms",
+    title: "High-Traffic Blogging & Publishing",
+    category: "Content Publishing",
+    prompt:
+      "Scalable blogging and digital publication platform with PostgreSQL content store, Varnish HTTP edge cache, Redis article feed cache, S3 media asset storage worker, Algolia full-text search indexer, and Next.js ISR frontend behind Cloudflare WAF.",
+    icon: FileText,
+  },
+  {
     id: "ecommerce",
     title: "E-Commerce Resilience Stack",
     category: "Enterprise SaaS",
@@ -86,14 +113,6 @@ const AGENT_SUGGESTIONS: PromptSuggestion[] = [
     icon: ShieldCheck,
   },
   {
-    id: "streaming",
-    title: "OTT Video Transcoder Pool",
-    category: "Media & CDN",
-    prompt:
-      "High-scale OTT streaming platform with ScyllaDB catalog, Redis manifest cache, FFmpeg transcoding workers, recommendation API, and Cloudflare video ingress.",
-    icon: Play,
-  },
-  {
     id: "deadlock",
     title: "Circular Deadlock Chaos Trap",
     category: "Chaos SRE",
@@ -104,6 +123,30 @@ const AGENT_SUGGESTIONS: PromptSuggestion[] = [
 ];
 
 const ASK_SUGGESTIONS: PromptSuggestion[] = [
+  {
+    id: "ticket-surge-sre",
+    title: "Flash-Sale Ticket Locking SRE",
+    category: "High Concurrency",
+    prompt:
+      "How does Horizon orchestrate distributed lock recovery during a high-concurrency live ticket booking flash-sale surge?",
+    icon: Ticket,
+  },
+  {
+    id: "streaming-transcoding-sre",
+    title: "Video Streaming Transcoder SRE",
+    category: "Streaming Media",
+    prompt:
+      "What recovery playbook should execute when FFmpeg GPU transcoding worker nodes crash during live 4K streaming?",
+    icon: Video,
+  },
+  {
+    id: "blogging-cache-sre",
+    title: "Blogging CMS Edge Cache Purge",
+    category: "CDN & Caching",
+    prompt:
+      "How does Horizon coordinate database failover and Varnish/Redis cache invalidation during a high-traffic blogging website outage?",
+    icon: FileText,
+  },
   {
     id: "kahn-explain",
     title: "How Kahn Sort Prevents Outages",

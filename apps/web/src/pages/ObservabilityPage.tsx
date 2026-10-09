@@ -848,12 +848,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     }, 3500);
 
     // 🚀 AUTOMATIC PIPELINE RESTART UPON FAILURE RESOLUTION:
-    // When failure is resolved, automatically restart and run the deployment pipeline completely from Node 1
-    // so the operator does not have to manually run the deployment pipeline
-    appendLog('🔄 [AUTO DEPLOYMENT RESTART] Outage resolved! Automatically restarting and running full deployment pipeline completely from step 1...');
-    setTimeout(() => {
-      handleApplyCustomPipeline(true);
-    }, 450);
+    // When failure is resolved outside deployment, automatically start deployment pipeline verification
+    // Only trigger if deployment is not already executing to prevent dual-execution race conditions
+    if (!pipelineDeployer.isExecuting()) {
+      appendLog('🔄 [AUTO DEPLOYMENT RESTART] Outage resolved! Automatically starting full deployment pipeline verification...');
+      setTimeout(() => {
+        handleApplyCustomPipeline(true);
+      }, 350);
+    }
   };
 
   // Dedicated Auto-Remediation Effect:
@@ -1541,12 +1543,45 @@ spec:
         </div>
 
         {/* Template Quick-Select Bar */}
-        <div className="space-y-2">
-          <div className="text-[11px] font-mono font-black text-[#6E6258] uppercase flex items-center gap-1.5">
-            <span>Select Pre-Built Pipeline Template:</span>
-            <span className="text-xs text-[#8A7B6D] font-normal">(1-Click load & edit)</span>
+        <div className="space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-[11px] font-mono font-black text-[#6E6258] uppercase flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />
+              <span>Select Architecture Scenario / Prompt Template:</span>
+              <span className="text-xs text-[#8A7B6D] font-normal">(Streaming, Ticketing, Blogging, E-Commerce & more)</span>
+            </div>
+            <span className="text-[10px] font-mono text-[#8A7B6D]">
+              Click chip to auto-load YAML & live topology
+            </span>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+
+          {/* Quick Scenario Prompt Chips */}
+          <div className="flex flex-wrap items-center gap-1.5 pb-1">
+            <span className="text-[10px] font-mono text-[#8A7B6D] font-bold">Quick Prompts:</span>
+            {[
+              { id: 'streaming', label: '🎬 Live Video Streaming (ScyllaDB + FFmpeg)', tmplId: 'streaming' },
+              { id: 'ticket-booking', label: '🎟️ Live Ticket Booking (CockroachDB + Locks)', tmplId: 'ticket-booking' },
+              { id: 'blogging-cms', label: '📰 Blogging Website (Postgres + Varnish)', tmplId: 'blogging-cms' },
+              { id: 'ecommerce', label: '🛍️ E-Commerce (MySQL + Redis + Stripe)', tmplId: 'ecommerce' },
+              { id: 'genai', label: '🤖 GenAI RAG (pgvector + vLLM)', tmplId: 'genai' },
+              { id: 'fintech', label: '💳 FinTech Ledger (Kafka + Merkle)', tmplId: 'fintech' },
+            ].map((chip) => (
+              <button
+                key={chip.id}
+                onClick={() => handleSelectTemplate(chip.tmplId)}
+                className={cn(
+                  'px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold border transition-all cursor-pointer flex items-center gap-1',
+                  selectedTemplateId === chip.tmplId
+                    ? 'bg-[#0047AB] text-white border-[#0047AB] shadow-xs ring-1 ring-blue-300'
+                    : 'bg-[#FAF3EA] hover:bg-white text-[#5A4E44] border-[#E5D7C5] hover:border-[#0047AB]/50'
+                )}
+              >
+                <span>{chip.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-2">
             {PIPELINE_TEMPLATES.map((tmpl) => {
               const isSelected = selectedTemplateId === tmpl.id;
               return (
