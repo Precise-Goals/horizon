@@ -146,6 +146,123 @@ class TopologyEngine:
         }
 
     # ==========================================================================
+    # Custom DAG YAML Pipeline & Dynamic Node Configuration
+    # ==========================================================================
+
+    def apply_custom_dag_pipeline(
+        self,
+        pipeline_name: str,
+        nodes: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """
+        Mounts a user-defined custom DAG pipeline of nodes into the cluster topology in memory.
+        Validates acyclic structure via Kahn's algorithm O(V+E) and computes blast radiuses.
+        """
+        if not nodes:
+            raise ValueError("Nodes list cannot be empty for custom DAG pipeline.")
+
+        new_nodes: Dict[str, SystemNode] = {}
+        for item in nodes:
+            node_id = str(item.get("id", "")).strip()
+            if not node_id:
+                raise ValueError("Every custom node must provide a non-empty 'id'.")
+            name = str(item.get("name", node_id)).strip()
+            raw_type = str(item.get("type", "application")).lower().strip()
+            valid_types = {"database", "cache", "application", "gateway", "queue", "ingress", "frontend"}
+            node_type = raw_type if raw_type in valid_types else "application"
+            deps = [str(d).strip() for d in item.get("dependencies", []) if str(d).strip()]
+
+            new_nodes[node_id] = SystemNode(
+                id=node_id,
+                name=name,
+                type=node_type,
+                status="healthy",
+                dependencies=deps,
+                latency_ms=4.5 if node_type == "database" else 1.8 if node_type == "cache" else 12.0,
+                cpu_percent=35.0,
+            )
+
+        # Validate that all dependencies point to defined nodes
+        for n in new_nodes.values():
+            for dep in n.dependencies:
+                if dep not in new_nodes:
+                    raise ValueError(f"Node '{n.id}' references undefined dependency '{dep}'.")
+                if dep == n.id:
+                    raise ValueError(f"Node '{n.id}' cannot depend on itself (circular loop).")
+
+        # Save previous state in case cycle is detected
+        prev_nodes = self._nodes
+        self._nodes = new_nodes
+        self._consecutive_failures = {n_id: 0 for n_id in new_nodes}
+
+        levels, cycle_detected = self.kahn_topological_sort()
+        if cycle_detected:
+            self._nodes = prev_nodes
+            raise ValueError("Circular dependency deadlock detected in custom DAG pipeline! Kahn topological sort failed.")
+
+        # Compute blast radius map
+        blast_map = {n_id: self.compute_blast_radius(n_id) for n_id in new_nodes}
+
+        return {
+            "status": "success",
+            "pipeline_name": pipeline_name,
+            "nodes_count": len(new_nodes),
+            "topological_tiers": levels,
+            "blast_radius_map": blast_map,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def reset_to_default_cluster(self) -> Dict[str, Any]:
+        """Restores baseline default 7-node enterprise cluster topology."""
+        self._reset_to_default_topology()
+        levels, _ = self.kahn_topological_sort()
+        return {
+            "status": "success",
+            "message": "Reset to default 7-node cluster topology.",
+            "nodes_count": len(self._nodes),
+            "topological_tiers": levels,
+        }
+
+    def get_dag_pipeline_templates(self) -> Dict[str, Any]:
+        """Returns standard pre-built DAG YAML pipeline templates for instant failure simulation."""
+        return {
+            "templates": [
+                {
+                    "id": "ecommerce",
+                    "name": "E-Commerce Resilience Mesh (7 Tiers)",
+                    "category": "Microservices",
+                    "description": "PostgreSQL -> Redis & Kafka -> Auth & Order Workers -> Envoy Gateway -> Storefront",
+                    "nodes_count": 7,
+                    "default_target": "pg-primary",
+                },
+                {
+                    "id": "genai",
+                    "name": "GenAI Vector RAG & LLM Inference (6 Tiers)",
+                    "category": "AI / LLM",
+                    "description": "pgvector & Redis Semantic Cache -> Embeddings & vLLM GPU -> Gateway -> Copilot",
+                    "nodes_count": 6,
+                    "default_target": "pgvector-store",
+                },
+                {
+                    "id": "fintech",
+                    "name": "FinTech Trading & Immutable Ledger (6 Tiers)",
+                    "category": "FinTech / Web3",
+                    "description": "Ledger DB -> Order Book -> Risk Engine -> FIX Gateway -> Trader Terminal",
+                    "nodes_count": 6,
+                    "default_target": "immutable-ledger-db",
+                },
+                {
+                    "id": "minimal",
+                    "name": "Minimal 3-Tier Baseline (3 Tiers)",
+                    "category": "Cloud Baseline",
+                    "description": "Aurora Database -> Microservice API -> Cloudflare Edge Ingress",
+                    "nodes_count": 3,
+                    "default_target": "db-core",
+                },
+            ]
+        }
+
+    # ==========================================================================
     # 3-Consecutive-Miss Health Probing (Sliding Window Failure Detection)
     # ==========================================================================
 

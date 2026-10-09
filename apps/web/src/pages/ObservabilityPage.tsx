@@ -34,7 +34,23 @@ import {
   FileText,
   Clock,
   ArrowRight,
+  Layers,
+  Code2,
+  Upload,
+  Play,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
+import {
+  parseCustomDagYaml,
+  validateAndCompilePipeline,
+  convertCustomNodesToSystemNodes,
+  serializePipelineToYaml,
+  PIPELINE_TEMPLATES,
+  ECOMMERCE_TEMPLATE_YAML,
+  type CustomNodeDefinition,
+  type PipelineValidationResult,
+} from '../engine/customDagPipeline';
 import { cn } from '../lib/utils';
 
 const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
@@ -169,6 +185,141 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     { id: 'web-frontend', name: 'Client Portal', type: 'frontend', status: 'healthy', latencyMs: 22.0, errorRate: 0.0, consecutiveMisses: 0 },
   ]);
 
+  // Dynamic Custom DAG YAML Pipeline state
+  const [customYaml, setCustomYaml] = useState<string>(ECOMMERCE_TEMPLATE_YAML);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('ecommerce');
+  const [isCustomPipelineActive, setIsCustomPipelineActive] = useState<boolean>(false);
+  const [activePipelineName, setActivePipelineName] = useState<string>('Default Enterprise 7-Tier Mesh');
+  const [isYamlEditorExpanded, setIsYamlEditorExpanded] = useState<boolean>(true);
+  const [customBlastRadiusMap, setCustomBlastRadiusMap] = useState<Record<string, string[]>>({
+    'db-primary': ['redis-cache', 'auth-service', 'payment-worker'],
+    'redis-cache': ['auth-service', 'api-gateway'],
+    'kafka-queue': ['payment-worker', 'api-gateway'],
+    'auth-service': ['api-gateway', 'web-frontend'],
+    'payment-worker': ['api-gateway', 'web-frontend'],
+    'api-gateway': ['web-frontend'],
+    'web-frontend': [],
+  });
+
+  // Real-time validation computation for current YAML in editor
+  const [pipelineValidation, setPipelineValidation] = useState<PipelineValidationResult>(() => {
+    try {
+      const spec = parseCustomDagYaml(ECOMMERCE_TEMPLATE_YAML);
+      return validateAndCompilePipeline(spec);
+    } catch (err) {
+      return {
+        isValid: false,
+        pipelineName: 'invalid',
+        nodes: [],
+        topologicalLevels: [],
+        blastRadiusMap: {},
+        cycleDetected: false,
+        errors: [err instanceof Error ? err.message : String(err)],
+        warnings: [],
+      };
+    }
+  });
+
+  // Handler for editing YAML
+  const handleYamlChange = (newYaml: string) => {
+    setCustomYaml(newYaml);
+    try {
+      const spec = parseCustomDagYaml(newYaml);
+      const res = validateAndCompilePipeline(spec);
+      setPipelineValidation(res);
+    } catch (err) {
+      setPipelineValidation({
+        isValid: false,
+        pipelineName: 'invalid',
+        nodes: [],
+        topologicalLevels: [],
+        blastRadiusMap: {},
+        cycleDetected: false,
+        errors: [err instanceof Error ? err.message : String(err)],
+        warnings: [],
+      });
+    }
+  };
+
+  // Handler for template selection
+  const handleSelectTemplate = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const tmpl = PIPELINE_TEMPLATES.find((t) => t.id === templateId);
+    if (tmpl) {
+      handleYamlChange(tmpl.yaml);
+    }
+  };
+
+  // Handler for deploying custom pipeline to the live cluster
+  const handleApplyCustomPipeline = () => {
+    if (!pipelineValidation.isValid || pipelineValidation.nodes.length === 0) return;
+
+    const systemNodes = convertCustomNodesToSystemNodes(pipelineValidation.nodes);
+    clusterState.setCustomTopology(systemNodes, pipelineValidation.pipelineName);
+
+    // Convert custom nodes to dynamic ServiceProbe entries
+    const newProbes: ServiceProbe[] = pipelineValidation.nodes.map((n) => {
+      const isDb = n.type === 'database';
+      const isCache = n.type === 'cache';
+      const isGw = n.type === 'gateway';
+      return {
+        id: n.id,
+        name: n.name || n.id,
+        type: n.type,
+        status: 'healthy',
+        latencyMs: isDb ? 4.2 : isCache ? 1.8 : isGw ? 8.5 : 14.0,
+        errorRate: 0.0,
+        consecutiveMisses: 0,
+      };
+    });
+
+    setServices(newProbes);
+    setCustomBlastRadiusMap(pipelineValidation.blastRadiusMap);
+    setActivePipelineName(pipelineValidation.pipelineName);
+    setIsCustomPipelineActive(true);
+    if (pipelineValidation.nodes[0]) {
+      setActiveDrill(pipelineValidation.nodes[0].id);
+    }
+
+    setAiLogs((prev) => [
+      ...prev,
+      `🚀 [CUSTOM DAG PIPELINE DEPLOYED] "${pipelineValidation.pipelineName}" mounted successfully.`,
+      `   Loaded ${pipelineValidation.nodes.length} nodes across ${pipelineValidation.topologicalLevels.length} topological recovery tiers O(V+E).`,
+      `   Acyclic Kahn verification: PASSED (0 circular deadlocks). Dynamic blast radius active.`,
+    ]);
+  };
+
+  // Handler for resetting to the nominal baseline cluster
+  const handleResetToDefaultCluster = () => {
+    clusterState.resetToDefaultTopology();
+    setServices([
+      { id: 'db-primary', name: 'PostgreSQL Primary', type: 'database', status: 'healthy', latencyMs: 4.2, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'redis-cache', name: 'Redis Cache Master', type: 'cache', status: 'healthy', latencyMs: 1.8, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'kafka-queue', name: 'Kafka Event Bus', type: 'queue', status: 'healthy', latencyMs: 6.5, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'auth-service', name: 'OAuth2 / JWT Service', type: 'service', status: 'healthy', latencyMs: 14.1, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'payment-worker', name: 'Payment Worker', type: 'service', status: 'healthy', latencyMs: 18.4, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'api-gateway', name: 'Envoy API Gateway', type: 'ingress', status: 'healthy', latencyMs: 8.2, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'web-frontend', name: 'Client Portal', type: 'frontend', status: 'healthy', latencyMs: 22.0, errorRate: 0.0, consecutiveMisses: 0 },
+    ]);
+    setCustomBlastRadiusMap({
+      'db-primary': ['redis-cache', 'auth-service', 'payment-worker'],
+      'redis-cache': ['auth-service', 'api-gateway'],
+      'kafka-queue': ['payment-worker', 'api-gateway'],
+      'auth-service': ['api-gateway', 'web-frontend'],
+      'payment-worker': ['api-gateway', 'web-frontend'],
+      'api-gateway': ['web-frontend'],
+      'web-frontend': [],
+    });
+    setIsCustomPipelineActive(false);
+    setActivePipelineName('Default Enterprise 7-Tier Mesh');
+    setActiveDrill('db-primary');
+
+    setAiLogs((prev) => [
+      ...prev,
+      '🔄 [CLUSTER TOPOLOGY RESET] Restored default 7-node enterprise microservice topology.',
+    ]);
+  };
+
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const terminalEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -243,13 +394,9 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
     const target = services.find((s) => s.id === nodeId) || services[0];
     const blast =
-      nodeId === 'db-primary'
-        ? ['redis-cache', 'auth-service', 'payment-worker']
-        : nodeId === 'redis-cache'
-        ? ['auth-service', 'api-gateway']
-        : nodeId === 'kafka-queue'
-        ? ['payment-worker', 'api-gateway']
-        : ['api-gateway', 'web-frontend'];
+      customBlastRadiusMap[nodeId] ||
+      clusterState.getGraph().computeBlastRadius(nodeId).affectedNodeIds ||
+      [];
 
     // Update service probes with 3-miss threshold tripped
     setServices((prev) =>
@@ -361,11 +508,12 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
     appendLog(`⚡ [PIPELINE 6/7: PLAYBOOK EXECUTION] Executing: "${diagnosis.playbook}".`);
     clusterState.setNodeStatus(inc.targetNode, 'healthy');
+    inc.blastRadius.forEach((bId) => clusterState.setNodeStatus(bId, 'healthy'));
     setServices((prev) =>
       prev.map((s) => ({
         ...s,
         status: 'healthy',
-        latencyMs: s.id === 'db-primary' ? 4.2 : s.id === 'redis-cache' ? 1.8 : 12.0,
+        latencyMs: s.type === 'database' ? 4.2 : s.type === 'cache' ? 1.8 : 12.0,
         errorRate: 0.0,
         consecutiveMisses: 0,
       }))
@@ -388,11 +536,23 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
         blastRadius: inc.blastRadius,
       },
       dagPlan: {
-        tiers: [
-          { tier: 0, services: ['db-primary'], action: 'Replica promotion & PITR restore' },
-          { tier: 1, services: ['redis-cache', 'kafka-queue'], action: 'Cache warm & queue consumer rebalance' },
-          { tier: 2, services: ['auth-service', 'api-gateway', 'web-frontend'], action: 'Ingress routing traffic cutover' },
-        ],
+        tiers:
+          isCustomPipelineActive && pipelineValidation.isValid && pipelineValidation.topologicalLevels.length > 0
+            ? pipelineValidation.topologicalLevels.map((lvl, idx) => ({
+                tier: idx,
+                services: lvl,
+                action:
+                  idx === 0
+                    ? 'Foundational storage & state store recovery'
+                    : idx === 1
+                    ? 'In-memory cache & message queue hydration'
+                    : 'Application service restart & traffic cutover',
+              }))
+            : [
+                { tier: 0, services: ['db-primary'], action: 'Replica promotion & PITR restore' },
+                { tier: 1, services: ['redis-cache', 'kafka-queue'], action: 'Cache warm & queue consumer rebalance' },
+                { tier: 2, services: ['auth-service', 'api-gateway', 'web-frontend'], action: 'Ingress routing traffic cutover' },
+              ],
       },
       aiDiagnosis: {
         source: diagnosis.source,
@@ -490,7 +650,7 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       prev.map((s) => ({
         ...s,
         status: 'healthy',
-        latencyMs: s.id === 'db-primary' ? 4.2 : s.id === 'redis-cache' ? 1.8 : 12.0,
+        latencyMs: s.type === 'database' ? 4.2 : s.type === 'cache' ? 1.8 : 12.0,
         errorRate: 0.0,
         consecutiveMisses: 0,
       }))
@@ -568,7 +728,15 @@ ${pipelineChecksums.map((p) => `- Stage ${p.stage}/7 [${p.pipelineName}]: \`${p.
   };
 
   // Live compiled DAG YAML text
-  const dagRecoveryYaml = `apiVersion: horizon.resilience/v1alpha1
+  const dagRecoveryYaml =
+    isCustomPipelineActive && pipelineValidation.isValid
+      ? serializePipelineToYaml(
+          pipelineValidation.pipelineName,
+          pipelineValidation.nodes,
+          pipelineValidation.topologicalLevels,
+          customBlastRadiusMap
+        )
+      : `apiVersion: horizon.resilience/v1alpha1
 kind: AutonomousRecoveryPlan
 metadata:
   incidentId: "${activeIncident?.id || 'INC-NOMINAL'}"
@@ -678,13 +846,13 @@ spec:
               <select
                 value={activeDrill}
                 onChange={(e) => setActiveDrill(e.target.value)}
-                className="bg-white text-xs font-mono font-bold text-[#1A1A1A] px-2 py-1 rounded-lg border border-[#D5C4B1] focus:outline-none focus:ring-1 focus:ring-[#0047AB] cursor-pointer"
+                className="bg-white text-xs font-mono font-bold text-[#1A1A1A] px-2 py-1 rounded-lg border border-[#D5C4B1] focus:outline-none focus:ring-1 focus:ring-[#0047AB] cursor-pointer max-w-[220px] truncate"
               >
-                <option value="db-primary">PostgreSQL Primary (SPOF)</option>
-                <option value="redis-cache">Redis Cache Master</option>
-                <option value="kafka-queue">Kafka Event Bus</option>
-                <option value="auth-service">OAuth2 / JWT Service</option>
-                <option value="api-gateway">Envoy API Gateway</option>
+                {services.map((svc) => (
+                  <option key={svc.id} value={svc.id}>
+                    {svc.name} ({svc.type})
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -1081,6 +1249,301 @@ spec:
           </div>
         </motion.div>
       )}
+
+      {/* ========================================================================= */}
+      {/* DYNAMIC CUSTOM DAG YAML PIPELINE & FAILURE SIMULATOR                      */}
+      {/* ========================================================================= */}
+      <motion.div
+        variants={itemVariants}
+        className={cn(
+          'p-6 rounded-3xl bg-white border-2 shadow-lg space-y-5 transition-all',
+          isCustomPipelineActive ? 'border-[#0047AB] ring-2 ring-[#0047AB]/20' : 'border-[#EADCC9]'
+        )}
+      >
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#EADCC9] pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <div className="p-2 rounded-xl bg-[#0047AB]/10 text-[#0047AB]">
+                <Layers className="w-5 h-5 text-[#0047AB]" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-black text-[#1A1A1A] tracking-tight">
+                Custom DAG YAML Pipeline & Failure Simulator
+              </h2>
+              {isCustomPipelineActive ? (
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-black border border-emerald-300 animate-pulse">
+                  ACTIVE CLUSTER TOPOLOGY
+                </span>
+              ) : (
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-mono font-bold border border-blue-200">
+                  READY TO DEPLOY
+                </span>
+              )}
+            </div>
+            <p className="text-xs sm:text-sm text-[#5A4E44]">
+              Define your own multi-tier infrastructure graph in declarative YAML or choose a pre-built template. Horizon parses the DAG, verifies acyclic structure via Kahn O(V+E), computes blast radius, and dynamically mounts the nodes into real-time failure simulation.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+            <button
+              onClick={() => setIsYamlEditorExpanded((prev) => !prev)}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Code2 className="w-3.5 h-3.5 text-[#0047AB]" />
+              <span>{isYamlEditorExpanded ? 'Collapse Editor' : 'Expand Editor'}</span>
+              {isYamlEditorExpanded ? <ChevronUp className="w-3 h-3 text-stone-500" /> : <ChevronDown className="w-3 h-3 text-stone-500" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Template Quick-Select Bar */}
+        <div className="space-y-2">
+          <div className="text-[11px] font-mono font-black text-[#6E6258] uppercase flex items-center gap-1.5">
+            <span>Select Pre-Built Pipeline Template:</span>
+            <span className="text-xs text-[#8A7B6D] font-normal">(1-Click load & edit)</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+            {PIPELINE_TEMPLATES.map((tmpl) => {
+              const isSelected = selectedTemplateId === tmpl.id;
+              return (
+                <button
+                  key={tmpl.id}
+                  onClick={() => handleSelectTemplate(tmpl.id)}
+                  className={cn(
+                    'p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-1',
+                    isSelected
+                      ? 'bg-[#0047AB] text-white border-[#0047AB] shadow-md ring-2 ring-blue-300/40'
+                      : 'bg-[#FAF3EA] hover:bg-[#F4EBE0] text-[#1A1A1A] border-[#E5D7C5]'
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase font-bold opacity-80">{tmpl.category}</span>
+                    <span
+                      className={cn(
+                        'px-1.5 py-0.2 rounded text-[9px] font-mono font-bold',
+                        isSelected ? 'bg-white/20 text-white' : 'bg-stone-200 text-stone-700'
+                      )}
+                    >
+                      {tmpl.nodeCount} Nodes
+                    </span>
+                  </div>
+                  <div className="text-xs font-black truncate">{tmpl.name.split(' (')[0]}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* YAML Code Editor & Real-Time Validation */}
+        <AnimatePresence>
+          {isYamlEditorExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-3"
+            >
+              <div className="relative rounded-2xl bg-[#1A1A1A] border-2 border-black overflow-hidden shadow-inner flex flex-col">
+                {/* Editor Header Bar */}
+                <div className="px-4 py-2 bg-stone-900 border-b border-stone-800 text-xs font-mono text-stone-400 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block" />
+                    <span className="text-stone-300 font-bold ml-2">pipeline.yaml</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] text-stone-400">
+                      Format: Horizon AutonomousRecoveryPipeline v1alpha1
+                    </span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(customYaml);
+                        setCopiedYaml(true);
+                        setTimeout(() => setCopiedYaml(false), 2000);
+                      }}
+                      className="px-2 py-0.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-300 text-[10px] transition-colors cursor-pointer flex items-center gap-1"
+                    >
+                      {copiedYaml ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedYaml ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Monospaced Editable Textarea */}
+                <textarea
+                  value={customYaml}
+                  onChange={(e) => handleYamlChange(e.target.value)}
+                  rows={14}
+                  spellCheck={false}
+                  placeholder="# Enter your custom DAG YAML pipeline here..."
+                  className="w-full p-4 bg-[#1A1A1A] text-emerald-300 font-mono text-xs leading-relaxed focus:outline-none resize-y selection:bg-[#0047AB] selection:text-white"
+                />
+
+                {/* Editor Footer / Validation Status Banner */}
+                <div className="px-4 py-2.5 bg-stone-900 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
+                  {pipelineValidation.isValid ? (
+                    <div className="flex items-center gap-2 text-emerald-400">
+                      <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                      <span className="font-bold">
+                        ✓ Valid DAG: {pipelineValidation.nodes.length} Nodes • {pipelineValidation.topologicalLevels.length} Topological Recovery Tiers • Acyclic (0 Cycles)
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-rose-400">
+                      <Flame className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span className="font-bold">
+                        ⚠️ Validation Error: {pipelineValidation.errors[0] || 'Invalid YAML schema'}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="text-stone-400 text-[11px] self-end sm:self-center">
+                    Algorithm: Kahn O(V+E)
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Pipeline Control Action Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Deploy Button */}
+            <button
+              onClick={handleApplyCustomPipeline}
+              disabled={!pipelineValidation.isValid}
+              className={cn(
+                'px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-md transition-all cursor-pointer flex items-center gap-2',
+                pipelineValidation.isValid
+                  ? 'bg-[#0047AB] hover:bg-blue-800 ring-2 ring-blue-400/40 active:scale-95'
+                  : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
+              )}
+            >
+              <Upload className="w-4 h-4 text-white" />
+              <span>Deploy Pipeline to Live Cluster ({pipelineValidation.nodes.length} Nodes)</span>
+            </button>
+
+            {/* Reset Cluster to Default Baseline Button */}
+            {isCustomPipelineActive && (
+              <button
+                onClick={handleResetToDefaultCluster}
+                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#5A4E44] bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5"
+                title="Restore default 7-node PostgreSQL / Redis cluster"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset to Default 7-Node Cluster</span>
+              </button>
+            )}
+          </div>
+
+          <div className="text-xs font-mono text-[#6E6258] flex items-center gap-2">
+            <span>Active Pipeline:</span>
+            <strong className="text-[#0047AB]">{activePipelineName}</strong>
+          </div>
+        </div>
+
+        {/* Dynamic Topology Preview & 1-Click Failure Injection Cards */}
+        {pipelineValidation.isValid && pipelineValidation.nodes.length > 0 && (
+          <div className="space-y-3 pt-2 border-t border-[#EADCC9]">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-mono font-black text-[#6E6258] uppercase">
+                Dynamic Nodes Matrix & Immediate Failure Injection:
+              </span>
+              <span className="text-[10px] font-mono text-[#8A7B6D]">
+                Click any node to inject failure & compute cascading blast radius
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              {pipelineValidation.nodes.map((node) => {
+                const tierIdx = pipelineValidation.topologicalLevels.findIndex((lvl) => lvl.includes(node.id));
+                const blast = pipelineValidation.blastRadiusMap[node.id] || [];
+                const isSelectedDrill = activeDrill === node.id;
+                const isDown = services.find((s) => s.id === node.id)?.status === 'down';
+                const isDegraded = services.find((s) => s.id === node.id)?.status === 'degraded';
+
+                return (
+                  <div
+                    key={node.id}
+                    className={cn(
+                      'p-3.5 rounded-2xl border transition-all space-y-2.5 flex flex-col justify-between',
+                      isDown
+                        ? 'bg-red-50 border-red-500 ring-2 ring-red-400'
+                        : isDegraded
+                        ? 'bg-amber-50 border-amber-400'
+                        : isSelectedDrill
+                        ? 'bg-blue-50/60 border-[#0047AB] ring-1 ring-[#0047AB]/30'
+                        : 'bg-[#FAF3EA] border-[#E8DAC8] hover:border-[#0047AB]/50'
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-[#D8C7B4] text-[#0047AB]">
+                          Tier {tierIdx >= 0 ? tierIdx : 0}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full',
+                            node.type === 'database'
+                              ? 'bg-purple-100 text-purple-800'
+                              : node.type === 'cache'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : node.type === 'gateway'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-stone-200 text-stone-800'
+                          )}
+                        >
+                          {node.type}
+                        </span>
+                      </div>
+
+                      <div className="font-bold text-xs text-[#1A1A1A] mt-1.5 truncate" title={node.name}>
+                        {node.name}
+                      </div>
+                      <div className="font-mono text-[10px] text-[#8A7B6D] truncate">id: {node.id}</div>
+                    </div>
+
+                    <div className="space-y-1 text-[10px] font-mono text-[#6E6258] pt-1 border-t border-[#E8DAC8]/60">
+                      <div>
+                        <strong>Dependencies:</strong>{' '}
+                        {node.dependencies.length > 0 ? node.dependencies.join(', ') : 'None (Foundation)'}
+                      </div>
+                      <div className={blast.length > 0 ? 'text-amber-800 font-bold' : 'text-stone-500'}>
+                        <strong>Blast Radius:</strong>{' '}
+                        {blast.length > 0 ? `${blast.length} downstream (${blast.join(', ')})` : '0 (Leaf)'}
+                      </div>
+                    </div>
+
+                    {/* Drill Action Button */}
+                    <div className="pt-1">
+                      <button
+                        onClick={() => {
+                          setActiveDrill(node.id);
+                          triggerOutageSimulation(node.id);
+                        }}
+                        className={cn(
+                          'w-full py-1.5 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs',
+                          isDown
+                            ? 'bg-red-600 text-white animate-pulse'
+                            : 'bg-white hover:bg-red-50 text-red-600 border border-red-300 hover:border-red-500'
+                        )}
+                      >
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>{isDown ? 'Outage Active' : 'Simulate Failure'}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </motion.div>
 
       {/* Main Grid: Left Column (Telemetry & Microservices) vs Right Column (Tabbed: Terminal / YAML / MCP) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

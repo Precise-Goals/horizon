@@ -245,8 +245,37 @@ MCP_TOOLS: List[McpToolDefinition] = [
                     "default": "all"
                 }
             },
-            required=[]
-        )
+            required=[],
+        ),
+    ),
+    McpToolDefinition(
+        name="horizon_apply_custom_dag_pipeline",
+        description="Mounts and verifies a user-defined custom DAG infrastructure pipeline with custom nodes, types, and dependencies. Enforces acyclic Kahn's topological sorting O(V+E) and computes blast radiuses.",
+        inputSchema=McpToolParameter(
+            type="object",
+            properties={
+                "pipeline_name": {
+                    "type": "string",
+                    "description": "Descriptive name for the custom infrastructure pipeline (e.g. 'e-commerce-mesh')",
+                    "default": "custom-dag-pipeline",
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": {"type": "string"},
+                            "name": {"type": "string"},
+                            "type": {"type": "string", "enum": ["database", "cache", "application", "gateway", "queue", "ingress", "frontend"]},
+                            "dependencies": {"type": "array", "items": {"type": "string"}},
+                        },
+                        "required": ["id"],
+                    },
+                    "description": "List of node definitions with IDs, display names, node types, and dependency IDs",
+                },
+            },
+            required=["nodes"],
+        ),
     ),
 ]
 
@@ -531,6 +560,15 @@ async def execute_tool(name: str, arguments: Optional[Dict[str, Any]] = None) ->
             }
             return McpToolResult(
                 content=[McpTextContent(type="text", text=json.dumps(output_payload, indent=2))],
+                isError=False,
+            )
+
+        elif name == "horizon_apply_custom_dag_pipeline":
+            nodes_data = args.get("nodes", [])
+            p_name = args.get("pipeline_name", "custom-dag-pipeline")
+            res = topology_engine.apply_custom_dag_pipeline(p_name, nodes_data)
+            return McpToolResult(
+                content=[McpTextContent(type="text", text=json.dumps(res, indent=2))],
                 isError=False,
             )
 

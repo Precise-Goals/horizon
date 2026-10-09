@@ -336,6 +336,41 @@ async def get_graph_analysis_endpoint():
     }
 
 
+@app.get("/api/v1/topology/templates", tags=["Topology"])
+async def get_topology_templates_endpoint():
+    """Returns standard pre-built DAG YAML pipeline templates for instant failure simulation."""
+    return topology_engine.get_dag_pipeline_templates()
+
+
+@app.post("/api/v1/topology/custom-pipeline", tags=["Topology"])
+async def apply_custom_pipeline_endpoint(request: Request):
+    """
+    Mounts a user-defined custom DAG pipeline of nodes into the cluster topology in memory.
+    Validates acyclic structure via Kahn's algorithm O(V+E) and computes blast radiuses.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid JSON payload.")
+
+    pipeline_name = body.get("pipeline_name", "custom-dag-pipeline")
+    nodes_data = body.get("nodes", [])
+    if not nodes_data:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nodes array cannot be empty.")
+
+    try:
+        result = topology_engine.apply_custom_dag_pipeline(pipeline_name, nodes_data)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
+
+
+@app.post("/api/v1/topology/reset", tags=["Topology"])
+async def reset_topology_endpoint():
+    """Restores baseline default 7-node enterprise cluster topology."""
+    return topology_engine.reset_to_default_cluster()
+
+
 @app.post("/api/v1/chaos", tags=["Chaos"])
 async def trigger_chaos_endpoint(request: Request):
     """Triggers simulated node failure or reset for chaos drills."""
