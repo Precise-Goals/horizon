@@ -190,17 +190,6 @@ export const Footer: React.FC = () => {
                   </Link>
                 </li>
                 <li>
-                  <a
-                    href="/research.pdf"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 group"
-                  >
-                    <span className="text-[#60A5FA]">Invention Paper (PDF)</span>
-                    <ArrowUpRight className="w-3 h-3 text-[#60A5FA] group-hover:text-white transition-colors" />
-                  </a>
-                </li>
-                <li>
                   <Link
                     to="/subscription"
                     className="text-zinc-300 hover:text-white transition-colors flex items-center gap-1.5 group"
@@ -259,7 +248,7 @@ export const Footer: React.FC = () => {
             </Link>
             <span>&bull;</span>
             <Link to="/patents" className="hover:text-white transition-colors">
-              Patents (research.pdf)
+              Patents & Research
             </Link>
             <span>&bull;</span>
             <span className="flex items-center gap-1.5">

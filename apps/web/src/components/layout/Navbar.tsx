@@ -300,7 +300,7 @@ export const Navbar: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-xs font-bold text-[#1A1A1A]">Patents & Research</div>
-                        <div className="text-[10px] text-[#666666]">Invention paper (research.pdf)</div>
+                        <div className="text-[10px] text-[#666666]">Technical invention disclosure</div>
                       </div>
                     </Link>
 
@@ -564,7 +564,7 @@ export const Navbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="block p-2.5 rounded-xl text-sm font-bold text-[#1A1A1A] hover:bg-[#FAF3EA]"
             >
-              Patents & Research (research.pdf)
+              Patents & Research
             </Link>
             <Link
               to="/policies"
