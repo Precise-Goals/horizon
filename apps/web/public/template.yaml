@@ -1,0 +1,207 @@
+# ==============================================================================
+# HORIZON AUTONOMOUS RECOVERY ENGINE — CANONICAL DAG PIPELINE SPECIFICATION
+# API Version: horizon.recovery.io/v1alpha1
+# Schema Standard: Open Container Resilience Manifest & Kahn Topological DAG
+# Blockchain Governance: MST Blockchain Testnet (Chain ID 91562037)
+# ==============================================================================
+#
+# INSTRUCTIONS FOR DEPLOYMENT:
+# 1. Edit this file with your system's nodes and dependency relationships.
+# 2. Upload or paste this YAML directly into the Horizon Observability & Verification Hub.
+# 3. Horizon parses the graph, validates acyclic correctness via Kahn's algorithm O(V+E),
+#    calculates downstream blast radius for every node, and mounts it into live telemetry.
+# 4. Simulate failures on any node to verify autonomous self-healing, PagerDuty alerts,
+#    and 7-stage cryptographic SHA-256 Merkle root anchoring.
+# ==============================================================================
+
+apiVersion: horizon.recovery.io/v1alpha1
+kind: AutonomousRecoveryPipeline
+
+metadata:
+  # Unique alphanumeric identifier for this infrastructure pipeline:
+  name: enterprise-resilience-mesh
+
+  # Deployment environment: production | staging | disaster-recovery | chaos-lab
+  environment: production
+
+  # Human-readable summary of the architectural topology:
+  description: "Mission-critical 5-tier microservices DAG with automated state failover, session hydration, and EIP-712 governance"
+
+  # Pipeline version tracking
+  version: "1.0.0"
+
+spec:
+  # ----------------------------------------------------------------------------
+  # BLOCKCHAIN GOVERNANCE & APPROVAL GATE
+  # ----------------------------------------------------------------------------
+  # Controls whether high-risk or stateful recovery operations (e.g. database failover,
+  # persistent disk restore) require human cryptographic authorization via EIP-712.
+  governanceGate:
+    required: true                         # Require cryptographic signature before executing Tier 0 failovers
+    standard: "EIP-712"                    # Structured typed data signing standard (EIP-712)
+    chainId: 91562037                      # MST Blockchain Testnet
+    contract: "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7" # Horizon Subscription & Governance Contract
+
+  # ----------------------------------------------------------------------------
+  # TOPOLOGY NODES SPECIFICATION
+  # ----------------------------------------------------------------------------
+  # Rules for declaring nodes:
+  # 1. id: Must be unique alphanumeric string (e.g. 'db-primary', 'redis-cache').
+  # 2. type: Must be one of: 'database', 'cache', 'application', 'gateway', 'queue', 'frontend'.
+  # 3. dependencies: Array of other node IDs that this node strictly REQUIRES to function.
+  #    - Foundational databases have dependencies: [] (Tier 0).
+  #    - Caches depend on databases: [db-primary] (Tier 1).
+  #    - Services depend on databases/caches: [db-primary, redis-cache] (Tier 2).
+  #    - Gateways depend on services: [auth-service, order-worker] (Tier 3).
+  #    - Clients depend on gateways: [api-gateway] (Tier 4).
+  # 4. IMPORTANT: Do NOT introduce circular dependencies (e.g. A -> B and B -> A).
+  #    Horizon's Kahn algorithm will reject cycles with an explicit deadlock warning.
+  # ----------------------------------------------------------------------------
+  nodes:
+
+    # --------------------------------------------------------------------------
+    # TIER 0: FOUNDATIONAL STATE STORE (PRIMARY DATABASE)
+    # --------------------------------------------------------------------------
+    # Foundational state stores must have dependencies: [] so they recover FIRST.
+    - id: db-primary
+      name: "PostgreSQL Primary Cluster (Multi-AZ)"
+      type: database
+      dependencies: []
+      healthProbe:
+        protocol: SQL_PING                # Probe type: SQL_PING | TCP_PING | HTTP_GET
+        endpoint: "SELECT 1;"             # SQL query or health endpoint
+        port: 5432                        # Database listening port
+        timeoutMs: 1500                   # Timeout before marking probe as missed (ms)
+        intervalSeconds: 5                # Watchdog polling frequency (seconds)
+        failureThreshold: 3               # Flapping guard: 3 consecutive misses trips PagerDuty P1
+      recoveryPolicy:
+        playbook: database_failover       # Playbook: database_failover | cache_purge | service_restart | restore_from_backup
+        rollbackStrategy: read_replica_promotion # Automated fallback if failover fails
+        requiresApproval: true            # Stateful operations require EIP-712 cryptographic Commander sign-off
+
+    # --------------------------------------------------------------------------
+    # TIER 1A: DISTRIBUTED IN-MEMORY CACHE
+    # --------------------------------------------------------------------------
+    # Depends on db-primary. If db-primary fails, cache is marked 'degraded' in blast radius.
+    - id: redis-cache
+      name: "Redis Distributed Session & Query Cache"
+      type: cache
+      dependencies:
+        - db-primary
+      healthProbe:
+        protocol: TCP_PING
+        endpoint: "PING"
+        port: 6379
+        timeoutMs: 500
+        intervalSeconds: 3
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: cache_purge             # Purge stale keys and trigger warm hydration
+        rollbackStrategy: warm_cache_hydration
+        requiresApproval: false           # Stateless cache restart is low-risk (auto-approved)
+
+    # --------------------------------------------------------------------------
+    # TIER 1B: EVENT MESSAGE BROKER
+    # --------------------------------------------------------------------------
+    - id: kafka-queue
+      name: "Kafka Order & CDC Event Stream Broker"
+      type: queue
+      dependencies:
+        - db-primary
+      healthProbe:
+        protocol: TCP_PING
+        port: 9092
+        timeoutMs: 1000
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: consumer_group_rebalance
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 2A: AUTHENTICATION & IDENTITY SERVICE
+    # --------------------------------------------------------------------------
+    # Depends on db-primary for user records and redis-cache for session tokens.
+    - id: auth-service
+      name: "OAuth2 & JWT Identity Microservice"
+      type: application
+      dependencies:
+        - db-primary
+        - redis-cache
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/health"
+        port: 8081
+        timeoutMs: 800
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: automated_circuit_breaker
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 2B: ASYNC WORKER SERVICE
+    # --------------------------------------------------------------------------
+    # Consumes from kafka-queue and commits to db-primary.
+    - id: payment-worker
+      name: "Payment Settlement & Ledger Worker"
+      type: application
+      dependencies:
+        - db-primary
+        - kafka-queue
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/ready"
+        port: 8082
+        timeoutMs: 1200
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: dead_letter_queue_flush
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 3: INGRESS API EDGE GATEWAY
+    # --------------------------------------------------------------------------
+    # Depends on auth-service and payment-worker to route external API traffic.
+    - id: api-gateway
+      name: "Envoy API Edge Ingress Gateway"
+      type: gateway
+      dependencies:
+        - auth-service
+        - payment-worker
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/healthz"
+        port: 443
+        timeoutMs: 500
+        intervalSeconds: 2
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: dynamic_traffic_shift   # Shift DNS/weight away from degraded pod pool
+        rollbackStrategy: fallback_origin_routing
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 4: CLIENT APPLICATION EDGE
+    # --------------------------------------------------------------------------
+    # Leaf node depending on api-gateway.
+    - id: web-frontend
+      name: "Next.js Client Storefront Application"
+      type: frontend
+      dependencies:
+        - api-gateway
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/api/health"
+        port: 3000
+        timeoutMs: 600
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: static_maintenance_page_fallback
+        requiresApproval: false

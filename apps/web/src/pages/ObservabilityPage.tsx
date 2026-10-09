@@ -40,6 +40,7 @@ import {
   Play,
   ChevronDown,
   ChevronUp,
+  Download,
 } from 'lucide-react';
 import {
   parseCustomDagYaml,
@@ -321,14 +322,31 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   };
 
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const terminalEndRef = useRef<HTMLDivElement | null>(null);
+  const terminalScrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Auto-scroll terminal to newest logs
+  // Auto-scroll terminal container ONLY without scrolling the outer browser page
   useEffect(() => {
-    if (rightPaneTab === 'terminal' && terminalEndRef.current) {
-      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (rightPaneTab === 'terminal' && terminalScrollContainerRef.current) {
+      terminalScrollContainerRef.current.scrollTop = terminalScrollContainerRef.current.scrollHeight;
     }
   }, [aiLogs, rightPaneTab]);
+
+  // Handle uploading custom .yaml or .json file from local computer
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const content = event.target?.result as string;
+      if (content) {
+        handleYamlChange(content);
+        setIsYamlEditorExpanded(true);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
   // Audio synthesizer for authentic PagerDuty chime
   const playPagerChime = useCallback(() => {
@@ -1428,6 +1446,36 @@ spec:
               <span>Deploy Pipeline to Live Cluster ({pipelineValidation.nodes.length} Nodes)</span>
             </button>
 
+            {/* Hidden File Input for Custom YAML Upload */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept=".yaml,.yml,.json,.txt"
+              className="hidden"
+            />
+
+            {/* Upload File Button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#1A1A1A] bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+              title="Upload custom .yaml or .json pipeline file from your computer"
+            >
+              <Upload className="w-4 h-4 text-[#0047AB]" />
+              <span>Upload .yaml File</span>
+            </button>
+
+            {/* Download template.yaml File Button (Direct Link & Button) */}
+            <a
+              href="/template.yaml"
+              download="template.yaml"
+              className="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#0047AB] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+              title="Download canonical template.yaml file with comprehensive comments explaining all fields"
+            >
+              <Download className="w-4 h-4 text-[#0047AB]" />
+              <span>Download template.yaml</span>
+            </a>
+
             {/* Reset Cluster to Default Baseline Button */}
             {isCustomPipelineActive && (
               <button
@@ -1727,7 +1775,7 @@ spec:
             {/* TAB 1: Live SRE Streaming Terminal */}
             {rightPaneTab === 'terminal' && (
               <div className="p-4 rounded-2xl bg-[#1A1A1A] border border-black shadow-inner flex-1 min-h-[440px] flex flex-col justify-between font-mono text-[11px] text-cyan-300 overflow-hidden">
-                <div className="space-y-2 overflow-y-auto max-h-[400px] pr-1">
+                <div ref={terminalScrollContainerRef} className="space-y-2 overflow-y-auto max-h-[400px] pr-1">
                   <div className="text-stone-400 text-[10px] pb-1 border-b border-stone-800 flex items-center justify-between">
                     <span>SARVAM SRE SENTINEL v2.4</span>
                     <span className="text-emerald-400 font-bold">STREAM ARMED</span>
@@ -1754,7 +1802,6 @@ spec:
                       {log}
                     </motion.div>
                   ))}
-                  <div ref={terminalEndRef} />
                 </div>
 
                 <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-400 flex items-center justify-between">

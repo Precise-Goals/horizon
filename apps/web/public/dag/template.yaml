@@ -1,0 +1,173 @@
+# ==============================================================================
+# HORIZON AUTONOMOUS RECOVERY ENGINE — CANONICAL DAG PIPELINE SPECIFICATION
+# API Version: horizon.recovery.io/v1alpha1
+# Schema Standard: Open Container Resilience Manifest & Kahn Topological DAG
+# Blockchain Governance: MST Blockchain Testnet (Chain ID 91562037)
+# ==============================================================================
+#
+# INSTRUCTIONS FOR DEPLOYMENT:
+# 1. Edit this file with your system's nodes and dependency relationships.
+# 2. Upload or paste this YAML directly into the Horizon Observability & Verification Hub.
+# 3. Horizon parses the graph, validates acyclic correctness via Kahn's algorithm O(V+E),
+#    calculates downstream blast radius for every node, and mounts it into live telemetry.
+# 4. Simulate failures on any node to verify autonomous self-healing, PagerDuty alerts,
+#    and 7-stage cryptographic SHA-256 Merkle root anchoring.
+# ==============================================================================
+
+apiVersion: horizon.recovery.io/v1alpha1
+kind: AutonomousRecoveryPipeline
+
+metadata:
+  name: enterprise-resilience-mesh
+  environment: production
+  description: "Mission-critical 5-tier microservices DAG with automated state failover, session hydration, and EIP-712 governance"
+  version: "1.0.0"
+
+spec:
+  governanceGate:
+    required: true
+    standard: "EIP-712"
+    chainId: 91562037
+    contract: "0x3EDad230dCFc6Dd3C357490b9feDa49639646BB7"
+
+  nodes:
+    # --------------------------------------------------------------------------
+    # TIER 0: FOUNDATIONAL STATE STORE (PRIMARY DATABASE)
+    # --------------------------------------------------------------------------
+    - id: db-primary
+      name: "PostgreSQL Primary Cluster (Multi-AZ)"
+      type: database
+      dependencies: []
+      healthProbe:
+        protocol: SQL_PING
+        endpoint: "SELECT 1;"
+        port: 5432
+        timeoutMs: 1500
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: database_failover
+        rollbackStrategy: read_replica_promotion
+        requiresApproval: true
+
+    # --------------------------------------------------------------------------
+    # TIER 1A: DISTRIBUTED IN-MEMORY CACHE
+    # --------------------------------------------------------------------------
+    - id: redis-cache
+      name: "Redis Distributed Session & Query Cache"
+      type: cache
+      dependencies:
+        - db-primary
+      healthProbe:
+        protocol: TCP_PING
+        endpoint: "PING"
+        port: 6379
+        timeoutMs: 500
+        intervalSeconds: 3
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: cache_purge
+        rollbackStrategy: warm_cache_hydration
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 1B: EVENT MESSAGE BROKER
+    # --------------------------------------------------------------------------
+    - id: kafka-queue
+      name: "Kafka Order & CDC Event Stream Broker"
+      type: queue
+      dependencies:
+        - db-primary
+      healthProbe:
+        protocol: TCP_PING
+        port: 9092
+        timeoutMs: 1000
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: consumer_group_rebalance
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 2A: AUTHENTICATION & IDENTITY SERVICE
+    # --------------------------------------------------------------------------
+    - id: auth-service
+      name: "OAuth2 & JWT Identity Microservice"
+      type: application
+      dependencies:
+        - db-primary
+        - redis-cache
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/health"
+        port: 8081
+        timeoutMs: 800
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: automated_circuit_breaker
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 2B: ASYNC WORKER SERVICE
+    # --------------------------------------------------------------------------
+    - id: payment-worker
+      name: "Payment Settlement & Ledger Worker"
+      type: application
+      dependencies:
+        - db-primary
+        - kafka-queue
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/ready"
+        port: 8082
+        timeoutMs: 1200
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: dead_letter_queue_flush
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 3: INGRESS API EDGE GATEWAY
+    # --------------------------------------------------------------------------
+    - id: api-gateway
+      name: "Envoy API Edge Ingress Gateway"
+      type: gateway
+      dependencies:
+        - auth-service
+        - payment-worker
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/healthz"
+        port: 443
+        timeoutMs: 500
+        intervalSeconds: 2
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: dynamic_traffic_shift
+        rollbackStrategy: fallback_origin_routing
+        requiresApproval: false
+
+    # --------------------------------------------------------------------------
+    # TIER 4: CLIENT APPLICATION EDGE
+    # --------------------------------------------------------------------------
+    - id: web-frontend
+      name: "Next.js Client Storefront Application"
+      type: frontend
+      dependencies:
+        - api-gateway
+      healthProbe:
+        protocol: HTTP_GET
+        endpoint: "/api/health"
+        port: 3000
+        timeoutMs: 600
+        intervalSeconds: 5
+        failureThreshold: 3
+      recoveryPolicy:
+        playbook: service_restart
+        rollbackStrategy: static_maintenance_page_fallback
+        requiresApproval: false
