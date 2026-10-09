@@ -424,11 +424,11 @@
   -webkit-background-clip: text;
   background-clip: text;
 
-  background-position: 60% 50%;
+  background-position: 67% 45%;
   background-size: cover;
   background-repeat: no-repeat;
   /* 3. Hide original text color */
-  filter: brightness(0.9);
+  filter: brightness(0.9) contrast(2.5) drop-shadow(0px 0px 1rem #46454540);
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
@@ -441,7 +441,19 @@ h1.text-\[17vw\].sm\:text-\[16vw\].md\:text-\[15vw\].lg\:text-\[14vw\].font-blac
   background: url(/public/horizon.jpg);
   background-clip: text;
   object-fit: cover;
-  background-position: 60% 50%;
+  background-position: 40% 60%;
   background-size: cover;
-  filter: brightness(0.95) drop-shadow(0px 0px 7rem #092192);
+  filter: brightness(0.95) contrast(2.5) drop-shadow(0px 0px 7rem #092192);
+}
+.minimalblankscreen.text-center.space-y-2.mb-5.sm\:mb-7.shrink-0 {
+  margin-top: 9%;
+}
+h1.bblacnkherotit.text-3xl.sm\:text-4xl.font-black.text-\[\#1A1A1A\].tracking-tight.uppercase.font-sans {
+  font-size: 5rem;
+  color: transparent;
+  background: url(/public/horizon.jpg);
+  background-size: cover;
+  background-position: 60% 49%;
+  background-clip: text;
+  filter: brightness(0.65) contrast(2.5);
 }
