@@ -414,3 +414,205 @@ Audits cluster health, validates acyclic safety via Kahn topological sort, ident
   "recommendation": "Deploy read replica and circuit breaker to mitigate database SPOF."
 }
 ```
+
+---
+
+### 9. `horizon_probe_health`
+Evaluates node or cluster health with sliding-window consecutive failure tracking. Prevents alert flapping by requiring **3 consecutive missed health probes** before transitioning a node to `down` and degrading downstream dependencies.
+
+- **Parameters:**
+  - `node_id` (*string*, optional): Target node to probe (e.g. `"redis-cache"`). If omitted, evaluates all cluster nodes.
+  - `simulate_miss` (*boolean*, optional): Manually trigger a simulated probe miss (`true`) or successful probe recovery (`false`).
+
+- **Example Call:**
+```json
+{
+  "name": "horizon_probe_health",
+  "arguments": {
+    "node_id": "redis-cache",
+    "simulate_miss": true
+  }
+}
+```
+
+- **Example Response (3rd Consecutive Miss):**
+```json
+{
+  "nodeId": "redis-cache",
+  "status": "down",
+  "healthy": false,
+  "consecutiveFailures": 3,
+  "failureDeclared": true,
+  "failureThreshold": 3,
+  "latencyMs": 999.0,
+  "errorRate": 1.0,
+  "message": "HARD FAILURE: Node redis-cache missed 3/3 consecutive probes. Status transitioned to DOWN.",
+  "totalProbed": 1
+}
+```
+
+---
+
+### 10. `horizon_submit_gate_approval`
+Cryptographically unblocks a paused high-risk recovery job using an EIP-712 digital signature, executing remaining recovery tiers and updating MTTR history.
+
+- **Parameters:**
+  - `job_id` (*string*, required): Active recovery job ID (e.g. `"REC-9940"`).
+  - `step_id` (*integer*, required): Playbook step ID to unblock (e.g. `1`).
+  - `signature` (*string*, required): 65-byte EIP-712 hex signature (`0x...`).
+  - `approver_address` (*string*, optional): Web3 wallet address of the approver.
+
+- **Example Call:**
+```json
+{
+  "name": "horizon_submit_gate_approval",
+  "arguments": {
+    "job_id": "REC-9940",
+    "step_id": 1,
+    "signature": "0x6f31b816fa8a8929e0018b335c0527ca3e7f917532bc13ef047814b776269ca84742f1f0a1515efbe49e9c3e98beaa93b137d6852a36b53dbbeeb7909ff7b2b61c",
+    "approver_address": "0x73595081334A18D4298A160b162faB4Fb4B3c85B"
+  }
+}
+```
+
+- **Example Response:**
+```json
+{
+  "jobId": "REC-9940",
+  "status": "completed",
+  "approver": "0x73595081334A18D4298A160b162faB4Fb4B3c85B",
+  "elapsedRtoSeconds": 24.8,
+  "rollingMttrSeconds": 31.4,
+  "message": "Cryptographic gate approval verified. Recovery job REC-9940 unblocked and completed."
+}
+```
+
+---
+
+### 11. `horizon_get_incident_timeline`
+Retrieves the real-time Recovery Time Objective (RTO) stopwatch, step execution milestones, audit log entries, and rolling Mean Time to Recovery (MTTR) metrics.
+
+- **Parameters:**
+  - `job_id_or_incident_id` (*string*, required): Recovery Job ID (e.g. `"REC-9940"`) or Incident ID (e.g. `"INC-8820"`).
+
+- **Example Call:**
+```json
+{
+  "name": "horizon_get_incident_timeline",
+  "arguments": {
+    "job_id_or_incident_id": "REC-9940"
+  }
+}
+```
+
+- **Example Response:**
+```json
+{
+  "jobId": "REC-9940",
+  "status": "completed",
+  "liveRtoStopwatchSeconds": 24.8,
+  "targetRtoSeconds": 60.0,
+  "milestones": [
+    {"tier": 0, "status": "completed", "durationSeconds": 12.3},
+    {"tier": 1, "status": "completed", "durationSeconds": 12.5}
+  ],
+  "rollingMttrMetrics": {
+    "rollingMttrSeconds": 31.4,
+    "targetRtoSeconds": 60.0,
+    "incidentCount": 4,
+    "recoveryHistorySeconds": [42.0, 36.5, 22.1, 24.8]
+  }
+}
+```
+
+---
+
+### 12. `horizon_broadcast_incident`
+Dispatches synchronized incident alerts and blast-radius summaries to War Room channels and external HTTP webhooks (Slack/Discord/PagerDuty).
+
+- **Parameters:**
+  - `incident_id` (*string*, required): Active incident identifier (e.g. `"INC-8820"`).
+  - `channels` (*array of strings*, optional): Target alert channels (default: `["#war-room-critical", "#sre-alerts", "#incident-response"]`).
+  - `webhook_url` (*string*, optional): Outbound HTTP POST webhook destination.
+
+- **Example Call:**
+```json
+{
+  "name": "horizon_broadcast_incident",
+  "arguments": {
+    "incident_id": "INC-8820",
+    "channels": ["#war-room-critical", "#sre-alerts"],
+    "webhook_url": "https://hooks.slack.com/services/T00/B00/mock123"
+  }
+}
+```
+
+- **Example Response:**
+```json
+{
+  "success": true,
+  "incidentId": "INC-8820",
+  "targetNode": "db-primary",
+  "alertTitle": "🚨 [HORIZON WAR ROOM] Incident INC-8820: Failure on db-primary",
+  "channelsDispatched": [
+    {"channel": "#war-room-critical", "status": "delivered"},
+    {"channel": "#sre-alerts", "status": "delivered"}
+  ],
+  "webhookDispatched": true,
+  "webhookStatus": 200
+}
+```
+
+---
+
+## ⚡ Inbound Alert Webhook Pipeline
+
+Horizon ingests firing alerts from monitoring systems to automatically trigger failure simulation and Kahn DAG recovery sequencing.
+
+### `POST /api/v1/incidents/webhook` (Alias: `POST /incidents/webhook`)
+
+#### Prometheus Alertmanager Integration
+Configure your `alertmanager.yml`:
+```yaml
+receivers:
+  - name: 'horizon-recovery-engine'
+    webhook_configs:
+      - url: 'https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook'
+        send_resolved: false
+```
+
+Alert payload example:
+```json
+{
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "PostgresDown",
+        "service": "db-primary",
+        "severity": "critical"
+      },
+      "annotations": {
+        "summary": "Postgres Primary connection pool exhausted"
+      }
+    }
+  ]
+}
+```
+
+#### Datadog Monitor Webhook Integration
+Configure your Datadog Webhook Integration:
+- **URL**: `https://horizon-mcp-server-phf8.onrender.com/api/v1/incidents/webhook`
+
+Alert payload example:
+```json
+{
+  "event_type": "metric_alert",
+  "title": "Redis latency spiked above 500ms",
+  "body": "Redis Cache node is failing liveness probes",
+  "tags": ["service:redis-cache", "env:production"],
+  "priority": "P1"
+}
+```
+

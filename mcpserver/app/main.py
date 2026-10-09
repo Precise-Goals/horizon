@@ -14,8 +14,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from sse_starlette.sse import EventSourceResponse
 
 from app.config import settings
-from app.models import JsonRpcRequest, JsonRpcResponse, JsonRpcErrorDetails
+from app.models import JsonRpcRequest, JsonRpcResponse, JsonRpcErrorDetails, WebhookIncidentPayload
 from app.tools.registry import get_tool_definitions, execute_tool
+from app.engine.topology import topology_engine
 
 # Configure structured logging
 logging.basicConfig(
@@ -144,6 +145,131 @@ async def health_check():
         "tools_registered": len(get_tool_definitions()),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+# ==============================================================================
+# Inbound Alertmanager / Datadog Webhook Pipeline
+# ==============================================================================
+
+@app.post("/api/v1/incidents/webhook", tags=["Inbound Webhook Pipeline"])
+@app.post("/incidents/webhook", tags=["Inbound Webhook Pipeline"])
+async def inbound_incident_webhook(request: Request):
+    """
+    Inbound webhook receiver for Datadog alerts and Prometheus Alertmanager notifications.
+    Ingests firing alerts, detects affected topology nodes, and automatically triggers
+    the Kahn DAG autonomous recovery pipeline.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid JSON payload in webhook request.",
+        )
+
+    # 1. Parse target node ID and incident attributes from payload
+    target_node_id: Optional[str] = None
+    source = "alertmanager"
+    reason = "Alertmanager firing notification"
+    strategy = "automatic"
+    auto_approve = True
+
+    if isinstance(body, dict):
+        if body.get("target_node_id"):
+            target_node_id = body["target_node_id"]
+        elif body.get("node_id"):
+            target_node_id = body["node_id"]
+        elif body.get("service"):
+            target_node_id = body["service"]
+
+        if body.get("strategy"):
+            strategy = body["strategy"]
+
+        if "auto_approve_low_risk" in body:
+            auto_approve = bool(body["auto_approve_low_risk"])
+
+        # Check Prometheus Alertmanager structure
+        if "alerts" in body and isinstance(body["alerts"], list) and len(body["alerts"]) > 0:
+            source = "prometheus_alertmanager"
+            first_alert = body["alerts"][0]
+            labels = first_alert.get("labels", {})
+            annotations = first_alert.get("annotations", {})
+            reason = (
+                annotations.get("summary")
+                or annotations.get("description")
+                or labels.get("alertname")
+                or reason
+            )
+
+            # Match node identifier from labels
+            for candidate_key in ["node_id", "node", "instance", "service", "host", "target"]:
+                val = labels.get(candidate_key)
+                if val:
+                    clean_val = str(val).split(":")[0]
+                    if topology_engine.get_node(clean_val):
+                        target_node_id = clean_val
+                        break
+                    elif not target_node_id:
+                        target_node_id = clean_val
+
+        # Check Datadog structure
+        elif any(k in body for k in ["event_type", "alert_type", "tags"]):
+            source = "datadog"
+            reason = body.get("title") or body.get("body") or "Datadog monitor alert"
+            tags = body.get("tags", [])
+            for t in tags:
+                if isinstance(t, str) and (":" in t):
+                    prefix, val = t.split(":", 1)
+                    if prefix in ["service", "node", "host"]:
+                        if topology_engine.get_node(val):
+                            target_node_id = val
+                            break
+
+        if not reason and body.get("reason"):
+            reason = body["reason"]
+
+    # If target_node_id is still unresolved, scan payload text for known node IDs
+    if not target_node_id or not topology_engine.get_node(target_node_id):
+        all_nodes = [n.id for n in topology_engine.get_nodes()]
+        raw_text = json.dumps(body).lower()
+        for nid in all_nodes:
+            if nid in raw_text:
+                target_node_id = nid
+                break
+
+    # Fallback to degraded/down node or primary database
+    if not target_node_id or not topology_engine.get_node(target_node_id):
+        down_nodes = [n.id for n in topology_engine.get_nodes() if n.status in ["down", "degraded"]]
+        target_node_id = down_nodes[0] if down_nodes else "db-primary"
+
+    logger.info(f"Inbound alert ingested from {source}. Target node: {target_node_id}. Trigger reason: {reason}")
+
+    # Inject failure on target node if currently healthy
+    node = topology_engine.get_node(target_node_id)
+    if node and node.status == "healthy":
+        topology_engine.simulate_failure(target_node_id, reason=reason)
+
+    # Trigger Kahn DAG autonomous recovery pipeline
+    recovery_result = topology_engine.trigger_recovery(
+        target_node_id=target_node_id,
+        auto_approve_low_risk=auto_approve,
+        strategy=strategy,
+    )
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "status": "incident_ingested",
+            "source": source,
+            "targetNode": target_node_id,
+            "reason": reason,
+            "recoveryJobId": recovery_result.get("jobId"),
+            "strategy": recovery_result.get("strategy", strategy),
+            "requiresGateApproval": recovery_result.get("requiresGateApproval", False),
+            "recoveryPlan": recovery_result,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        },
+    )
 
 
 # ==============================================================================
@@ -363,6 +489,10 @@ async def dashboard():
                 <div class="card">
                     <div class="card-title">Direct JSON-RPC Endpoint</div>
                     <div class="card-value">POST /mcp</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">Inbound Webhook Pipeline</div>
+                    <div class="card-value">POST /api/v1/incidents/webhook</div>
                 </div>
                 <div class="card">
                     <div class="card-title">Health Check Probe</div>

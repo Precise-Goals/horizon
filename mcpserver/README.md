@@ -63,7 +63,7 @@ Open [http://localhost:10000](http://localhost:10000) to view the developer dash
 ```bash
 pytest tests -v
 ```
-All 16 unit and integration tests run in ~10 seconds.
+All 40 unit and integration tests run in ~12 seconds with 100% pass rate.
 
 ---
 

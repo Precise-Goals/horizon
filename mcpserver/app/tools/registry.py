@@ -44,7 +44,7 @@ MCP_TOOLS: List[McpToolDefinition] = [
     ),
     McpToolDefinition(
         name="horizon_trigger_recovery",
-        description="Trigger an autonomous multi-tier recovery sequence executed in Kahn topological bottom-up order. Automatically flags human-in-the-loop approval gates for stateful or high-blast-radius nodes.",
+        description="Trigger an autonomous multi-tier recovery sequence executed in Kahn topological bottom-up order with playbooks for database failover, service restart, or backup restoration. Automatically flags human-in-the-loop approval gates for stateful or high-blast-radius nodes.",
         inputSchema=McpToolParameter(
             type="object",
             properties={
@@ -56,6 +56,12 @@ MCP_TOOLS: List[McpToolDefinition] = [
                     "type": "boolean",
                     "description": "Whether to automatically approve and execute low-risk recovery steps",
                     "default": True
+                },
+                "strategy": {
+                    "type": "string",
+                    "description": "Recovery playbook strategy: 'automatic', 'database_failover', 'service_restart', or 'restore_from_backup'",
+                    "enum": ["automatic", "database_failover", "service_restart", "restore_from_backup"],
+                    "default": "automatic"
                 }
             },
             required=["target_node_id"]
@@ -143,7 +149,89 @@ MCP_TOOLS: List[McpToolDefinition] = [
             },
             required=[]
         )
-    )
+    ),
+    McpToolDefinition(
+        name="horizon_probe_health",
+        description="Evaluates node and cluster health using a 3-consecutive-miss sliding window threshold before declaring a hard failure.",
+        inputSchema=McpToolParameter(
+            type="object",
+            properties={
+                "node_id": {
+                    "type": "string",
+                    "description": "Optional identifier of a specific node to probe. If omitted, probes all cluster nodes."
+                },
+                "simulate_miss": {
+                    "type": "boolean",
+                    "description": "Simulate a probe timeout or missed heartbeat to evaluate the consecutive failure threshold",
+                    "default": False
+                }
+            },
+            required=[]
+        )
+    ),
+    McpToolDefinition(
+        name="horizon_submit_gate_approval",
+        description="Submits a cryptographic EIP-712 signature to unblock a paused recovery job gate and complete all downstream tiers.",
+        inputSchema=McpToolParameter(
+            type="object",
+            properties={
+                "job_id": {
+                    "type": "string",
+                    "description": "Recovery job identifier or incident identifier currently paused awaiting approval"
+                },
+                "step_id": {
+                    "type": "integer",
+                    "description": "Playbook step number being authorized (e.g., 1)"
+                },
+                "signature": {
+                    "type": "string",
+                    "description": "Hex cryptographic signature (0x...) authorizing execution of the gated tier"
+                },
+                "approver_address": {
+                    "type": "string",
+                    "description": "Optional Ethereum/MST wallet address authorizing the gate (e.g. '0x73595081334A18D4298A160b162faB4Fb4B3c85B')"
+                }
+            },
+            required=["job_id", "step_id", "signature"]
+        )
+    ),
+    McpToolDefinition(
+        name="horizon_get_incident_timeline",
+        description="Retrieves recovery timeline, live RTO stopwatch seconds, step milestones, and rolling MTTR metrics.",
+        inputSchema=McpToolParameter(
+            type="object",
+            properties={
+                "job_id_or_incident_id": {
+                    "type": "string",
+                    "description": "Identifier of the recovery job or incident to inspect"
+                }
+            },
+            required=["job_id_or_incident_id"]
+        )
+    ),
+    McpToolDefinition(
+        name="horizon_broadcast_incident",
+        description="Dispatches War Room notifications to incident channels and outbound HTTP webhooks (Slack/Discord).",
+        inputSchema=McpToolParameter(
+            type="object",
+            properties={
+                "incident_id": {
+                    "type": "string",
+                    "description": "Identifier of the incident to broadcast"
+                },
+                "channels": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of Slack/Discord channels or teams to alert (e.g. ['#war-room-critical', '#sre-alerts'])"
+                },
+                "webhook_url": {
+                    "type": "string",
+                    "description": "Optional outbound HTTP webhook endpoint URL for external alert routing"
+                }
+            },
+            required=["incident_id"]
+        )
+    ),
 ]
 
 
@@ -197,7 +285,12 @@ async def execute_tool(name: str, arguments: Optional[Dict[str, Any]] = None) ->
                     isError=True,
                 )
             auto_approve = args.get("auto_approve_low_risk", True)
-            result = topology_engine.trigger_recovery(target_node_id, auto_approve_low_risk=auto_approve)
+            strategy = args.get("strategy", "automatic")
+            result = topology_engine.trigger_recovery(
+                target_node_id,
+                auto_approve_low_risk=auto_approve,
+                strategy=strategy,
+            )
             return McpToolResult(
                 content=[McpTextContent(type="text", text=json.dumps(result, indent=2))],
                 isError=False,
@@ -306,6 +399,68 @@ async def execute_tool(name: str, arguments: Optional[Dict[str, Any]] = None) ->
 
             return McpToolResult(
                 content=[McpTextContent(type="text", text=json.dumps(diagnosis, indent=2))],
+                isError=False,
+            )
+
+        elif name == "horizon_probe_health":
+            node_id = args.get("node_id")
+            simulate_miss = args.get("simulate_miss")
+            result = topology_engine.probe_cluster_health(node_id=node_id, simulate_miss=simulate_miss)
+            return McpToolResult(
+                content=[McpTextContent(type="text", text=json.dumps(result, indent=2))],
+                isError=False,
+            )
+
+        elif name == "horizon_submit_gate_approval":
+            job_id = args.get("job_id") or args.get("incident_id") or args.get("job_id_or_incident_id")
+            step_id = args.get("step_id")
+            signature = args.get("signature")
+            if not job_id or step_id is None or not signature:
+                return McpToolResult(
+                    content=[McpTextContent(type="text", text="Error: 'job_id', 'step_id', and 'signature' are required.")],
+                    isError=True,
+                )
+            approver = args.get("approver_address")
+            result = topology_engine.submit_gate_approval(
+                job_id=job_id,
+                step_id=int(step_id),
+                signature=signature,
+                approver_address=approver,
+            )
+            return McpToolResult(
+                content=[McpTextContent(type="text", text=json.dumps(result, indent=2))],
+                isError=False,
+            )
+
+        elif name == "horizon_get_incident_timeline":
+            job_id_or_incident_id = args.get("job_id_or_incident_id") or args.get("job_id") or args.get("incident_id")
+            if not job_id_or_incident_id:
+                return McpToolResult(
+                    content=[McpTextContent(type="text", text="Error: 'job_id_or_incident_id' is required.")],
+                    isError=True,
+                )
+            result = topology_engine.get_incident_timeline(job_id_or_incident_id)
+            return McpToolResult(
+                content=[McpTextContent(type="text", text=json.dumps(result, indent=2))],
+                isError=False,
+            )
+
+        elif name == "horizon_broadcast_incident":
+            incident_id = args.get("incident_id")
+            if not incident_id:
+                return McpToolResult(
+                    content=[McpTextContent(type="text", text="Error: 'incident_id' is required.")],
+                    isError=True,
+                )
+            channels = args.get("channels")
+            webhook_url = args.get("webhook_url")
+            result = await topology_engine.broadcast_incident_alert(
+                incident_id=incident_id,
+                channels=channels,
+                webhook_url=webhook_url,
+            )
+            return McpToolResult(
+                content=[McpTextContent(type="text", text=json.dumps(result, indent=2))],
                 isError=False,
             )
 
