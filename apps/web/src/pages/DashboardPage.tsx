@@ -231,7 +231,7 @@ export const DashboardPage: React.FC = () => {
       {/* ── Infrastructure Status Strip (Features Cobalt Blue Patch in between) ── */}
       <motion.div variants={itemVariants} className="horizon-infra-strip grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* 1. Docker Agent / Hybrid Engine (Porcelain Card) */}
-        <div className="skeuo-card p-5 flex items-center gap-3.5">
+        <div className="skeuo-card rounded-[2rem] p-5 flex items-center gap-3.5">
           <div
             className={cn(
               'p-2.5 rounded-xl border flex-shrink-0',
@@ -265,7 +265,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* 2. MST Blockchain (COBALT BLUE BACKGROUND PATCH IN BETWEEN) */}
-        <div className="cobalt-patch p-5 flex items-center justify-between gap-3 text-white">
+        <div className="cobalt-patch rounded-[2rem] p-5 flex items-center justify-between gap-3 text-white">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="p-2.5 rounded-xl bg-white/15 border border-white/20 text-white flex-shrink-0">
               <ShieldCheck className="w-4 h-4" aria-label="MST Blockchain" />
@@ -295,7 +295,7 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* 3. Dependency DAG (Porcelain Card) */}
-        <div className="skeuo-card p-5 flex items-center justify-between gap-3">
+        <div className="skeuo-card rounded-[2rem] p-5 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="p-2.5 rounded-xl bg-[#EBF7EE] border border-[#0F8E52]/25 text-[#0F8E52] flex-shrink-0">
               <Network className="w-4 h-4" aria-label="Topology DAG" />

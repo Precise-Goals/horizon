@@ -56,7 +56,7 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
     <motion.article
       whileHover={{ y: -2, transition: { duration: 0.18 } }}
       className={cn(
-        'horizon-metric-widget skeuo-card p-5 flex flex-col justify-between gap-4 overflow-hidden',
+        'horizon-metric-widget skeuo-card rounded-[2rem] sm:rounded-[2.25rem] p-5 flex flex-col justify-between gap-4 overflow-hidden',
         className
       )}
       aria-label={`Metric: ${title}`}

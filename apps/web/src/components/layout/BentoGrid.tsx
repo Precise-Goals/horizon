@@ -8,3 +8,11 @@ export const BentoGrid = ({ className, children }: { className?: string, childre
     </div>
   );
 };
+
+export const BentoCard = ({ className, children }: { className?: string, children: React.ReactNode }) => {
+  return (
+    <div className={cn("skeuo-card rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 flex flex-col justify-between overflow-hidden", className)}>
+      {children}
+    </div>
+  );
+};

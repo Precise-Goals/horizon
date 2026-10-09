@@ -149,12 +149,12 @@
    TACTILE SKEUOMORPHISM SURFACES & CARDS
    ===================================================================== */
 
-/* Porcelain Skeuomorphic Card */
+/* Porcelain Skeuomorphic Card & Bento Grid Cards */
 .skeuo-card,
 .bento-card {
   background: #FFFFFF;
   border: 1px solid rgba(26, 26, 26, 0.11);
-  border-radius: 1.25rem;
+  border-radius: 2.25rem;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
     0 1px 3px rgba(26, 26, 26, 0.05),
@@ -175,7 +175,7 @@
 .skeuo-well {
   background: #F4EBE0;
   border: 1px solid rgba(26, 26, 26, 0.10);
-  border-radius: 0.875rem;
+  border-radius: 1.5rem;
   box-shadow: 
     inset 0 2px 4px rgba(26, 26, 26, 0.07),
     inset 0 1px 2px rgba(26, 26, 26, 0.04),
@@ -186,7 +186,7 @@
 .cobalt-patch {
   background: linear-gradient(145deg, #003380 0%, #0047AB 55%, #00398A 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 1.5rem;
+  border-radius: 2.5rem;
   color: #FFF8F0;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
@@ -345,4 +345,22 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #555555;
+}
+
+.titlehero{
+    font-size: 12rem;
+    /* 1. Set background first */
+    background: url(../public/horizon.jpg);
+    
+    /* 2. Apply clip properties */
+    -webkit-background-clip: text;
+    background-clip: text;
+    
+    background-position: 60% 34%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    /* 3. Hide original text color */
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+
 }

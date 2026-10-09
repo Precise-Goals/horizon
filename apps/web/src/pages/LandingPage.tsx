@@ -93,23 +93,11 @@ export const LandingPage: React.FC = () => {
         aria-label="Horizon Hero"
       >
         <div className="max-w-5xl mx-auto px-5 sm:px-8 space-y-7">
-          {/* Tactile Hardware Status Pill */}
-          <motion.div
-            {...fadeUpProps(0)}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-[rgba(26,26,26,0.14)] shadow-[inset_0_1px_0_#FFFFFF,0_2px_6px_rgba(26,26,26,0.06)]"
-          >
-            <span className="skeuo-led skeuo-led-healthy animate-pulse" />
-            <span className="text-[11px] font-bold text-[#1A1A1A] tracking-wider uppercase">
-              Autonomous Cloud Resilience
-            </span>
-            <span className="horizon-badge text-[10px] text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20">
-              MST Testnet (91562037)
-            </span>
-          </motion.div>
+         
 
           {/* Monumental Inky Black Typography */}
           <motion.div {...fadeUpProps(0.06)} className="space-y-3">
-            <h1 className="text-display font-black text-[#1A1A1A] uppercase tracking-tight leading-none drop-shadow-sm select-none">
+            <h1 className="text-display font-black uppercase tracking-tight leading-none drop-shadow-sm select-none titlehero">
               Horizon
             </h1>
             <p className="text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.2em] uppercase text-[#0047AB]">
@@ -153,24 +141,7 @@ export const LandingPage: React.FC = () => {
             </Link>
           </motion.div>
 
-          {/* Hardware Telemetry Strip Well */}
-          <motion.div
-            {...fadeUpProps(0.24)}
-            className="skeuo-well inline-flex flex-wrap items-center justify-center gap-5 px-5 py-2.5 text-xs font-mono text-[#555555]"
-          >
-            <div className="flex items-center gap-2">
-              <span className="skeuo-led skeuo-led-healthy" />
-              <span className="font-bold text-[#1A1A1A]">7 Services Monitored</span>
-            </div>
-            <span>&bull;</span>
-            <div>
-              Target MTTR: <span className="text-[#0F8E52] font-black">&lt; 3.8m</span>
-            </div>
-            <span>&bull;</span>
-            <div>
-              Consensus: <span className="text-[#0047AB] font-bold">MST Testnet</span>
-            </div>
-          </motion.div>
+         {/* <img src="horri.png" alt="Horizon" className='horri' /> */}
         </div>
 
         {/* ============================================================
@@ -289,7 +260,7 @@ export const LandingPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Bento Card 1: DAG Engine (Spans 2 columns) */}
-            <div className="md:col-span-2 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+            <div className="md:col-span-2 skeuo-card rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-9 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 rounded-2xl bg-[#EBF1FA] border border-[#0047AB]/25 flex items-center justify-center text-[#0047AB]">
@@ -327,7 +298,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Bento Card 2: BridgeKey Blockchain Security */}
-            <div className="md:col-span-1 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+            <div className="md:col-span-1 skeuo-card rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-9 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 rounded-2xl bg-[#F5F3FF] border border-[#7C3AED]/25 flex items-center justify-center text-[#7C3AED]">
@@ -362,7 +333,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Bento Card 3: Sarvam AI Copilot */}
-            <div className="md:col-span-1 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+            <div className="md:col-span-1 skeuo-card rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-9 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 rounded-2xl bg-[#EBF1FA] border border-[#0047AB]/25 flex items-center justify-center text-[#0047AB]">
@@ -397,7 +368,7 @@ export const LandingPage: React.FC = () => {
             </div>
 
             {/* Bento Card 4: Human Approval Gates (Spans 2 columns) */}
-            <div className="md:col-span-2 skeuo-card p-7 sm:p-9 flex flex-col justify-between space-y-6">
+            <div className="md:col-span-2 skeuo-card rounded-[2rem] sm:rounded-[2.5rem] p-7 sm:p-9 flex flex-col justify-between space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="w-12 h-12 rounded-2xl bg-[#FEF6E7] border border-[#D97706]/25 flex items-center justify-center text-[#D97706]">
@@ -447,7 +418,7 @@ export const LandingPage: React.FC = () => {
             <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
               System Architecture & Methodology
             </span>
-            <h2 id="lifecycle-heading" className="text-hero text-white">
+            <h2 id="lifecycle-heading" className="text-hero-hi text-white">
               The 5-Phase Autonomous Recovery Lifecycle
             </h2>
             <p className="text-sm sm:text-base text-[#D0E2FF]">
@@ -462,7 +433,7 @@ export const LandingPage: React.FC = () => {
               return (
                 <div
                   key={phase.step}
-                  className="p-5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-md flex flex-col justify-between space-y-3 shadow-lg"
+                  className="p-5 rounded-[1.75rem] sm:rounded-[2rem] bg-white/10 border border-white/20 backdrop-blur-md flex flex-col justify-between space-y-3 shadow-lg"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
@@ -484,7 +455,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           {/* Technical Specifications Matrix Inside Cobalt Patch */}
-          <div className="rounded-3xl border border-white/20 bg-[#003680]/90 p-7 sm:p-9 space-y-6 shadow-2xl">
+          <div className="rounded-[2.5rem] sm:rounded-[3rem] border border-white/20 bg-[#003680]/90 p-7 sm:p-9 space-y-6 shadow-2xl">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-white/15">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-white">
@@ -504,7 +475,7 @@ export const LandingPage: React.FC = () => {
               {TECH_SPECS.map((spec) => (
                 <div
                   key={spec.label}
-                  className="p-4 sm:p-5 rounded-2xl bg-white/10 border border-white/15 space-y-1 font-mono"
+                  className="p-4 sm:p-5 rounded-[1.75rem] bg-white/10 border border-white/15 space-y-1 font-mono"
                 >
                   <div className="text-[11px] font-bold text-[#C8DCFF] uppercase tracking-wider">
                     {spec.label}
@@ -546,7 +517,7 @@ export const LandingPage: React.FC = () => {
             {FAQS.map((faq, idx) => (
               <div
                 key={idx}
-                className="skeuo-card overflow-hidden"
+                className="skeuo-card rounded-[1.75rem] sm:rounded-[2rem] overflow-hidden"
               >
                 <button
                   type="button"
