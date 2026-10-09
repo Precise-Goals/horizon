@@ -368,13 +368,17 @@ async def dashboard():
                     <div class="card-title">Health Check Probe</div>
                     <div class="card-value">GET /health</div>
                 </div>
+                <div class="card">
+                    <div class="card-title">Static Outbound Egress CIDRs</div>
+                    <div class="card-value" style="font-size: 12px; color: #a7f3d0;">74.220.52.0/24<br>74.220.60.0/24</div>
+                </div>
             </div>
 
             <h3 style="font-size: 18px; margin-top: 32px; margin-bottom: 14px;">Cursor &amp; Claude Desktop Configuration</h3>
             <pre><code>{{
   "mcpServers": {{
     "horizon-recovery": {{
-      "url": "https://&lt;your-render-app&gt;.onrender.com/sse",
+      "url": "https://horizon-mcp-server-phf8.onrender.com/sse",
       "transport": "sse"
     }}
   }}

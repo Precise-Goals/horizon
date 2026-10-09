@@ -32,9 +32,22 @@ https://www.npmjs.com/package/@mstblockchain/mst-vibe-kit
 
 
 
-MCP Endpoint
+MCP Endpoint (MST Default)
 
 https://mcp.mstblockchain.com/sse
+
+
+
+Horizon Autonomous Recovery MCP Server (Live on Render)
+
+https://horizon-mcp-server-phf8.onrender.com
+SSE Transport: https://horizon-mcp-server-phf8.onrender.com/sse
+Direct HTTP JSON-RPC: https://horizon-mcp-server-phf8.onrender.com/mcp
+Health Check: https://horizon-mcp-server-phf8.onrender.com/health
+
+Render Outbound Static IP Ranges (Egress Firewall Whitelist):
+74.220.52.0/24
+74.220.60.0/24
 
 
 

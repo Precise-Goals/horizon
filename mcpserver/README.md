@@ -67,14 +67,19 @@ All 16 unit and integration tests run in ~10 seconds.
 
 ---
 
-## ☁️ Deployment on Render Free Tier
+## ☁️ Live Production Deployment (Render Free Tier)
+
+The server is currently running live in production on Render:
+👉 **`https://horizon-mcp-server-phf8.onrender.com`**
+
+- **Health Probe**: `https://horizon-mcp-server-phf8.onrender.com/health`
+- **SSE Transport**: `https://horizon-mcp-server-phf8.onrender.com/sse`
+- **HTTP Transport**: `https://horizon-mcp-server-phf8.onrender.com/mcp`
+- **Static Outbound IP Egress (Firewall Whitelist)**:
+  - `74.220.52.0/24` (74.220.52.0 - 74.220.52.255)
+  - `74.220.60.0/24` (74.220.60.0 - 74.220.60.255)
 
 Complete deployment instructions are detailed in [**DEPLOYMENT.md**](./DEPLOYMENT.md).
-
-### 1-Click Render Blueprint:
-1. Go to [Render Dashboard](https://dashboard.render.com/) > **Blueprints**.
-2. Connect this repository and set Blueprint Path to `mcpserver/render.yaml`.
-3. Provide your `SARVAM_API_KEY` and click **Apply**.
 
 ---
 
@@ -87,7 +92,7 @@ For detailed setup instructions with Cursor, Claude Desktop, Windsurf, and cURL,
 {
   "mcpServers": {
     "horizon-recovery": {
-      "url": "https://<your-render-app>.onrender.com/sse",
+      "url": "https://horizon-mcp-server-phf8.onrender.com/sse",
       "transport": "sse"
     }
   }

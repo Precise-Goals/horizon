@@ -103,16 +103,16 @@ If you prefer immutable container builds, the repository includes a multi-stage 
 
 ---
 
-## 🩺 Verification & Health Check
+## 🩺 Live Production Endpoint & Verification
 
-Once deployment finishes, Render provides a public URL:
-`https://horizon-mcp-server-<random>.onrender.com`
+The Horizon MCP Server is deployed and running live on Render at:
+👉 **`https://horizon-mcp-server-phf8.onrender.com`**
 
 ### 1. Test Health Probe
 ```bash
-curl https://horizon-mcp-server-<random>.onrender.com/health
+curl https://horizon-mcp-server-phf8.onrender.com/health
 ```
-**Expected Response (HTTP 200):**
+**Live Production Response (HTTP 200):**
 ```json
 {
   "status": "healthy",
@@ -121,22 +121,38 @@ curl https://horizon-mcp-server-<random>.onrender.com/health
   "environment": "production",
   "active_sse_sessions": 0,
   "tools_registered": 8,
-  "timestamp": "2026-10-09T11:05:00.000000+00:00"
+  "timestamp": "2026-10-09T11:23:37.453831+00:00"
 }
 ```
 
 ### 2. View Interactive Web Dashboard
 Open your browser to:
-`https://horizon-mcp-server-<random>.onrender.com/`
+👉 [https://horizon-mcp-server-phf8.onrender.com/](https://horizon-mcp-server-phf8.onrender.com/)
 
 You will see the live developer dashboard listing all 8 registered recovery tools, copy-paste configurations, and active transport endpoints.
 
 ### 3. Test Direct MCP JSON-RPC 2.0
 ```bash
-curl -X POST https://horizon-mcp-server-<random>.onrender.com/mcp \
+curl -X POST https://horizon-mcp-server-phf8.onrender.com/mcp \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}'
 ```
+
+---
+
+## 🛡️ Enterprise Firewall Whitelisting & Outbound IP CIDR Blocks
+
+When the Horizon MCP Server on Render establishes connections to your external databases, internal VPC networks, or cloud clusters, outgoing requests originate from Render's designated static outbound IP ranges:
+
+| CIDR Block | Usable IP Range | Region | Purpose |
+| :--- | :--- | :--- | :--- |
+| `74.220.52.0/24` | `74.220.52.0` – `74.220.52.255` | Oregon (US West) | Outbound Egress Whitelist |
+| `74.220.60.0/24` | `74.220.60.0` – `74.220.60.255` | Oregon (US West) | Outbound Egress Whitelist |
+
+### Whitelisting Instructions:
+- **AWS Security Groups**: Add Inbound Rule allowing TCP port (e.g. `5432` for PostgreSQL, `6379` for Redis) from CIDRs `74.220.52.0/24` and `74.220.60.0/24`.
+- **MongoDB Atlas / Redis Cloud**: Add IP Access List entries for both CIDR blocks.
+- **Kubernetes Ingress & Cloudflare WAF**: Whitelist CIDR blocks in your firewall security policies.
 
 ---
 

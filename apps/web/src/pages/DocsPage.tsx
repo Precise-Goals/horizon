@@ -113,7 +113,7 @@ export const DocsPage: React.FC = () => {
       {
         mcpServers: {
           horizon: {
-            url: 'https://horizon-recovery.vercel.app/api/v1/mcp',
+            url: 'https://horizon-mcp-server-phf8.onrender.com/sse',
             transport: 'sse',
             headers: {
               'X-Horizon-Client': 'cursor-agent',
@@ -1071,6 +1071,83 @@ export const DocsPage: React.FC = () => {
                 </a>
               </div>
             </div>
+          {/* Live Production Server & Firewall Whitelist Card */}
+          <div className="p-5 rounded-2xl bg-white border border-[#E5D7C5] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#FAF3EA] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="text-xs font-black text-[#1A1A1A] uppercase tracking-wider">
+                  Live Production MCP Server (Render Free Tier)
+                </span>
+              </div>
+              <a
+                href="https://horizon-mcp-server-phf8.onrender.com/health"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200 hover:bg-emerald-100 transition-colors w-fit"
+              >
+                <span>Status: Healthy (8 Tools Active)</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Production SSE Stream URL</span>
+                <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
+                  <span>https://horizon-mcp-server-phf8.onrender.com/sse</span>
+                  <button
+                    onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/sse', 'prod-sse')}
+                    className="p-1 text-[#6E6258] hover:text-[#1A1A1A] ml-2 shrink-0"
+                    title="Copy URL"
+                  >
+                    {copiedKey === 'prod-sse' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#EADCC9] space-y-1">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-[#8A7B6D]">Direct JSON-RPC 2.0 URL</span>
+                <div className="flex items-center justify-between font-mono text-[11px] text-[#0047AB] font-semibold break-all">
+                  <span>https://horizon-mcp-server-phf8.onrender.com/mcp</span>
+                  <button
+                    onClick={() => copyToClipboard('https://horizon-mcp-server-phf8.onrender.com/mcp', 'prod-mcp')}
+                    className="p-1 text-[#6E6258] hover:text-[#1A1A1A] ml-2 shrink-0"
+                    title="Copy URL"
+                  >
+                    {copiedKey === 'prod-mcp' ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Firewall Egress IP Whitelist Section */}
+            <div className="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-amber-950 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-amber-700" />
+                  Enterprise Firewall Whitelist (Static Outbound Egress IPs)
+                </span>
+                <button
+                  onClick={() => copyToClipboard('74.220.52.0/24\n74.220.60.0/24', 'egress-ips')}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 hover:text-amber-950 px-2 py-0.5 rounded bg-amber-100/70"
+                >
+                  {copiedKey === 'egress-ips' ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedKey === 'egress-ips' ? 'Copied' : 'Copy CIDRs'}</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-amber-900 leading-relaxed">
+                Whitelist these Render Oregon (US West) IP blocks in your AWS Security Groups, MongoDB Atlas, or Kubernetes ingress controllers to accept authenticated recovery webhooks and database probes:
+              </p>
+              <div className="flex flex-wrap gap-2 font-mono text-[11px]">
+                <code className="px-2 py-1 rounded bg-white border border-amber-200 font-bold text-amber-950">74.220.52.0/24</code>
+                <code className="px-2 py-1 rounded bg-white border border-amber-200 font-bold text-amber-950">74.220.60.0/24</code>
+              </div>
+            </div>
+          </div>
           </section>
 
           {/* Section 2: Client Configuration with Exhaustive OS Paths */}

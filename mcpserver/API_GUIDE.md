@@ -25,7 +25,7 @@ Create or update `.cursor/mcp.json` in your project root:
 {
   "mcpServers": {
     "horizon-recovery": {
-      "url": "https://<your-app>.onrender.com/sse",
+      "url": "https://horizon-mcp-server-phf8.onrender.com/sse",
       "transport": "sse"
     }
   }
@@ -55,7 +55,7 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Appli
 {
   "mcpServers": {
     "horizon-render": {
-      "url": "https://<your-app>.onrender.com/sse",
+      "url": "https://horizon-mcp-server-phf8.onrender.com/sse",
       "transport": "sse"
     }
   }
@@ -85,7 +85,7 @@ Edit `%APPDATA%\Claude\claude_desktop_config.json` (Windows) or `~/Library/Appli
 Send JSON-RPC 2.0 requests directly to `POST /mcp` without maintaining SSE streams:
 
 ```bash
-curl -X POST https://<your-app>.onrender.com/mcp \
+curl -X POST https://horizon-mcp-server-phf8.onrender.com/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -97,6 +97,18 @@ curl -X POST https://<your-app>.onrender.com/mcp \
     }
   }'
 ```
+
+---
+
+### 4. Enterprise Firewall & Outbound Egress Whitelisting
+
+If your target databases, Kubernetes clusters, or private cloud VPCs require IP whitelisting, configure your firewalls to allow inbound connections from Render's static outbound IP ranges:
+
+```text
+74.220.52.0/24
+74.220.60.0/24
+```
+*Region: Oregon (US West). Usable IPs: 74.220.52.0 - 74.220.52.255 and 74.220.60.0 - 74.220.60.255.*
 
 ---
 
