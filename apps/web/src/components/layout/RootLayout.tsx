@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Navbar } from './Navbar';
 import { Footer } from './Footer';
 import { OnboardingGate } from '../auth/OnboardingGate';
+import { cn } from '../../lib/utils';
 
 /**
  * RootLayout — Minimalist, Centered, SRE Command Layout.
@@ -15,6 +16,7 @@ import { OnboardingGate } from '../auth/OnboardingGate';
  */
 export const RootLayout: React.FC = () => {
   const location = useLocation();
+  const isPatents = location.pathname.startsWith('/patents') || location.pathname === '/governance/patents';
 
   return (
     <OnboardingGate>
@@ -36,7 +38,14 @@ export const RootLayout: React.FC = () => {
 
         {/* Centered Main Stage */}
         <main className="horizon-main-content flex-1 w-full relative z-10 flex flex-col items-center">
-          <div className="horizon-content-wrapper max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 w-full">
+          <div
+            className={cn(
+              'horizon-content-wrapper mx-auto w-full transition-all',
+              isPatents
+                ? 'max-w-[1400px] px-2 sm:px-5 py-4 sm:py-6'
+                : 'max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12'
+            )}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}
