@@ -42,4 +42,28 @@ describe('Sarvam AI SRE Copilot & Domain Guardrail Suite', () => {
     expect(status.mode).toBe('IN_MEMORY_SIMULATOR');
     expect(status.connected).toBe(false);
   });
+
+  it('accepts multilingual technical questions in Hindi, Spanish, French, and Hinglish', () => {
+    expect(sarvamAgent.isDomainQuery('कहान एल्गोरिदम कैसे काम करता है?')).toBe(true);
+    expect(sarvamAgent.isDomainQuery('डाटाबेस रिकवरी और क्लस्टर डाउनटाइम कैसे रोकें?')).toBe(true);
+    expect(sarvamAgent.isDomainQuery('¿Cómo funciona la recuperación de microservicios?')).toBe(true);
+    expect(sarvamAgent.isDomainQuery('Comment fonctionne la reprise après panne de base de données?')).toBe(true);
+    expect(sarvamAgent.isDomainQuery('Microservices failover kaise hota hai?')).toBe(true);
+  });
+
+  it('rejects multilingual out-of-domain inquiries (cooking, sports, jokes in other languages)', () => {
+    expect(sarvamAgent.isDomainQuery('खाना कैसे बनाते हैं रेसिपी बताओ')).toBe(false);
+    expect(sarvamAgent.isDomainQuery('receta para cocinar pizza en casa')).toBe(false);
+    expect(sarvamAgent.isDomainQuery('quel temps fait-il météo aujourd hui')).toBe(false);
+  });
+
+  it('askSreAdvisor returns fluent multilingual SRE responses', async () => {
+    const hindiRes = await sarvamAgent.askSreAdvisor('माइक्रोसर्विसेज रिकवरी कैसे होती है?');
+    expect(hindiRes).toContain('माइक्रोसर्विसेज');
+    expect(hindiRes.endsWith('।') || hindiRes.endsWith('.')).toBe(true);
+
+    const esRes = await sarvamAgent.askSreAdvisor('¿Cómo funciona la recuperación de microservicios?');
+    expect(esRes).toContain('recuperación');
+    expect(esRes.endsWith('.')).toBe(true);
+  });
 });

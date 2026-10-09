@@ -104,12 +104,28 @@ const ASK_SUGGESTIONS: PromptSuggestion[] = [
     icon: Sparkles,
   },
   {
+    id: "hindi-sre",
+    title: "कहान एल्गोरिदम (Hindi / हिन्दी)",
+    category: "Multilingual SRE",
+    prompt:
+      "कहान एल्गोरिदम वितरित माइक्रोसर्विसेज में कैस्केडिंग फेलियर और क्रैश लूप को कैसे रोकता है?",
+    icon: Sparkles,
+  },
+  {
     id: "blast-radius",
     title: "Calculating Blast Radius",
     category: "Failure Analysis",
     prompt:
       "How do you calculate downstream blast radius when a primary database connection pool is exhausted?",
     icon: Activity,
+  },
+  {
+    id: "spanish-sre",
+    title: "¿Cómo funciona la recuperación? (Español)",
+    category: "Multilingual SRE",
+    prompt:
+      "¿Cómo orquesta Horizon la recuperación de microservicios en orden topológico estricto?",
+    icon: Sparkles,
   },
   {
     id: "eip712-approval",
@@ -131,33 +147,11 @@ const ASK_SUGGESTIONS: PromptSuggestion[] = [
 
 /**
  * Intelligent detector to determine if prompt is requesting DAG / Architecture generation.
+ * In Ask mode, strictly returns false to keep Ask mode conversational and avoid DAG canvas.
  */
 function isDagGenerationPrompt(text: string, mode: "agent" | "ask"): boolean {
-  if (mode === "agent") return true;
-  const lower = text.toLowerCase();
-  const dagKeywords = [
-    "dag",
-    "topology",
-    "architecture",
-    "generate",
-    "synthesize",
-    "microservice",
-    "microservices",
-    "pipeline",
-    "stack",
-    "mesh",
-    "deadlock",
-    "dependency graph",
-    "build flow",
-    "create flow",
-    "design system",
-    "infrastructure",
-    "k8s",
-    "kubernetes",
-    "cluster",
-    "orchestrate",
-  ];
-  return dagKeywords.some((kw) => lower.includes(kw));
+  if (mode === "ask") return false;
+  return true;
 }
 
 export const ArchitectPage: React.FC = () => {
@@ -286,9 +280,9 @@ export const ArchitectPage: React.FC = () => {
         setThinkingStep("");
       }
     } else {
-      // ── CONVERSATIONAL SRE GUIDANCE: Domain Guardrail & ~500 Char Complete Answer ──
+      // ── CONVERSATIONAL SRE GUIDANCE: Multilingual SRE Advisor (strictly NO DAG canvas) ──
       setThinkingStep(
-        "Querying Sarvam AI (sarvam-105b) for SRE guidance & resilience analysis...",
+        "Consulting Sarvam AI Copilot (Multilingual SRE Assistant)...",
       );
       await new Promise((r) => setTimeout(r, 200));
 
@@ -304,11 +298,12 @@ export const ArchitectPage: React.FC = () => {
           }),
           text: reply,
           mode: "ask",
-          // No decoded object -> DAG window does NOT open!
+          // Strictly NO decoded object -> DAG window NEVER opens in Ask mode!
         };
 
         setChatMessages((prev) => [...prev, agentMsg]);
       } catch {
+        const fallbackReply = await sarvamAgent.askSreAdvisor(query);
         const agentMsg: ChatMessage = {
           id: `agent-${Date.now()}`,
           sender: "agent",
@@ -316,7 +311,7 @@ export const ArchitectPage: React.FC = () => {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          text: "In distributed microservice meshes, services must be recovered strictly bottom-up: foundational storage must satisfy readiness probes before caches warm, followed by core workers, and finally ingress routers. This prevents thundering herds and crash loops.",
+          text: fallbackReply,
           mode: "ask",
         };
         setChatMessages((prev) => [...prev, agentMsg]);
@@ -543,7 +538,8 @@ export const ArchitectPage: React.FC = () => {
                         THE EMBEDDED DAG WINDOW (Miro-style Canvas + Tabs)
                         ONLY OPENS WHEN PROMPT IS GIVEN RELATED TO DAG GENERATION!
                        ───────────────────────────────────────────────────────────── */}
-                    {msg.decoded &&
+                    {msg.mode !== "ask" &&
+                      msg.decoded &&
                       (() => {
                         const decoded = msg.decoded;
                         return (
@@ -871,7 +867,7 @@ export const ArchitectPage: React.FC = () => {
               placeholder={
                 chatMode === "agent"
                   ? "Describe infrastructure to build DAG: 'E-commerce with MySQL, Redis, and Stripe', 'Fintech payments'..."
-                  : "Ask SRE question: 'How does Kahn sort prevent cascade outages?', 'Compare PostgreSQL vs ScyllaDB'..."
+                  : "Ask SRE question in any language (English, हिन्दी, Español, Français, Hinglish): 'How does Kahn sort prevent cascade outages?'..."
               }
               rows={1}
               disabled={isProcessing}
