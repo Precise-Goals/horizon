@@ -170,6 +170,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   ]);
 
   const autoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const terminalEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-scroll terminal to newest logs
+  useEffect(() => {
+    if (rightPaneTab === 'terminal' && terminalEndRef.current) {
+      terminalEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [aiLogs, rightPaneTab]);
 
   // Audio synthesizer for authentic PagerDuty chime
   const playPagerChime = useCallback(() => {
@@ -225,7 +233,6 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
     };
   }, [activeIncident]);
 
@@ -304,18 +311,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       'color: #DC2626; font-weight: bold; background: #FEE2E2; padding: 2px 6px; border-radius: 4px;',
       'color: #1A1A1A; font-family: monospace;'
     );
-
-    // If autoRemediate is ON: trigger after the 1.2s observability observation window
-    if (autoRemediate) {
-      if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
-      autoTimerRef.current = setTimeout(() => {
-        executeAiAgentRemediation(newIncident);
-      }, 1200);
-    }
   };
 
   // Autonomous AI Remediation Action — Computes Kahn DAG, queries Real AI, anchors Merkle checksums, and creates Post-Mortem Report
   const executeAiAgentRemediation = async (incidentOverride?: typeof activeIncident) => {
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
     const inc = incidentOverride || activeIncident;
     if (!inc || isAiAgentWorking) return;
     setIsAiAgentWorking(true);
@@ -452,9 +455,32 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     setIsAiAgentWorking(false);
   };
 
+  // Dedicated Auto-Remediation Effect:
+  // When an incident is FIRING and autoRemediate is ON, starts a 1.2s observability window then auto-heals
+  useEffect(() => {
+    if (!autoRemediate || !activeIncident || activeIncident.status !== 'FIRING' || isAiAgentWorking) {
+      return;
+    }
+
+    const currentIncident = activeIncident;
+    autoTimerRef.current = setTimeout(() => {
+      executeAiAgentRemediation(currentIncident);
+    }, 1200);
+
+    return () => {
+      if (autoTimerRef.current) {
+        clearTimeout(autoTimerRef.current);
+        autoTimerRef.current = null;
+      }
+    };
+  }, [autoRemediate, activeIncident?.id, activeIncident?.status, isAiAgentWorking]);
+
   // Reset to Baseline
   const resetToNominal = () => {
-    if (autoTimerRef.current) clearTimeout(autoTimerRef.current);
+    if (autoTimerRef.current) {
+      clearTimeout(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
     setActiveIncident(null);
     setIsAiAgentWorking(false);
     setAiDiagnosis(null);
@@ -695,8 +721,8 @@ spec:
               <span>Simulate Breach</span>
             </button>
 
-            {/* Manual AI Remediate Button (active if autoRemediate is OFF) */}
-            {!autoRemediate && (
+            {/* Auto-Remediation active or Manual AI Remediate Button */}
+            {!autoRemediate ? (
               <button
                 onClick={() => executeAiAgentRemediation()}
                 disabled={!isFiring || isAiAgentWorking}
@@ -710,7 +736,17 @@ spec:
                 <Sparkles className="w-4 h-4 text-white" />
                 <span>{isAiAgentWorking ? 'AI Healing...' : '🤖 Remediate with AI'}</span>
               </button>
-            )}
+            ) : isFiring ? (
+              <button
+                onClick={() => executeAiAgentRemediation()}
+                disabled={isAiAgentWorking}
+                className="px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-md flex items-center gap-2 transition-all cursor-pointer"
+                title="Auto-remediation active. Click to bypass the 1.2s delay and remediate immediately."
+              >
+                <Sparkles className={cn('w-4 h-4 text-white', isAiAgentWorking && 'animate-spin')} />
+                <span>{isAiAgentWorking ? 'AI Auto-Remediating...' : '⚡ Fix Now (Auto-1.2s)'}</span>
+              </button>
+            ) : null}
 
             {/* Reset Button */}
             <button
@@ -762,8 +798,18 @@ spec:
                 </div>
               </div>
 
-              {!autoRemediate && (
-                <div className="flex items-center gap-2 shrink-0">
+              <div className="flex items-center gap-2 shrink-0">
+                {autoRemediate ? (
+                  <button
+                    onClick={() => executeAiAgentRemediation()}
+                    disabled={isAiAgentWorking}
+                    className="px-5 py-3 rounded-xl bg-white text-[#0047AB] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-80"
+                    title="Auto-remediation active. Click to trigger immediately."
+                  >
+                    <Sparkles className={cn('w-4 h-4 text-[#0047AB]', isAiAgentWorking ? 'animate-spin' : 'group-hover:scale-110 transition-transform')} />
+                    <span>{isAiAgentWorking ? '🤖 AI Auto-Healing Active...' : '⚡ Auto-Healing (Fix Now)'}</span>
+                  </button>
+                ) : (
                   <button
                     onClick={() => executeAiAgentRemediation()}
                     disabled={isAiAgentWorking}
@@ -772,8 +818,8 @@ spec:
                     <Sparkles className="w-4 h-4 text-[#0047AB] group-hover:scale-110 transition-transform" />
                     <span>{isAiAgentWorking ? 'AI Agent Healing...' : '🤖 Execute AI Remediation'}</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </motion.div>
         )}
@@ -1245,6 +1291,7 @@ spec:
                       {log}
                     </motion.div>
                   ))}
+                  <div ref={terminalEndRef} />
                 </div>
 
                 <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-400 flex items-center justify-between">
