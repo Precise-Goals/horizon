@@ -24,7 +24,8 @@ export type NodeDeployStatus =
   | 'verifying'
   | 'verified_green'
   | 'failed'
-  | 'auto_remedying';
+  | 'auto_remedying'
+  | 'restarting';
 
 export interface SynchronousNodeState {
   nodeId: string;
@@ -46,6 +47,7 @@ export type DeploymentPhase =
   | 'running'
   | 'paused_on_failure'
   | 'auto_remedying'
+  | 'restarting'
   | 'completed'
   | 'cancelled';
 
@@ -333,6 +335,19 @@ export class SynchronousPipelineDeployer {
           log(`🔒 [REMEDY PIPELINE VERIFIED COMPLETE] Checksum: ${remedyChecksum.slice(0, 18)}...`);
           log(`   Remedy pipeline verified 100% complete. Resuming deployment pipeline one-by-one.`);
 
+          // Dynamically restart the resolved node
+          stateItem.status = 'restarting';
+          this.currentProgress.phase = 'restarting';
+          clusterState.setNodeStatus(node.id, 'recovering');
+          log(`🔄 [DYNAMIC RESTART] Rebooting & restarting pod/container for "${stateItem.nodeName}" to apply remedy...`);
+          emit();
+
+          await new Promise((r) => setTimeout(r, Math.min(delay, 450)));
+
+          // Node completes restart and recovers to nominal state
+          clusterState.setNodeStatus(node.id, 'healthy');
+          log(`⚡ [DYNAMIC RESUME] Node "${stateItem.nodeName}" restarted successfully. Warmup health probes verified.`);
+
           // Re-compute verified checksum after verified healing incorporating the remedy checksum
           const healedChecksum = await computeSha256({
             nodeId: node.id,
@@ -348,7 +363,8 @@ export class SynchronousPipelineDeployer {
           this.currentProgress.failedNodeId = null;
           this.currentProgress.phase = 'running';
 
-          log(`✅ [AUTO REMEDY SUCCESS] "${stateItem.nodeName}" verified healed via playbook "${diagnosis.playbook}".`);
+          log(`✅ [AUTO REMEDY SUCCESS] "${stateItem.nodeName}" restarted & verified green.`);
+          log(`   Resuming deployment pipeline dynamically. Subsequent nodes proceeding one by one.`);
           log(`   New Checksum: ${healedChecksum.slice(0, 18)}... [STATUS: GREEN]`);
           emit();
 
@@ -416,6 +432,18 @@ export class SynchronousPipelineDeployer {
           log(`🔒 [MANUAL REMEDY PIPELINE VERIFIED COMPLETE] Checksum: ${manualRemedyChecksum.slice(0, 18)}...`);
           log(`   Remedy pipeline verified complete! Resuming deployment pipeline one-by-one.`);
 
+          // Dynamically restart the resolved node
+          stateItem.status = 'restarting';
+          this.currentProgress.phase = 'restarting';
+          clusterState.setNodeStatus(node.id, 'recovering');
+          log(`🔄 [DYNAMIC RESTART] Rebooting & restarting pod/container for "${stateItem.nodeName}" to apply manual fix...`);
+          emit();
+
+          await new Promise((r) => setTimeout(r, Math.min(delay, 450)));
+
+          clusterState.setNodeStatus(node.id, 'healthy');
+          log(`⚡ [DYNAMIC RESUME] Node "${stateItem.nodeName}" restarted successfully. Warmup health probes verified.`);
+
           const healedChecksum = await computeSha256({
             nodeId: node.id,
             nodeName: node.name,
@@ -429,7 +457,9 @@ export class SynchronousPipelineDeployer {
           stateItem.status = 'verified_green';
           this.currentProgress.failedNodeId = null;
 
-          log(`✅ [MANUAL REMEDY SUCCESS] "${stateItem.nodeName}" verified restored to nominal health. [STATUS: GREEN]`);
+          log(`✅ [MANUAL REMEDY SUCCESS] "${stateItem.nodeName}" restarted & restored to nominal health.`);
+          log(`   Resuming deployment pipeline dynamically. Subsequent nodes proceeding one by one.`);
+          log(`   Node Checksum: ${healedChecksum.slice(0, 18)}... [STATUS: GREEN]`);
           emit();
 
           await new Promise((r) => setTimeout(r, delay));

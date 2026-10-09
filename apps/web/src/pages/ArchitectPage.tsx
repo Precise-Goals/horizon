@@ -801,6 +801,7 @@ export const ArchitectPage: React.FC = () => {
                                     const isGreen = node.status === 'verified_green';
                                     const isChecking = node.status === 'verifying';
                                     const isFailed = node.status === 'failed';
+                                    const isRestarting = node.status === 'restarting';
 
                                     return (
                                       <motion.div
@@ -814,6 +815,8 @@ export const ArchitectPage: React.FC = () => {
                                             ? "bg-amber-50 border-2 border-amber-400 text-amber-950 animate-pulse"
                                             : isFailed
                                             ? "bg-red-50 border-2 border-red-500 text-red-950"
+                                            : isRestarting
+                                            ? "bg-cyan-50 border-2 border-cyan-500 text-cyan-950 animate-pulse ring-1 ring-cyan-300"
                                             : "bg-white/90 border-[#E5D7C5] text-stone-500"
                                         )}
                                       >
@@ -822,6 +825,7 @@ export const ArchitectPage: React.FC = () => {
                                           {isGreen && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
                                           {isChecking && <Loader2 className="w-3 h-3 text-amber-600 animate-spin" />}
                                           {isFailed && <AlertTriangle className="w-3 h-3 text-red-600" />}
+                                          {isRestarting && <RotateCcw className="w-3 h-3 text-cyan-600 animate-spin" />}
                                         </div>
                                         <div className="font-bold truncate mt-0.5" title={node.nodeName}>
                                           {node.nodeName}
@@ -836,7 +840,7 @@ export const ArchitectPage: React.FC = () => {
                                                 </span>
                                               )}
                                             </div>
-                                          ) : isChecking ? 'Hashing...' : 'Pending'}
+                                          ) : isChecking ? 'Hashing...' : isRestarting ? 'Restarting...' : 'Pending'}
                                         </div>
                                       </motion.div>
                                     );

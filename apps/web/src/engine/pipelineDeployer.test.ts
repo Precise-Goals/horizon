@@ -184,6 +184,8 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     // Verify log confirms remedy completion before sequential resumption
     expect(logs.some((l) => l.includes('[REMEDY PIPELINE VERIFIED COMPLETE]'))).toBe(true);
     expect(logs.some((l) => l.includes('Resuming deployment pipeline one-by-one'))).toBe(true);
+    expect(logs.some((l) => l.includes('[DYNAMIC RESTART]'))).toBe(true);
+    expect(logs.some((l) => l.includes('[DYNAMIC RESUME]'))).toBe(true);
 
     // Downstream service-tier successfully resumed and completed green
     const serviceNode = finalProgress.nodes.find((n) => n.nodeId === 'service-tier')!;

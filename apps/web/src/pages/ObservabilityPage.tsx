@@ -403,6 +403,9 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
             if (nodeState.status === 'auto_remedying') {
               return { ...s, status: 'degraded', latencyMs: 140.0, errorRate: 0.15 };
             }
+            if (nodeState.status === 'restarting') {
+              return { ...s, status: 'degraded', latencyMs: 38.0, errorRate: 0.02 };
+            }
             return s;
           })
         );
@@ -1829,6 +1832,9 @@ spec:
                 {deployProgress.phase === 'auto_remedying' && (
                   <Brain className="w-4 h-4 text-purple-700 animate-pulse" />
                 )}
+                {deployProgress.phase === 'restarting' && (
+                  <RotateCcw className="w-4 h-4 text-cyan-600 animate-spin" />
+                )}
                 {deployProgress.phase === 'paused_on_failure' && (
                   <AlertTriangle className="w-4 h-4 text-red-600 animate-bounce" />
                 )}
@@ -1838,6 +1844,7 @@ spec:
                 <span className="text-xs sm:text-sm font-black font-mono tracking-tight text-[#1A1A1A]">
                   {deployProgress.phase === 'running' && `SYNCHRONOUS PROBE IN PROGRESS: Step ${deployProgress.currentIndex + 1} of ${deployProgress.totalNodes}`}
                   {deployProgress.phase === 'auto_remedying' && `🤖 AUTO-REMEDY ACTIVE: Diagnosing & Healing Failed Node...`}
+                  {deployProgress.phase === 'restarting' && `🔄 RESTARTING & RESUMING NODE: Rebooting Pod to Apply Remedy...`}
                   {deployProgress.phase === 'paused_on_failure' && `⚠️ DEPLOYMENT HALTED: Checksum Mismatch (Auto-Remedy is OFF)`}
                   {deployProgress.phase === 'completed' && `🎉 ALL ${deployProgress.totalNodes} NODES VERIFIED WITH CRYPTOGRAPHIC CHECKSUMS (100% GREEN)`}
                 </span>
@@ -1892,6 +1899,7 @@ spec:
                 const isVerifying = node.status === 'verifying';
                 const isFailed = node.status === 'failed';
                 const isRemedying = node.status === 'auto_remedying';
+                const isRestarting = node.status === 'restarting';
 
                 return (
                   <motion.div
@@ -1908,7 +1916,9 @@ spec:
                         : isFailed
                         ? 'bg-red-50 border-2 border-red-500 text-red-950 ring-1 ring-red-400'
                         : isRemedying
-                        ? 'bg-purple-50 border-2 border-purple-500 text-purple-950'
+                        ? 'bg-purple-50 border-2 border-purple-500 text-purple-950 animate-pulse'
+                        : isRestarting
+                        ? 'bg-cyan-50 border-2 border-cyan-500 text-cyan-950 animate-pulse ring-1 ring-cyan-300'
                         : 'bg-white/90 border-[#E5D7C5] text-stone-500'
                     )}
                   >
@@ -1918,6 +1928,7 @@ spec:
                       {isVerifying && <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />}
                       {isFailed && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
                       {isRemedying && <Brain className="w-3.5 h-3.5 text-purple-600 animate-pulse" />}
+                      {isRestarting && <RotateCcw className="w-3.5 h-3.5 text-cyan-600 animate-spin" />}
                     </div>
                     <div className="font-bold text-xs truncate" title={node.nodeName}>
                       {node.nodeName}
@@ -1938,6 +1949,8 @@ spec:
                         <span className="text-red-700 font-bold">FAILED</span>
                       ) : isRemedying ? (
                         <span className="text-purple-700">Self-Healing</span>
+                      ) : isRestarting ? (
+                        <span className="text-cyan-700 font-bold">Restarting Pod...</span>
                       ) : (
                         <span>Queued</span>
                       )}
@@ -1971,6 +1984,7 @@ spec:
                 const isVerifying = deployNodeState?.status === 'verifying';
                 const isDeployFailed = deployNodeState?.status === 'failed';
                 const isAutoRemedying = deployNodeState?.status === 'auto_remedying';
+                const isRestarting = deployNodeState?.status === 'restarting';
                 const isDown = services.find((s) => s.id === node.id)?.status === 'down' || isDeployFailed;
                 const isDegraded = services.find((s) => s.id === node.id)?.status === 'degraded' || isAutoRemedying;
 
@@ -1985,6 +1999,8 @@ spec:
                         ? 'bg-emerald-50/90 border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.25)] ring-2 ring-emerald-400/50 text-emerald-950'
                         : isVerifying
                         ? 'bg-amber-50/90 border-2 border-amber-400 ring-2 ring-amber-300 animate-pulse'
+                        : isRestarting
+                        ? 'bg-cyan-50 border-2 border-cyan-500 ring-2 ring-cyan-300 animate-pulse'
                         : isDown
                         ? 'bg-red-50 border-red-500 ring-2 ring-red-400'
                         : isDegraded
@@ -2047,15 +2063,27 @@ spec:
                           setActiveDrill(node.id);
                           triggerOutageSimulation(node.id);
                         }}
+                        disabled={isRestarting}
                         className={cn(
                           'w-full py-1.5 rounded-xl font-bold text-[11px] transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs',
                           isDown
                             ? 'bg-red-600 text-white animate-pulse'
+                            : isRestarting
+                            ? 'bg-cyan-600 text-white animate-pulse cursor-wait'
                             : 'bg-white hover:bg-red-50 text-red-600 border border-red-300 hover:border-red-500'
                         )}
                       >
-                        <Flame className="w-3.5 h-3.5" />
-                        <span>{isDown ? 'Outage Active' : 'Simulate Failure'}</span>
+                        {isRestarting ? (
+                          <>
+                            <RotateCcw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Restarting Pod...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Flame className="w-3.5 h-3.5" />
+                            <span>{isDown ? 'Outage Active' : 'Simulate Failure'}</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </motion.div>
