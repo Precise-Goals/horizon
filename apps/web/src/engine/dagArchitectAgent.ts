@@ -603,38 +603,115 @@ spec:
   }
 
   /**
-   * Generates a standard Horizon YAML Recovery Pipeline.
+   * Generates a standard Horizon YAML Recovery Pipeline directly derived from the DAG.
    */
   private generateYamlSpec(name: string, nodes: SystemNode[], levels: string[][]): string {
     const timestamp = new Date().toISOString();
+    const sanitizedName =
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'custom-topology';
+
+    // Compute downstream blast radius for each node in the DAG
+    const computeBlastRadius = (nodeId: string): string[] => {
+      const downstream = new Set<string>();
+      const queue = [nodeId];
+      while (queue.length > 0) {
+        const curr = queue.shift()!;
+        for (const n of nodes) {
+          if (n.dependencies.includes(curr) && !downstream.has(n.id)) {
+            downstream.add(n.id);
+            queue.push(n.id);
+          }
+        }
+      }
+      return Array.from(downstream);
+    };
 
     const nodesYaml = nodes
-      .map(
-        (n) => `      - id: ${n.id}
+      .map((n) => {
+        const tierIdx = levels.findIndex((lvl) => lvl.includes(n.id));
+        const blast = computeBlastRadius(n.id);
+        const isDb = n.type === 'database';
+        const isCache = n.type === 'cache';
+        const isGw = n.type === 'gateway';
+
+        const protocol = isDb ? 'SQL_PING' : isCache ? 'TCP_PING' : 'HTTP_GET';
+        const endpoint = isDb ? 'SELECT 1;' : isCache ? 'PING' : isGw ? '/healthz' : '/ready';
+        const port = isDb ? (n.id.includes('mysql') ? 3306 : 5432) : isCache ? 6379 : isGw ? 443 : 8080;
+        const playbook = isDb
+          ? 'database_failover'
+          : isCache
+          ? 'cache_purge'
+          : isGw
+          ? 'dynamic_traffic_shift'
+          : 'service_restart';
+        const rollback = isDb ? 'read_replica_fallback' : isCache ? 'in_memory_eviction' : 'automated_circuit_breaker';
+        const requiresApproval = isDb || n.name.toLowerCase().includes('ledger') || n.id.includes('ledger');
+
+        return `      - id: ${n.id}
         name: "${n.name}"
         type: ${n.type}
+        tier: ${tierIdx >= 0 ? tierIdx : 0}
         dependencies: [${n.dependencies.map((d) => `"${d}"`).join(', ')}]
-        playbook: ${n.type === 'database' ? 'database_failover' : n.type === 'cache' ? 'cache_purge' : 'service_restart'}`
-      )
+        downstreamBlastRadius: [${blast.map((b) => `"${b}"`).join(', ')}]
+        healthProbe:
+          protocol: ${protocol}
+          endpoint: "${endpoint}"
+          port: ${port}
+          intervalSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        recoveryPolicy:
+          playbook: ${playbook}
+          rollbackStrategy: ${rollback}
+          requiresHumanApproval: ${requiresApproval ? 'true # Gated by BridgeKey EIP-712' : 'false'}`;
+      })
       .join('\n');
 
     const levelsYaml = levels
-      .map(
-        (lvl, idx) => `      - tier: ${idx}
+      .map((lvl, idx) => {
+        const tierName =
+          idx === 0
+            ? 'Foundational Storage & Persistence'
+            : idx === 1
+            ? 'Caches, Messaging & Event Brokers'
+            : idx === 2
+            ? 'Core Microservices & Workers'
+            : 'Edge Ingress & API Gateways';
+        const strategy =
+          idx === 0
+            ? 'foundational_storage_restore'
+            : idx === 1
+            ? 'cache_invalidation_warmup'
+            : 'rolling_traffic_shift';
+        const isGated = idx === 0 || lvl.some((id) => id.includes('ledger') || id.includes('db'));
+
+        return `      - tier: ${idx}
+        name: "${tierName}"
         nodes: [${lvl.map((id) => `"${id}"`).join(', ')}]
-        strategy: ${idx === 0 ? 'foundational_storage_restore' : idx === 1 ? 'cache_invalidation_warmup' : 'rolling_traffic_shift'}
-        risk: ${idx === 0 ? 'high # Gated by BridgeKey EIP-712' : 'low'}`
-      )
+        strategy: ${strategy}
+        concurrency: parallel_batch_with_barrier
+        preFlightBarrier: "${idx === 0 ? 'storage_volume_readiness' : `tier_${idx - 1}_probes_healthy`}"
+        governanceGate: "${isGated ? 'bridgekey_eip712_multisig' : 'autonomous_orchestrator'}"
+        risk: ${isGated ? 'high # Gated by BridgeKey EIP-712' : 'low'}`;
+      })
       .join('\n');
 
     return `apiVersion: horizon.recovery.io/v1alpha1
 kind: AutonomousRecoveryPipeline
 metadata:
-  name: ${name}
-  namespace: production
+  name: ${sanitizedName}
+  namespace: horizon-production
   version: 1.0.0
   generatedBy: Sarvam-Horizon-Agentic-Architect
   createdAt: "${timestamp}"
+  labels:
+    architecture: "${sanitizedName}"
+    engine: "Sarvam-105B-Kahn-DAG"
+    topologyNodes: "${nodes.length}"
+    recoveryTiers: "${levels.length}"
 spec:
   governance:
     mode: autonomous-with-human-gate
@@ -646,6 +723,8 @@ spec:
       - dns_traffic_cutover
 
   topology:
+    totalNodes: ${nodes.length}
+    acyclicVerified: true
     nodes:
 ${nodesYaml}
 
@@ -653,6 +732,13 @@ ${nodesYaml}
     concurrencyMode: tier-synchronized
     topologicalLevels:
 ${levelsYaml}
+
+  resilienceSlo:
+    targetMTTRSeconds: 45
+    maxAllowedDowntimeSeconds: 120
+    zeroDowntimeCutover: true
+    kahnSortCycleSafetyVerified: true
+    topologicalAlgorithm: "Kahn-O(V+E)"
 
   verificationProbes:
     probeIntervalSeconds: 5

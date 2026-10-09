@@ -14,11 +14,17 @@ describe('DagArchitectAgent Engine Suite', () => {
     // Root database should be in Tier 0
     expect(result.topologicalLevels[0]).toContain('db-mysql-master');
 
-    // Generated YAML must follow Horizon specification
+    // Generated YAML must follow Horizon specification and be strictly derived from DAG
     expect(result.yamlPipeline).toContain('apiVersion: horizon.recovery.io/v1alpha1');
     expect(result.yamlPipeline).toContain('kind: AutonomousRecoveryPipeline');
     expect(result.yamlPipeline).toContain('db-mysql-master');
     expect(result.yamlPipeline).toContain('topologicalLevels:');
+    expect(result.yamlPipeline).toContain('downstreamBlastRadius:');
+    expect(result.yamlPipeline).toContain('healthProbe:');
+    expect(result.yamlPipeline).toContain('recoveryPolicy:');
+    expect(result.yamlPipeline).toContain('resilienceSlo:');
+    expect(result.yamlPipeline).toContain('targetMTTRSeconds: 45');
+    expect(result.yamlPipeline).toContain('kahnSortCycleSafetyVerified: true');
   });
 
   it('synthesizes GenAI Vector RAG stack with vector stores in Tier 0', () => {
