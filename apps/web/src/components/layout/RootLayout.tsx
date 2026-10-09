@@ -43,7 +43,7 @@ export const RootLayout: React.FC = () => {
             className={cn(
               'horizon-content-wrapper mx-auto w-full transition-all',
               isArchitect
-                ? 'max-w-5xl px-3 sm:px-6 py-4 sm:py-6 flex-1 flex flex-col'
+                ? 'max-w-7xl px-2 sm:px-4 py-3 sm:py-5 flex-1 flex flex-col'
                 : isPatents
                 ? 'max-w-5xl px-3 sm:px-6 py-6 sm:py-8'
                 : 'max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12'

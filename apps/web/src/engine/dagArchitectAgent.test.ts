@@ -73,4 +73,46 @@ describe('DagArchitectAgent Engine Suite', () => {
     clusterState.resetToDefaultTopology();
     expect(clusterState.getNodes().length).toBe(7);
   });
+
+  it('compiles and validates raw structured JSON output from Sarvam AI API', () => {
+    const rawAiJson = {
+      architectureName: 'Sarvam FinTech Mesh',
+      summary: 'Real-time settlement engine with immutable audit ledger.',
+      reasoning: 'Foundational PostgreSQL ledger recovers first, followed by Kafka and fraud API.',
+      nodes: [
+        { id: 'db-ledger', name: 'PostgreSQL Ledger', type: 'database', dependencies: [] },
+        { id: 'kafka-bus', name: 'Kafka Event Log', type: 'cache', dependencies: ['db-ledger'] },
+        { id: 'fraud-worker', name: 'Fraud Detection Engine', type: 'application', dependencies: ['kafka-bus'] },
+        { id: 'edge-gw', name: 'PCI-DSS Edge Gateway', type: 'gateway', dependencies: ['fraud-worker'] },
+      ],
+      cycleDetected: false,
+    };
+
+    const compiled = dagArchitectAgent.compileArchitectureFromJson(rawAiJson, 'FinTech settlement pipeline');
+    expect(compiled).not.toBeNull();
+    expect(compiled!.architectureName).toBe('Sarvam FinTech Mesh');
+    expect(compiled!.cycleDetected).toBe(false);
+    expect(compiled!.nodes.length).toBe(4);
+    expect(compiled!.topologicalLevels.length).toBe(4);
+    expect(compiled!.topologicalLevels[0]).toContain('db-ledger');
+    expect(compiled!.topologicalLevels[3]).toContain('edge-gw');
+    expect(compiled!.yamlPipeline).toContain('apiVersion: horizon.recovery.io/v1alpha1');
+  });
+
+  it('detects cycles when Sarvam AI JSON contains circular dependencies', () => {
+    const cyclicJson = {
+      architectureName: 'Deadlock Test',
+      nodes: [
+        { id: 'service-a', name: 'Service A', type: 'application', dependencies: ['service-b'] },
+        { id: 'service-b', name: 'Service B', type: 'application', dependencies: ['service-a'] },
+      ],
+      cycleDetected: true,
+      cycleExplanation: 'Mutual circular dependency between A and B',
+    };
+
+    const compiled = dagArchitectAgent.compileArchitectureFromJson(cyclicJson, 'Deadlock');
+    expect(compiled).not.toBeNull();
+    expect(compiled!.cycleDetected).toBe(true);
+    expect(compiled!.cycleExplanation).toBeDefined();
+  });
 });

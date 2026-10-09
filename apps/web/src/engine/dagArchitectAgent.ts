@@ -5,6 +5,7 @@
  */
 import type { SystemNode, NodeType } from '@/types';
 import { sarvamAgent } from './sarvamAgent';
+import { DependencyGraph } from './dependencyGraph';
 
 export interface DecodedArchitecture {
   architectureName: string;
@@ -24,31 +25,150 @@ export interface ChatMessage {
   text: string;
   reasoning?: string;
   decoded?: DecodedArchitecture;
+  mode?: 'ask' | 'agent';
 }
 
 export class DagArchitectAgent {
   /**
-   * Main agent entrypoint: Processes user prompt and returns decoded DAG & YAML.
+   * Main agent entrypoint: Real pipeline calling Sarvam AI API to synthesize DAGs and compile recovery specs.
    */
   public async processPrompt(userPrompt: string): Promise<DecodedArchitecture> {
-    // 1. Try invoking Sarvam LLM for high-level semantic reasoning (optional)
-    let llmExplanation = '';
+    // 1. Query real Sarvam AI API (sarvam-105b) for structured enterprise DAG synthesis
     try {
-      llmExplanation = await sarvamAgent.chat([
-        {
-          role: 'system',
-          content:
-            'You are Horizon DAG Architect AI. Analyze infrastructure flows, dependencies, and topological recovery order. Summarize the flow in 2 sentences.',
-        },
+      const systemPrompt = `You are Horizon Autonomous SRE Architect AI (Sarvam-105B).
+Design a production-ready enterprise microservice DAG topology for the given user request.
+Return ONLY valid JSON matching this exact structure:
+{
+  "architectureName": "<Descriptive Architecture Name>",
+  "summary": "<2-3 sentence overview of the architecture and resilience design>",
+  "reasoning": "<Kahn topological explanation: foundational stores to edge>",
+  "nodes": [
+    { "id": "service-id", "name": "Display Name", "type": "database|cache|application|gateway", "dependencies": ["dependency-id"] }
+  ],
+  "cycleDetected": false
+}
+Rules:
+1. "type" MUST be one of: "database", "cache", "application", "gateway".
+2. "dependencies" MUST only contain valid "id"s of other nodes in the list.
+3. If simulating a cycle or deadlock, include circular dependencies and set cycleDetected: true.`;
+
+      const sarvamRaw = await sarvamAgent.chat([
+        { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ]);
-    } catch {
-      // Fallback cleanly to deterministic synthesis
+
+      if (sarvamRaw && sarvamRaw.trim().length > 0) {
+        const jsonMatch = sarvamRaw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          const compiled = this.compileArchitectureFromJson(parsed, userPrompt);
+          if (compiled && compiled.nodes.length >= 2) {
+            return compiled;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[DagArchitectAgent] Sarvam AI generation notice: utilizing verified heuristic engine fallback', err);
     }
 
-    // 2. Deterministic entity extraction & dependency decoding
-    const decoded = this.synthesizeArchitecture(userPrompt, llmExplanation);
-    return decoded;
+    // 2. Verified topological heuristic engine fallback
+    return this.synthesizeArchitecture(userPrompt);
+  }
+
+  /**
+   * Compiles and validates raw structured JSON output from Sarvam AI into verified DecodedArchitecture.
+   */
+  public compileArchitectureFromJson(
+    raw: {
+      architectureName?: string;
+      summary?: string;
+      reasoning?: string;
+      nodes?: Array<{ id: string; name?: string; type?: string; dependencies?: string[] }>;
+      cycleDetected?: boolean;
+      cycleExplanation?: string;
+    },
+    userPrompt: string
+  ): DecodedArchitecture | null {
+    if (!raw.nodes || !Array.isArray(raw.nodes) || raw.nodes.length === 0) {
+      return null;
+    }
+
+    const architectureName = raw.architectureName || 'AI-Synthesized Cloud Topology';
+    const summary = raw.summary || `Synthesized multi-tier cloud topology for prompt: "${userPrompt}"`;
+
+    // Normalize and sanitize nodes
+    const validNodeTypes = new Set<NodeType>(['database', 'cache', 'application', 'gateway']);
+    const knownIds = new Set(raw.nodes.map((n) => n.id.trim().toLowerCase()));
+
+    const nodes: SystemNode[] = raw.nodes.map((n, idx) => {
+      const cleanId = (n.id || `node-${idx}`).trim().toLowerCase();
+      let nodeType: NodeType = 'application';
+      if (n.type && validNodeTypes.has(n.type.toLowerCase() as NodeType)) {
+        nodeType = n.type.toLowerCase() as NodeType;
+      } else {
+        const idLower = cleanId;
+        if (idLower.includes('db') || idLower.includes('sql') || idLower.includes('store') || idLower.includes('data')) {
+          nodeType = 'database';
+        } else if (idLower.includes('cache') || idLower.includes('redis') || idLower.includes('memcached')) {
+          nodeType = 'cache';
+        } else if (idLower.includes('gw') || idLower.includes('gateway') || idLower.includes('ingress') || idLower.includes('proxy')) {
+          nodeType = 'gateway';
+        }
+      }
+
+      const validDeps = Array.isArray(n.dependencies)
+        ? n.dependencies
+            .map((d) => d.trim().toLowerCase())
+            .filter((d) => d !== cleanId && knownIds.has(d))
+        : [];
+
+      return {
+        id: cleanId,
+        name: n.name || cleanId.toUpperCase(),
+        type: nodeType,
+        dependencies: validDeps,
+        status: 'healthy',
+        failureRisk: nodeType === 'database' ? 'high' : nodeType === 'cache' ? 'medium' : 'low',
+        metrics: {
+          latencyMs: 12 + idx * 3,
+          cpuPercent: 25 + (idx % 4) * 8,
+          memoryPercent: 35 + (idx % 3) * 10,
+          errorRate: 0.0,
+        },
+      };
+    });
+
+    // Check for cycles using DependencyGraph
+    const graph = new DependencyGraph();
+    nodes.forEach((n) => graph.addNode(n));
+    nodes.forEach((n) => {
+      n.dependencies.forEach((dep) => graph.addDependency(n.id, dep));
+    });
+
+    const isCyclic = Boolean(raw.cycleDetected || graph.hasCycle());
+    const topologicalLevels = this.computeLevels(nodes);
+
+    const edges: { source: string; target: string; relationship: string }[] = [];
+    nodes.forEach((n) => {
+      n.dependencies.forEach((dep) => {
+        edges.push({ source: dep, target: n.id, relationship: 'depends_on' });
+      });
+    });
+
+    const yamlPipeline = this.generateYamlSpec(architectureName, nodes, topologicalLevels);
+
+    return {
+      architectureName,
+      summary,
+      cycleDetected: isCyclic,
+      cycleExplanation: isCyclic
+        ? raw.cycleExplanation || 'Circular dependency cycle detected between services. Kahn topological sort halted.'
+        : undefined,
+      nodes,
+      edges,
+      topologicalLevels,
+      yamlPipeline,
+    };
   }
 
   /**
