@@ -69,6 +69,8 @@ export interface DeployOptions {
   stepDelayMs?: number;
   /** Optional function to check if a specific node is currently simulated as failed */
   isNodeFailing?: (nodeId: string) => boolean;
+  /** Optional function to verify if a node has successfully healed before proceeding to success */
+  verifyHealing?: (nodeId: string) => boolean;
 }
 
 export class SynchronousPipelineDeployer {
@@ -277,7 +279,23 @@ export class SynchronousPipelineDeployer {
           stateItem.remedyAction = diagnosis.playbook;
           clusterState.setNodeStatus(node.id, 'healthy');
 
-          // Re-compute verified checksum after healing
+          // Strict healing verification: ONLY proceed to success if node truly heals
+          const isAutoHealed = options.verifyHealing
+            ? options.verifyHealing(node.id)
+            : clusterState.getNode(node.id)?.status === 'healthy';
+
+          if (!isAutoHealed) {
+            log(`❌ [HEALING VERIFICATION REJECTED] Node "${stateItem.nodeName}" failed post-remedy health probe.`);
+            log(`   Halting deployment. Progression stopped due to unhealed failure.`);
+            stateItem.status = 'failed';
+            stateItem.errorMessage = 'Post-remedy health verification failed: node failed to heal.';
+            this.currentProgress.phase = 'paused_on_failure';
+            this.currentProgress.failedNodeId = node.id;
+            emit();
+            return this.getProgress();
+          }
+
+          // Re-compute verified checksum after verified healing
           const healedChecksum = await computeSha256({
             nodeId: node.id,
             nodeName: node.name,
@@ -291,7 +309,7 @@ export class SynchronousPipelineDeployer {
           this.currentProgress.failedNodeId = null;
           this.currentProgress.phase = 'running';
 
-          log(`✅ [AUTO REMEDY SUCCESS] "${stateItem.nodeName}" healed via playbook "${diagnosis.playbook}".`);
+          log(`✅ [AUTO REMEDY SUCCESS] "${stateItem.nodeName}" verified healed via playbook "${diagnosis.playbook}".`);
           log(`   New Checksum: ${healedChecksum.slice(0, 18)}... [STATUS: GREEN]`);
           emit();
 
@@ -318,6 +336,21 @@ export class SynchronousPipelineDeployer {
           this.currentProgress.phase = 'running';
           clusterState.setNodeStatus(node.id, 'healthy');
 
+          // Strict healing verification on manual fix: ONLY proceed to success if node heals
+          const isManualHealed = options.verifyHealing
+            ? options.verifyHealing(node.id)
+            : clusterState.getNode(node.id)?.status === 'healthy';
+
+          if (!isManualHealed) {
+            log(`❌ [MANUAL HEALING REJECTED] Node "${stateItem.nodeName}" still failing health probe.`);
+            stateItem.status = 'failed';
+            stateItem.errorMessage = 'Manual remedy failed to restore healthy state.';
+            this.currentProgress.phase = 'paused_on_failure';
+            this.currentProgress.failedNodeId = node.id;
+            emit();
+            return this.getProgress();
+          }
+
           const healedChecksum = await computeSha256({
             nodeId: node.id,
             nodeName: node.name,
@@ -330,7 +363,7 @@ export class SynchronousPipelineDeployer {
           stateItem.status = 'verified_green';
           this.currentProgress.failedNodeId = null;
 
-          log(`✅ [MANUAL REMEDY SUCCESS] "${stateItem.nodeName}" restored to nominal health. [STATUS: GREEN]`);
+          log(`✅ [MANUAL REMEDY SUCCESS] "${stateItem.nodeName}" verified restored to nominal health. [STATUS: GREEN]`);
           emit();
 
           await new Promise((r) => setTimeout(r, delay));

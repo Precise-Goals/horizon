@@ -127,11 +127,15 @@ class ClusterStateManager {
   }
 
   public setNodeStatus(id: string, status: 'healthy' | 'degraded' | 'down' | 'recovering'): void {
-    const node = this.nodes.get(id);
-    if (!node) return;
-
-    node.status = status;
-    this.graph.addNode(node);
+    let node = this.nodes.get(id);
+    if (!node) {
+      node = { id, name: id, type: 'application', status, dependencies: [] };
+      this.nodes.set(id, node);
+      this.graph.addNode(node);
+    } else {
+      node.status = status;
+      this.graph.addNode(node);
+    }
 
     this.addAuditLog({
       id: Math.random().toString(36).substring(2, 9),

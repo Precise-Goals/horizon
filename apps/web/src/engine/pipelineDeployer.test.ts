@@ -132,4 +132,25 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     expect(logs.some((l) => l.includes('[MANUAL OPERATOR ACTION RECEIVED]'))).toBe(true);
     expect(logs.some((l) => l.includes('[MANUAL REMEDY SUCCESS]'))).toBe(true);
   });
+
+  it('strictly refuses to proceed to node success if healing verification fails', async () => {
+    const logs: string[] = [];
+
+    const finalProgress = await deployer.execute({
+      pipelineName: 'test-unhealed-pipeline',
+      nodes: mockNodes,
+      autoRemediate: true,
+      stepDelayMs: 20,
+      isNodeFailing: (nodeId) => nodeId === 'cache-tier',
+      verifyHealing: () => false, // Healing verification fails!
+      onLog: (l) => logs.push(l),
+    });
+
+    // Must be paused_on_failure, cache-tier must NOT be verified_green!
+    expect(finalProgress.phase).toBe('paused_on_failure');
+    expect(finalProgress.failedNodeId).toBe('cache-tier');
+    expect(finalProgress.nodes[1].status).toBe('failed');
+    expect(finalProgress.nodes[2].status).toBe('pending');
+    expect(logs.some((l) => l.includes('[HEALING VERIFICATION REJECTED]'))).toBe(true);
+  });
 });

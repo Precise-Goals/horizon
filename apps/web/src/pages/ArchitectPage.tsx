@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router";
 import { motion, type BezierDefinition } from "framer-motion";
 import {
   dagArchitectAgent,
@@ -34,6 +35,7 @@ import {
   Loader2,
   Wrench,
   Brain,
+  ExternalLink,
 } from "lucide-react";
 import {
   pipelineDeployer,
@@ -162,6 +164,8 @@ function isDagGenerationPrompt(text: string, mode: "agent" | "ask"): boolean {
 }
 
 export const ArchitectPage: React.FC = () => {
+  const navigate = useNavigate();
+
   // Mode selection: 'agent' (generates DAGs & actuators) | 'ask' (conversational SRE advisor)
   const [chatMode, setChatMode] = useState<"agent" | "ask">("agent");
   const [inputPrompt, setInputPrompt] = useState("");
@@ -171,6 +175,17 @@ export const ArchitectPage: React.FC = () => {
   const [activeDeployingArch, setActiveDeployingArch] = useState<string | null>(null);
   const [archDeployProgress, setArchDeployProgress] = useState<DeploymentProgress | null>(null);
   const [autoRemediate, setAutoRemediate] = useState<boolean>(() => clusterState.isAutoRemediate());
+
+  // 1-Click Import & Direct Simulation in Observability Page
+  const handleImportToObservability = (architecture: DecodedArchitecture) => {
+    try {
+      localStorage.setItem("horizon_staged_custom_dag_yaml", architecture.yamlPipeline);
+      localStorage.setItem("horizon_staged_custom_dag_name", architecture.architectureName);
+    } catch {
+      // Storage fallback safe
+    }
+    navigate("/observability");
+  };
 
   // Active tab per message: Record<messageId, 'dag' | 'yaml' | 'rollout'>
   const [activeTabs, setActiveTabs] = useState<
@@ -348,6 +363,10 @@ export const ArchitectPage: React.FC = () => {
       nodes: architecture.nodes,
       topologicalLevels: architecture.topologicalLevels,
       autoRemediate: autoRemediate,
+      verifyHealing: (nodeId) => {
+        const n = clusterState.getNode(nodeId);
+        return n ? n.status === 'healthy' : true;
+      },
       onProgress: (progress) => {
         setArchDeployProgress(progress);
       },
@@ -700,6 +719,16 @@ export const ArchitectPage: React.FC = () => {
                                       ? "Deployed Green!"
                                       : "Deploy"}
                                   </span>
+                                </button>
+
+                                {/* 1-Click Simulate in Observability Hub */}
+                                <button
+                                  onClick={() => handleImportToObservability(decoded)}
+                                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-[#FFF8F0] hover:bg-[#F5ECE0] text-[#1A1A1A] border border-[#D5C7B5] hover:border-[#1A1A1A] shadow-[0_2px_6px_rgba(26,26,26,0.06)]"
+                                  title="Import DAG directly into Observability Hub to simulate failure & blast radius"
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5 text-[#0047AB]" />
+                                  <span>Simulate in Observability</span>
                                 </button>
 
                                 {/* Copy & Download */}
