@@ -8,7 +8,7 @@ import {
 } from '../engine/dagArchitectAgent';
 import { sarvamAgent } from '../engine/sarvamAgent';
 import { clusterState } from '../engine/state';
-import type { SystemNode } from '../types';
+import type { SystemNode, NodeType } from '../types';
 import {
   Send,
   Network,
@@ -35,10 +35,11 @@ import {
   Trash2,
   Maximize2,
   Minimize2,
-  X,
   MessageSquare,
   Bot,
   ExternalLink,
+  ChevronRight,
+  ArrowDown,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { cn } from '../lib/utils';
@@ -57,15 +58,6 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: { staggerChildren: 0.05, duration: 0.25 },
-  },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: EASE },
   },
 };
 
@@ -154,6 +146,37 @@ const ASK_SUGGESTIONS: PromptSuggestion[] = [
   },
 ];
 
+/**
+ * Intelligent detector to determine if prompt is requesting DAG / Architecture generation.
+ */
+function isDagGenerationPrompt(text: string, mode: 'agent' | 'ask'): boolean {
+  if (mode === 'agent') return true;
+  const lower = text.toLowerCase();
+  const dagKeywords = [
+    'dag',
+    'topology',
+    'architecture',
+    'generate',
+    'synthesize',
+    'microservice',
+    'microservices',
+    'pipeline',
+    'stack',
+    'mesh',
+    'deadlock',
+    'dependency graph',
+    'build flow',
+    'create flow',
+    'design system',
+    'infrastructure',
+    'k8s',
+    'kubernetes',
+    'cluster',
+    'orchestrate',
+  ];
+  return dagKeywords.some((kw) => lower.includes(kw));
+}
+
 export const ArchitectPage: React.FC = () => {
   // Mode selection: 'agent' (generates DAGs & actuators) | 'ask' (conversational SRE advisor)
   const [chatMode, setChatMode] = useState<'agent' | 'ask'>('agent');
@@ -162,37 +185,23 @@ export const ArchitectPage: React.FC = () => {
   const [thinkingStep, setThinkingStep] = useState<string>('');
   const [deployedArchName, setDeployedArchName] = useState<string | null>(null);
 
-  // Claude Visualize Window state
-  const [visualizeOpen, setVisualizeOpen] = useState(true);
-  const [visualizeFullscreen, setVisualizeFullscreen] = useState(false);
-  const [visualizeTab, setVisualizeTab] = useState<'dag' | 'yaml' | 'recovery'>('dag');
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
-  const [copiedYaml, setCopiedYaml] = useState(false);
+  // Active tab per message: Record<messageId, 'dag' | 'yaml' | 'rollout'>
+  const [activeTabs, setActiveTabs] = useState<Record<string, 'dag' | 'yaml' | 'rollout'>>({});
+  // Selected node for blast radius inspection: Record<messageId, string | null>
+  const [selectedNodes, setSelectedNodes] = useState<Record<string, string | null>>({});
+  const [copiedYamlId, setCopiedYamlId] = useState<string | null>(null);
 
-  // Active architecture currently loaded in the Visualize Window
-  const [activeArchitecture, setActiveArchitecture] = useState<DecodedArchitecture>(() => {
-    return dagArchitectAgent.synthesizeArchitecture(
-      'E-commerce system with MySQL master, Redis cache, Auth worker, Stripe payment service, API gateway, and Horizon Web UI.'
-    );
-  });
-
-  // Conversation history
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    const initialDecoded = dagArchitectAgent.synthesizeArchitecture(
-      'E-commerce system with MySQL master, Redis cache, Auth worker, Stripe payment service, API gateway, and Horizon Web UI.'
-    );
-    return [
-      {
-        id: 'msg-welcome',
-        sender: 'agent',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: 'Welcome to the Horizon Agentic Flow Architect. I synthesize natural language requirements into verified DAG topologies with real Sarvam AI reasoning, run Kahn’s algorithm to guarantee cycle safety, and compile declarative YAML recovery pipelines. Use Agent Mode to build topologies or Ask Mode for expert SRE guidance.',
-        reasoning: 'Verified enterprise baseline: 7 microservices partitioned into 4 topological tiers. Cycle check: O(V + E) Kahn sort PASSED with zero deadlocks.',
-        decoded: initialDecoded,
-        mode: 'agent',
-      },
-    ];
-  });
+  // Conversation history: Starts purely conversational with NO DAG window open!
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: 'msg-welcome',
+      sender: 'agent',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      text: 'Hi! I am the Horizon SRE Agent. Enter a prompt to generate a cycle-safe infrastructure DAG with real Sarvam AI reasoning, or ask me any site reliability question.',
+      mode: 'agent',
+      // Note: No decoded architecture here so DAG window remains unopened initially!
+    },
+  ]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -203,31 +212,6 @@ export const ArchitectPage: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages, isProcessing, thinkingStep]);
-
-  // Blast radius calculation when an individual node is selected in the visualizer window
-  const blastRadiusInfo = useMemo(() => {
-    if (!selectedNodeId || !activeArchitecture) return null;
-    const node = activeArchitecture.nodes.find((n) => n.id === selectedNodeId);
-    if (!node) return null;
-
-    const downstream = new Set<string>();
-    const queue = [selectedNodeId];
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      for (const n of activeArchitecture.nodes) {
-        if (n.dependencies.includes(current) && !downstream.has(n.id)) {
-          downstream.add(n.id);
-          queue.push(n.id);
-        }
-      }
-    }
-
-    return {
-      selectedNode: node,
-      upstreamDeps: node.dependencies,
-      downstreamBlast: Array.from(downstream),
-    };
-  }, [selectedNodeId, activeArchitecture]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputPrompt).trim();
@@ -245,8 +229,10 @@ export const ArchitectPage: React.FC = () => {
     setInputPrompt('');
     setIsProcessing(true);
 
-    if (chatMode === 'agent') {
-      // ── AGENT MODE: Real DAG synthesis via Sarvam AI API + Kahn topological sort ──
+    const isDagRequest = isDagGenerationPrompt(query, chatMode);
+
+    if (isDagRequest) {
+      // ── DAG GENERATION PIPELINE: Real Sarvam AI API + Kahn topological sort ──
       setThinkingStep('Consulting Sarvam AI API (sarvam-105b) for infrastructure decomposition...');
       await new Promise((r) => setTimeout(r, 160));
       setThinkingStep('Analyzing persistence stores, caching tiers, and ingress microservices...');
@@ -258,30 +244,29 @@ export const ArchitectPage: React.FC = () => {
 
       try {
         const decoded = await dagArchitectAgent.processPrompt(query);
-        setActiveArchitecture(decoded);
-        setVisualizeOpen(true); // Automatically triggers the Claude Visualize Window!
-        setSelectedNodeId(null);
+        const msgId = `agent-${Date.now()}`;
 
         const agentMsg: ChatMessage = {
-          id: `agent-${Date.now()}`,
+          id: msgId,
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           text: decoded.summary,
           reasoning: decoded.cycleDetected
             ? decoded.cycleExplanation
-            : `Synthesized ${decoded.nodes.length} microservices across ${decoded.topologicalLevels.length} recovery tiers. Kahn’s algorithm proved acyclic structure: O(V + E) = ${decoded.nodes.length + decoded.edges.length} operations. Generated Kubernetes CRD spec and triggered Visualizer Window.`,
+            : `Synthesized ${decoded.nodes.length} microservices across ${decoded.topologicalLevels.length} recovery tiers. Kahn’s algorithm proved acyclic structure: O(V + E) = ${decoded.nodes.length + decoded.edges.length} operations. Generated Kubernetes CRD spec and triggered DAG artifact window.`,
           decoded,
           mode: 'agent',
         };
 
+        // Initialize active tab for this message to 'dag'
+        setActiveTabs((prev) => ({ ...prev, [msgId]: 'dag' }));
         setChatMessages((prev) => [...prev, agentMsg]);
       } catch (err: any) {
         const fallbackArch = dagArchitectAgent.synthesizeArchitecture(query);
-        setActiveArchitecture(fallbackArch);
-        setVisualizeOpen(true);
+        const msgId = `agent-${Date.now()}`;
 
         const agentMsg: ChatMessage = {
-          id: `agent-${Date.now()}`,
+          id: msgId,
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           text: fallbackArch.summary,
@@ -289,13 +274,15 @@ export const ArchitectPage: React.FC = () => {
           decoded: fallbackArch,
           mode: 'agent',
         };
+
+        setActiveTabs((prev) => ({ ...prev, [msgId]: 'dag' }));
         setChatMessages((prev) => [...prev, agentMsg]);
       } finally {
         setIsProcessing(false);
         setThinkingStep('');
       }
     } else {
-      // ── ASK MODE: Conversational SRE Guidance via Sarvam AI API ──
+      // ── CONVERSATIONAL SRE GUIDANCE: Sarvam AI API (No DAG Window Triggered) ──
       setThinkingStep('Querying Sarvam AI (sarvam-105b) for SRE guidance & resilience analysis...');
       await new Promise((r) => setTimeout(r, 200));
 
@@ -313,8 +300,11 @@ export const ArchitectPage: React.FC = () => {
           id: `agent-${Date.now()}`,
           sender: 'agent',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          text: reply || 'Sarvam AI completed resilience analysis. Recommending Kahn topological dependency orchestration to eliminate cascading connection failures.',
+          text:
+            reply ||
+            'Sarvam AI completed resilience analysis. Recommending Kahn topological dependency orchestration to eliminate cascading connection failures.',
           mode: 'ask',
+          // No decoded object -> DAG window does NOT open!
         };
 
         setChatMessages((prev) => [...prev, agentMsg]);
@@ -344,10 +334,10 @@ export const ArchitectPage: React.FC = () => {
     setTimeout(() => setDeployedArchName(null), 4000);
   };
 
-  const handleCopyYaml = (yamlContent: string) => {
+  const handleCopyYaml = (msgId: string, yamlContent: string) => {
     navigator.clipboard.writeText(yamlContent);
-    setCopiedYaml(true);
-    setTimeout(() => setCopiedYaml(false), 2000);
+    setCopiedYamlId(msgId);
+    setTimeout(() => setCopiedYamlId(null), 2000);
   };
 
   const handleDownloadYaml = (architecture: DecodedArchitecture) => {
@@ -373,10 +363,35 @@ export const ArchitectPage: React.FC = () => {
         id: `msg-${Date.now()}`,
         sender: 'agent',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        text: 'Chat history cleared. Choose a template or enter an infrastructure requirement.',
+        text: 'Chat history cleared. Choose a scenario or enter an infrastructure requirement.',
         mode: chatMode,
       },
     ]);
+  };
+
+  // Helper to calculate blast radius for a given architecture and node
+  const getBlastRadiusInfo = (arch: DecodedArchitecture, nodeId: string | null) => {
+    if (!nodeId) return null;
+    const node = arch.nodes.find((n) => n.id === nodeId);
+    if (!node) return null;
+
+    const downstream = new Set<string>();
+    const queue = [nodeId];
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      for (const n of arch.nodes) {
+        if (n.dependencies.includes(current) && !downstream.has(n.id)) {
+          downstream.add(n.id);
+          queue.push(n.id);
+        }
+      }
+    }
+
+    return {
+      selectedNode: node,
+      upstreamDeps: node.dependencies,
+      downstreamBlast: Array.from(downstream),
+    };
   };
 
   return (
@@ -384,149 +399,138 @@ export const ArchitectPage: React.FC = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="horizon-agent-app w-full flex-1 flex flex-col justify-between font-sans min-h-[calc(100vh-140px)] relative"
+      className="horizon-agent-app w-full flex-1 flex flex-col font-sans relative py-2"
     >
-      {/* ── Top Navigation & Mode Switcher Bar ── */}
-      <motion.div variants={itemVariants} className="pb-3 border-b border-[#E5D7C5] flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
-          >
-            <span>&larr; Home</span>
-          </Link>
-          <span className="text-[#D0C2B0] text-xs">|</span>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg overflow-hidden bg-[#0A1128] border border-[rgba(26,26,26,0.15)] shadow-xs flex items-center justify-center p-0.5 shrink-0">
-              <img src="/logo.png" alt="Horizon Agent Logo" className="w-full h-full object-contain" />
-            </div>
-            <div>
-              <h2 className="text-sm font-bold text-[#1A1A1A] tracking-tight leading-none">
-                Horizon Agentic Flow Architect
-              </h2>
-              <span className="text-[10px] font-mono text-[#0047AB] font-bold">
-                Sarvam AI &bull; Kahn O(V+E) Engine
-              </span>
-            </div>
+      {/* ── TOP HEADER SECTION: Matches referenceagent.png wireframe exactly ── */}
+      <div className="text-center space-y-1.5 mb-5 shrink-0">
+        <div className="flex items-center justify-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl overflow-hidden bg-[#0A1128] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] p-0.5 flex items-center justify-center shrink-0">
+            <img src="/logo.png" alt="Horizon Logo" className="w-full h-full object-contain" />
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-[#1A1A1A] tracking-tight uppercase font-sans">
+            HORIZON
+          </h1>
+        </div>
+
+        {/* Small text lorem ipsum / descriptive subtitle */}
+        <p className="text-xs sm:text-sm text-[#6E6258] font-semibold max-w-lg mx-auto leading-relaxed">
+          Autonomous Multi-Agent Infrastructure Recovery &amp; DAG Flow Architect
+        </p>
+
+        {/* Badge 20 / v2.0 / Sarvam AI / Kahn O(V+E) */}
+        <div className="flex items-center justify-center gap-2 pt-0.5">
+          <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-[#FAF3EA] border-2 border-[#1A1A1A] text-[11px] font-mono font-bold text-[#0047AB] shadow-[2px_2px_0px_#1A1A1A]">
+            <span>v2.0</span>
+            <span className="text-[#1A1A1A]">&bull;</span>
+            <span>Sarvam AI (105B)</span>
+            <span className="text-[#1A1A1A]">&bull;</span>
+            <span>Kahn O(V+E)</span>
           </div>
         </div>
 
         {/* ── Ask Mode vs Agent Mode Segmented Switcher ── */}
-        <div className="flex items-center p-1 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5] shadow-xs">
-          <button
-            onClick={() => setChatMode('agent')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              chatMode === 'agent'
-                ? 'bg-[#0047AB] text-white shadow-xs'
-                : 'text-[#6E6258] hover:text-[#1A1A1A]'
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>Agent Mode</span>
-          </button>
-
-          <button
-            onClick={() => setChatMode('ask')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              chatMode === 'ask'
-                ? 'bg-white text-[#0047AB] shadow-xs border border-[#CCD8EB]'
-                : 'text-[#6E6258] hover:text-[#1A1A1A]'
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Ask Mode</span>
-          </button>
-        </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-2">
-          {activeArchitecture && !visualizeOpen && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => setVisualizeOpen(true)}
-              className="text-xs text-[#0047AB] border-[#0047AB]/30 gap-1.5 font-bold"
-              title="Open Claude Visualize Window"
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <div className="inline-flex p-1 rounded-2xl bg-[#FAF3EA] border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]">
+            <button
+              onClick={() => setChatMode('agent')}
+              className={cn(
+                'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border-2',
+                chatMode === 'agent'
+                  ? 'bg-[#0047AB] text-white border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]'
+                  : 'border-transparent text-[#6E6258] hover:text-[#1A1A1A]'
+              )}
             >
-              <Network className="w-3.5 h-3.5 text-[#0047AB]" />
-              <span>Open Visualizer</span>
-            </Button>
-          )}
+              <Zap className="w-3.5 h-3.5" />
+              <span>⚡ Agent Mode (DAG &amp; Deploy)</span>
+            </button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleResetToDefault}
-            className="text-xs text-[#6E6258] hover:text-[#1A1A1A] gap-1.5 font-semibold"
-            title="Reset active cluster to baseline"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Baseline</span>
-          </Button>
+            <button
+              onClick={() => setChatMode('ask')}
+              className={cn(
+                'px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border-2',
+                chatMode === 'ask'
+                  ? 'bg-white text-[#0047AB] border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A]'
+                  : 'border-transparent text-[#6E6258] hover:text-[#1A1A1A]'
+              )}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>💬 Ask Mode (SRE Copilot)</span>
+            </button>
+          </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleClearHistory}
-            className="text-xs text-[#6E6258] hover:text-[#1A1A1A] gap-1.5"
-            title="Clear message history"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Clear</span>
-          </Button>
+          {/* Quick utility controls */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={handleResetToDefault}
+              className="p-1.5 rounded-xl bg-white border-2 border-[#1A1A1A] text-[#6E6258] hover:text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] cursor-pointer text-xs font-bold flex items-center gap-1"
+              title="Reset baseline cluster"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Reset</span>
+            </button>
+            <button
+              onClick={handleClearHistory}
+              className="p-1.5 rounded-xl bg-white border-2 border-[#1A1A1A] text-[#6E6258] hover:text-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] cursor-pointer text-xs font-bold flex items-center gap-1"
+              title="Clear chat history"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Clear</span>
+            </button>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* ── Main Canvas: Split View or Full Screen ── */}
-      <div className="flex-1 flex flex-col lg:flex-row gap-5 my-4 overflow-hidden relative">
-        {/* ── LEFT: AGENTIC CHAT WINDOW (Width adjusts dynamically based on Visualize Window) ── */}
-        <div
-          className={cn(
-            'flex flex-col justify-between transition-all duration-300',
-            visualizeFullscreen
-              ? 'hidden'
-              : visualizeOpen
-              ? 'w-full lg:w-[46%] xl:w-[44%] shrink-0'
-              : 'w-full max-w-4xl mx-auto'
-          )}
-        >
-          {/* Chat Messages Stream */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 text-xs max-h-[calc(100vh-270px)]">
-            {chatMessages.map((msg) => (
+      {/* ── MAIN BENTO CONTAINER: Rounded card matching referenceagent.png ── */}
+      <div className="w-full max-w-5xl mx-auto rounded-3xl border-2 border-[#1A1A1A] bg-[#FFFDF9] shadow-[6px_6px_0px_#1A1A1A] p-4 sm:p-6 flex flex-col justify-between min-h-[640px] relative">
+        {/* Chat History Flow */}
+        <div className="flex-1 overflow-y-auto space-y-5 pr-1 max-h-[calc(100vh-360px)] min-h-[380px]">
+          {chatMessages.map((msg) => {
+            const currentTab = activeTabs[msg.id] || 'dag';
+            const selectedNodeId = selectedNodes[msg.id] || null;
+            const blastInfo = msg.decoded ? getBlastRadiusInfo(msg.decoded, selectedNodeId) : null;
+
+            return (
               <div
                 key={msg.id}
-                className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
+                className={cn(
+                  'flex flex-col space-y-1.5 w-full',
+                  msg.sender === 'user' ? 'items-end' : 'items-start'
+                )}
               >
-                {/* Message Header */}
-                <div className="flex items-center gap-1.5 mb-1 text-[11px] font-mono font-bold text-[#8A7B6D]">
+                {/* Header tag */}
+                <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#8A7B6D] px-1">
                   {msg.sender === 'agent' && (
-                    <div className="w-5 h-5 rounded-md overflow-hidden bg-[#0A1128] border border-[#0047AB]/30 flex items-center justify-center p-0.5 shrink-0">
+                    <div className="w-4 h-4 rounded-md overflow-hidden bg-[#0A1128] border border-[#1A1A1A] flex items-center justify-center p-0.5 shrink-0">
                       <img src="/logo.png" alt="Horizon Agent" className="w-full h-full object-contain" />
                     </div>
                   )}
-                  <span>{msg.sender === 'user' ? 'Operator' : 'Horizon SRE Copilot'}</span>
+                  <span>{msg.sender === 'user' ? 'User' : 'Horizon SRE Copilot'}</span>
                   <span>&bull;</span>
                   <span>{msg.timestamp}</span>
                   {msg.mode && (
-                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono uppercase bg-[#FAF3EA] text-[#6E6258] border border-[#E5D7C5]">
+                    <span className="text-[9px] px-1.5 py-0.2 rounded font-mono uppercase bg-[#FAF3EA] text-[#6E6258] border border-[#1A1A1A]">
                       {msg.mode}
                     </span>
                   )}
                 </div>
 
-                {/* Message Bubble Content */}
+                {/* Message Bubble */}
                 <div
-                  className={`rounded-2xl leading-relaxed ${
+                  className={cn(
+                    'leading-relaxed transition-all',
                     msg.sender === 'user'
-                      ? 'max-w-[85%] p-3.5 bg-[#0047AB] text-white shadow-sm font-medium'
-                      : 'w-full p-4 bg-white border border-[#E5D7C5] text-[#1A1A1A] shadow-xs space-y-3'
-                  }`}
+                      ? 'max-w-[85%] sm:max-w-[75%] p-3.5 bg-[#0047AB] text-white rounded-2xl rounded-tr-xs border-2 border-[#1A1A1A] shadow-[2px_2px_0px_#1A1A1A] font-medium text-xs sm:text-sm'
+                      : 'w-full max-w-[98%] sm:max-w-[95%] p-4 bg-white text-[#1A1A1A] rounded-2xl rounded-tl-xs border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] space-y-3.5'
+                  )}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  {/* Text Body */}
+                  <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed">
+                    {msg.text}
+                  </p>
 
-                  {/* Thinking Process Accordion */}
+                  {/* Thinking Process Accordion (if present) */}
                   {msg.reasoning && (
-                    <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5] text-[11px] font-mono space-y-1">
+                    <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5] text-[11px] font-mono space-y-1">
                       <div className="flex items-center gap-1.5 text-[#0047AB] font-bold">
                         <img src="/logo.png" alt="Horizon Icon" className="w-3.5 h-3.5 object-contain rounded" />
                         <span>Kahn’s Topological Reasoning Stream</span>
@@ -537,510 +541,453 @@ export const ArchitectPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Claude-style Artifact Pill in Message to trigger Visualizer Window */}
-                  {msg.decoded && (
-                    <div className="p-3 rounded-xl bg-[#F7EFE5] border border-[#E0D0BE] flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-lg bg-[#0047AB] text-white flex items-center justify-center shrink-0">
-                          <Network className="w-3.5 h-3.5" />
+                  {/* ─────────────────────────────────────────────────────────────
+                      THE EMBEDDED DAG WINDOW (Directly from referenceagent.png)
+                      ONLY OPENS WHEN PROMPT IS GIVEN RELATED TO DAG GENERATION!
+                     ───────────────────────────────────────────────────────────── */}
+                  {msg.decoded && (() => {
+                    const decoded = msg.decoded;
+                    return (
+                    <div className="mt-3 rounded-2xl border-2 border-[#1A1A1A] bg-[#FFFBF5] overflow-hidden shadow-[4px_4px_0px_#1A1A1A]">
+                      {/* ── Top Bar matching wireframe: | DAG | Yaml | ── */}
+                      <div className="px-3 sm:px-4 py-2.5 bg-white border-b-2 border-[#1A1A1A] flex flex-wrap items-center justify-between gap-2.5">
+                        {/* Tab Switcher: | DAG | Yaml | Rollout | */}
+                        <div className="flex items-center gap-1 sm:gap-1.5">
+                          <button
+                            onClick={() =>
+                              setActiveTabs((prev) => ({ ...prev, [msg.id]: 'dag' }))
+                            }
+                            className={cn(
+                              'px-3 py-1.5 rounded-xl font-bold text-xs border-2 border-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_#1A1A1A]',
+                              currentTab === 'dag'
+                                ? 'bg-[#0047AB] text-white'
+                                : 'bg-[#FAF3EA] text-[#1A1A1A] hover:bg-white'
+                            )}
+                          >
+                            <Network className="w-3.5 h-3.5" />
+                            <span>DAG</span>
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              setActiveTabs((prev) => ({ ...prev, [msg.id]: 'yaml' }))
+                            }
+                            className={cn(
+                              'px-3 py-1.5 rounded-xl font-bold text-xs border-2 border-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_#1A1A1A]',
+                              currentTab === 'yaml'
+                                ? 'bg-[#0047AB] text-white'
+                                : 'bg-[#FAF3EA] text-[#1A1A1A] hover:bg-white'
+                            )}
+                          >
+                            <FileCode className="w-3.5 h-3.5" />
+                            <span>Yaml</span>
+                          </button>
+
+                          <button
+                            onClick={() =>
+                              setActiveTabs((prev) => ({ ...prev, [msg.id]: 'rollout' }))
+                            }
+                            className={cn(
+                              'px-3 py-1.5 rounded-xl font-bold text-xs border-2 border-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_#1A1A1A]',
+                              currentTab === 'rollout'
+                                ? 'bg-[#0047AB] text-white'
+                                : 'bg-[#FAF3EA] text-[#1A1A1A] hover:bg-white'
+                            )}
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Rollout</span>
+                          </button>
                         </div>
-                        <div>
-                          <div className="font-bold text-[11px] text-[#1A1A1A]">
-                            {msg.decoded.architectureName}
-                          </div>
-                          <div className="text-[9px] font-mono text-[#6E6258]">
-                            {msg.decoded.nodes.length} nodes &bull; {msg.decoded.topologicalLevels.length} recovery tiers
-                          </div>
+
+                        {/* Right side actions & Status */}
+                        <div className="flex items-center gap-2">
+                          {decoded.cycleDetected ? (
+                            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-900 border-2 border-[#1A1A1A] shadow-[1px_1px_0px_#1A1A1A] flex items-center gap-1">
+                              <AlertTriangle className="w-3 h-3 text-red-700" />
+                              <span>Deadlock Trap</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-900 border-2 border-[#1A1A1A] shadow-[1px_1px_0px_#1A1A1A] flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                              <span>Acyclic Verified</span>
+                            </span>
+                          )}
+
+                          {/* 1-Click Cluster Actuator */}
+                          <button
+                            onClick={() => handleDeployToCluster(decoded)}
+                            disabled={decoded.cycleDetected}
+                            className={cn(
+                              'px-3 py-1 rounded-xl text-xs font-bold border-2 border-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_#1A1A1A]',
+                              deployedArchName === decoded.architectureName
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-[#0047AB] text-white hover:bg-[#003680]'
+                            )}
+                            title="Deploy topology directly to active Horizon cluster"
+                          >
+                            {deployedArchName === decoded.architectureName ? (
+                              <Check className="w-3.5 h-3.5" />
+                            ) : (
+                              <Rocket className="w-3.5 h-3.5" />
+                            )}
+                            <span>
+                              {deployedArchName === decoded.architectureName
+                                ? 'Deployed!'
+                                : 'Deploy'}
+                            </span>
+                          </button>
+
+                          {/* Copy & Download */}
+                          <button
+                            onClick={() => handleCopyYaml(msg.id, decoded.yamlPipeline)}
+                            className="p-1.5 rounded-lg bg-white border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#FAF3EA] transition-all cursor-pointer shadow-2xs"
+                            title="Copy YAML"
+                          >
+                            {copiedYamlId === msg.id ? (
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+
+                          <button
+                            onClick={() => handleDownloadYaml(decoded)}
+                            className="p-1.5 rounded-lg bg-white border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#FAF3EA] transition-all cursor-pointer shadow-2xs"
+                            title="Download .yaml manifest"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => {
-                          setActiveArchitecture(msg.decoded!);
-                          setVisualizeOpen(true);
-                          setVisualizeTab('dag');
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-[#0047AB] hover:bg-[#003680] text-white text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 shadow-sm shrink-0"
-                      >
-                        <Network className="w-3 h-3" />
-                        <span>Inspect in Window</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            {/* Live Thinking Stream Animation */}
-            {isProcessing && (
-              <div className="p-3.5 rounded-2xl bg-white border border-[#0047AB]/30 shadow-md space-y-2 w-full">
-                <div className="flex items-center gap-2 text-xs text-[#0047AB] font-bold">
-                  <div className="w-5 h-5 rounded-md overflow-hidden bg-[#0A1128] flex items-center justify-center p-0.5 shrink-0 animate-pulse">
-                    <img src="/logo.png" alt="Horizon Agent" className="w-full h-full object-contain" />
-                  </div>
-                  <span>Sarvam AI Processing...</span>
-                </div>
-                <div className="text-[11px] font-mono text-[#5A4E44] flex items-center gap-2 p-2 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5]">
-                  <span className="w-2 h-2 rounded-full bg-[#0047AB] animate-ping shrink-0" />
-                  <span>{thinkingStep}</span>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Prompt Suggestions & Composer */}
-          <div className="pt-3 border-t border-[#E5D7C5] space-y-2.5">
-            {/* Template Chips for Quick Demos */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-              <span className="text-[10px] font-mono uppercase font-bold text-[#8A7B6D] shrink-0 flex items-center gap-1">
-                <Zap className="w-3 h-3 text-[#0047AB]" />
-                <span>{chatMode === 'agent' ? 'Scenarios:' : 'Questions:'}</span>
-              </span>
-              {(chatMode === 'agent' ? AGENT_SUGGESTIONS : ASK_SUGGESTIONS).map((sug) => (
-                <button
-                  key={sug.id}
-                  onClick={() => handleSendMessage(sug.prompt)}
-                  disabled={isProcessing}
-                  className="shrink-0 px-2.5 py-1 rounded-full bg-white hover:bg-[#FAF3EA] border border-[#E5D7C5] hover:border-[#0047AB] text-[10px] font-semibold text-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1 shadow-2xs hover:scale-[1.02]"
-                >
-                  <sug.icon className="w-3 h-3 text-[#0047AB]" />
-                  <span>{sug.title}</span>
-                </button>
-              ))}
-            </div>
-
-            {/* Composer Bar */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              className="relative rounded-2xl skeuo-card p-2 border border-[#E5D7C5] bg-white shadow-md flex items-center gap-2"
-            >
-              <div className="pl-1.5 shrink-0">
-                <div className="w-6 h-6 rounded-md overflow-hidden bg-[#0A1128] border border-[rgba(26,26,26,0.15)] flex items-center justify-center p-0.5">
-                  <img src="/logo.png" alt="Horizon Agent" className="w-full h-full object-contain" />
-                </div>
-              </div>
-
-              <textarea
-                value={inputPrompt}
-                onChange={(e) => setInputPrompt(e.target.value)}
-                placeholder={
-                  chatMode === 'agent'
-                    ? "Agent: 'Design fintech settlement with Postgres and Kafka', 'Simulate circular deadlock'..."
-                    : "Ask: 'How does Kahn sort prevent outages?', 'Compare ScyllaDB vs PostgreSQL'..."
-                }
-                rows={1}
-                disabled={isProcessing}
-                className="flex-1 py-1 px-1.5 text-xs text-[#1A1A1A] placeholder-[#8A7B6D] focus:outline-none bg-transparent resize-none font-medium leading-relaxed"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage();
-                  }
-                }}
-              />
-
-              <Button
-                type="submit"
-                size="sm"
-                variant="primary"
-                disabled={!inputPrompt.trim() || isProcessing}
-                className="rounded-xl px-3.5 py-1.5 text-xs font-bold gap-1 shrink-0 shadow-sm"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">
-                  {chatMode === 'agent' ? 'Synthesize' : 'Ask'}
-                </span>
-              </Button>
-            </form>
-          </div>
-        </div>
-
-        {/* ── RIGHT: CLAUDE VISUALIZE WINDOW (Artifacts Side Pane) ── */}
-        <AnimatePresence>
-          {visualizeOpen && activeArchitecture && (
-            <motion.div
-              key="visualize-window"
-              initial={{ opacity: 0, x: 24, scale: 0.98 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 24, scale: 0.98 }}
-              transition={{ duration: 0.28, ease: EASE }}
-              className={cn(
-                'flex flex-col rounded-3xl skeuo-card border border-[#E5D7C5] bg-white shadow-2xl overflow-hidden transition-all',
-                visualizeFullscreen
-                  ? 'w-full h-[calc(100vh-170px)]'
-                  : 'w-full lg:w-[54%] xl:w-[56%] h-[calc(100vh-170px)] shrink-0'
-              )}
-            >
-              {/* Window Header Bar */}
-              <div className="px-4 py-3 bg-[#FAF3EA] border-b border-[#E5D7C5] flex flex-wrap items-center justify-between gap-2.5 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-[#0A1128] border border-[rgba(26,26,26,0.15)] flex items-center justify-center p-0.5 shrink-0">
-                    <img src="/logo.png" alt="Horizon Logo" className="w-full h-full object-contain" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-xs sm:text-sm font-bold text-[#1A1A1A] tracking-tight">
-                        {activeArchitecture.architectureName}
-                      </h3>
-                      {activeArchitecture.cycleDetected ? (
-                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-300">
-                          Deadlock
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
-                          Acyclic Verified
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-[#6E6258] font-mono">
-                      {activeArchitecture.nodes.length} nodes &bull; {activeArchitecture.topologicalLevels.length} recovery tiers
-                    </span>
-                  </div>
-                </div>
-
-                {/* Window Actions: Deploy, Copy, Fullscreen, Close */}
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => handleDeployToCluster(activeArchitecture)}
-                    disabled={activeArchitecture.cycleDetected}
-                    className={`rounded-xl px-3 py-1 text-xs font-bold gap-1 transition-all ${
-                      deployedArchName === activeArchitecture.architectureName
-                        ? 'bg-emerald-600 border-emerald-500 text-white'
-                        : ''
-                    }`}
-                    title="Deploy this architecture to active cluster"
-                  >
-                    {deployedArchName === activeArchitecture.architectureName ? (
-                      <Check className="w-3.5 h-3.5" />
-                    ) : (
-                      <Rocket className="w-3.5 h-3.5" />
-                    )}
-                    <span>
-                      {deployedArchName === activeArchitecture.architectureName
-                        ? 'Deployed!'
-                        : 'Deploy to Cluster'}
-                    </span>
-                  </Button>
-
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleCopyYaml(activeArchitecture.yamlPipeline)}
-                    className="rounded-xl p-1.5 h-7 w-7 text-[#6E6258] hover:text-[#1A1A1A]"
-                    title="Copy YAML spec"
-                  >
-                    {copiedYaml ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  </Button>
-
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => handleDownloadYaml(activeArchitecture)}
-                    className="rounded-xl p-1.5 h-7 w-7 text-[#6E6258] hover:text-[#1A1A1A]"
-                    title="Download .yaml spec"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                  </Button>
-
-                  <button
-                    onClick={() => setVisualizeFullscreen(!visualizeFullscreen)}
-                    className="p-1.5 rounded-xl hover:bg-black/5 text-[#6E6258] hover:text-[#1A1A1A] transition-colors cursor-pointer"
-                    title={visualizeFullscreen ? 'Exit fullscreen' : 'Maximize window'}
-                  >
-                    {visualizeFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setVisualizeOpen(false);
-                      setVisualizeFullscreen(false);
-                    }}
-                    className="p-1.5 rounded-xl hover:bg-red-50 text-[#6E6258] hover:text-red-600 transition-colors cursor-pointer"
-                    title="Close Visualizer Window"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Window Tab Navigation */}
-              <div className="px-4 pt-2 pb-1.5 bg-white border-b border-[#EADCC9] flex items-center gap-1.5 overflow-x-auto shrink-0">
-                <button
-                  onClick={() => setVisualizeTab('dag')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                    visualizeTab === 'dag'
-                      ? 'bg-[#0047AB] text-white shadow-xs'
-                      : 'text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#FAF3EA]'
-                  }`}
-                >
-                  <Network className="w-3.5 h-3.5" />
-                  <span>Flow Visualizer</span>
-                </button>
-
-                <button
-                  onClick={() => setVisualizeTab('yaml')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                    visualizeTab === 'yaml'
-                      ? 'bg-[#0047AB] text-white shadow-xs'
-                      : 'text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#FAF3EA]'
-                  }`}
-                >
-                  <FileCode className="w-3.5 h-3.5" />
-                  <span>Dynamic YAML Code</span>
-                </button>
-
-                <button
-                  onClick={() => setVisualizeTab('recovery')}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
-                    visualizeTab === 'recovery'
-                      ? 'bg-[#0047AB] text-white shadow-xs'
-                      : 'text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#FAF3EA]'
-                  }`}
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Kahn Recovery Rollout</span>
-                </button>
-              </div>
-
-              {/* Main Visualizer Body Content with Fluent Staged Animations */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                {/* Circular Deadlock Warning */}
-                {activeArchitecture.cycleDetected && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-300 text-xs text-red-900 flex items-start gap-2 shadow-xs">
-                    <ShieldAlert className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
-                    <div>
-                      <span className="font-bold">Circular Deadlock Detected:</span>
-                      <p className="mt-0.5 text-red-800 leading-relaxed font-medium">
-                        {activeArchitecture.cycleExplanation}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Blast Radius Inspector Banner */}
-                {blastRadiusInfo && (
-                  <div className="p-2.5 rounded-xl bg-[#EBF1FA] border border-[#0047AB]/30 text-xs flex items-center justify-between shadow-xs">
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-4 h-4 text-[#0047AB]" />
-                      <div>
-                        <span className="font-bold text-[#1A1A1A]">
-                          Node Selected: {blastRadiusInfo.selectedNode.name}
-                        </span>
-                        <span className="text-[10px] text-[#555555] block">
-                          Upstream: {blastRadiusInfo.upstreamDeps.length} &bull; Downstream blast radius: {blastRadiusInfo.downstreamBlast.length} services affected
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setSelectedNodeId(null)}
-                      className="text-[10px] font-bold text-[#6E6258] hover:text-[#1A1A1A] px-2 py-0.5 rounded bg-white border border-[#CCD8EB] cursor-pointer"
-                    >
-                      Clear Selection
-                    </button>
-                  </div>
-                )}
-
-                <AnimatePresence mode="wait">
-                  {/* TAB 1: FLOW VISUALIZER WITH FLUENT TIER ANIMATIONS */}
-                  {visualizeTab === 'dag' && (
-                    <motion.div
-                      key="visualize-dag"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-4"
-                    >
-                      {activeArchitecture.topologicalLevels
-                        .slice()
-                        .reverse()
-                        .map((tierNodeIds, tierIndex) => {
-                          const actualTier = activeArchitecture.topologicalLevels.length - 1 - tierIndex;
-                          const tierNodes = activeArchitecture.nodes.filter((n) => tierNodeIds.includes(n.id));
-
-                          return (
-                            <motion.div
-                              key={actualTier}
-                              initial={{ opacity: 0, y: 16 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.35, delay: tierIndex * 0.08, ease: EASE }}
-                              className="space-y-2 relative"
-                            >
-                              <div className="flex items-center justify-between text-[11px] font-mono text-[#6E6258] border-b border-[#EADCC9] pb-1 font-bold">
-                                <span className="text-[#0047AB] flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full bg-[#0047AB]" />
-                                  {actualTier === 0
-                                    ? 'TIER 0: FOUNDATIONAL PERSISTENCE & STORAGE'
-                                    : actualTier === 1
-                                    ? 'TIER 1: CACHES, KV STORES & EVENT BROKERS'
-                                    : actualTier === 2
-                                    ? 'TIER 2: CORE MICROSERVICES & WORKERS'
-                                    : actualTier === 3
-                                    ? 'TIER 3: INGRESS ROUTERS & API GATEWAYS'
-                                    : `TIER ${actualTier}: CLIENT APPLICATIONS`}
+                      {/* ── Active Tab Content Area ── */}
+                      <div className="p-3 sm:p-4">
+                        {/* ── TAB 1: VISUAL DAG GRAPH (Matches ovals & lines in referenceagent.png) ── */}
+                        {currentTab === 'dag' && (
+                          <div className="space-y-4">
+                            {/* Topology Header Info */}
+                            <div className="flex flex-wrap items-center justify-between text-xs text-[#1A1A1A] font-bold pb-2 border-b border-[#E5D7C5]">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-[#0047AB]">
+                                  {decoded.architectureName}
                                 </span>
-                                <span className="text-[#8A7B6D]">Recover Sequence: #{actualTier + 1}</span>
+                                <span className="text-[#8A7B6D] font-mono text-[11px]">
+                                  ({decoded.nodes.length} nodes &bull; {decoded.topologicalLevels.length} tiers)
+                                </span>
                               </div>
+                              <span className="text-[11px] font-mono text-[#6E6258]">
+                                Click node to inspect Blast Radius
+                              </span>
+                            </div>
 
-                              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5">
-                                {tierNodes.map((node) => {
-                                  const Icon = iconMap[node.type] || Server;
-                                  const isSelected = selectedNodeId === node.id;
-                                  const isDownstream = blastRadiusInfo?.downstreamBlast.includes(node.id);
-                                  const isUpstream = blastRadiusInfo?.upstreamDeps.includes(node.id);
+                            {/* Blast Radius Inspector Notification Banner */}
+                            {blastInfo && (
+                              <div className="p-2.5 rounded-xl bg-[#EBF1FA] border-2 border-[#1A1A1A] text-xs flex items-center justify-between shadow-[2px_2px_0px_#1A1A1A]">
+                                <div className="flex items-center gap-2">
+                                  <Activity className="w-4 h-4 text-[#0047AB]" />
+                                  <div>
+                                    <span className="font-bold text-[#1A1A1A]">
+                                      Selected Node: {blastInfo.selectedNode.name}
+                                    </span>
+                                    <span className="text-[10px] text-[#555555] block">
+                                      Upstream: {blastInfo.upstreamDeps.length} providers &bull; Downstream blast impact: {blastInfo.downstreamBlast.length} services affected
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() =>
+                                    setSelectedNodes((prev) => ({ ...prev, [msg.id]: null }))
+                                  }
+                                  className="text-[10px] font-bold text-[#1A1A1A] hover:bg-[#FAF3EA] px-2 py-0.5 rounded-lg border border-[#1A1A1A] bg-white cursor-pointer shadow-2xs"
+                                >
+                                  Clear Selection
+                                </button>
+                              </div>
+                            )}
+
+                            {/* ── Visual Topological Tiers & Oval Nodes (from referenceagent.png) ── */}
+                            <div className="space-y-4 pt-1">
+                              {decoded.topologicalLevels
+                                .slice()
+                                .reverse()
+                                .map((tierNodeIds, tierIndex) => {
+                                  const actualTier =
+                                    decoded.topologicalLevels.length - 1 - tierIndex;
+                                  const tierNodes = decoded.nodes.filter((n) =>
+                                    tierNodeIds.includes(n.id)
+                                  );
 
                                   return (
-                                    <div
-                                      key={node.id}
-                                      onClick={() => setSelectedNodeId(node.id)}
-                                      className={`p-3 rounded-xl border transition-all space-y-1.5 cursor-pointer shadow-xs ${
-                                        isSelected
-                                          ? 'bg-[#EBF1FA] border-[#0047AB] ring-2 ring-[#0047AB] shadow-md scale-[1.01]'
-                                          : isDownstream
-                                          ? 'bg-rose-50/70 border-rose-300 ring-1 ring-rose-400'
-                                          : isUpstream
-                                          ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-400'
-                                          : 'bg-white border-[#E5D7C5] hover:border-[#0047AB]/50 hover:shadow-xs'
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <div
-                                            className={`p-1.5 rounded-lg border ${
-                                              isSelected
-                                                ? 'bg-[#0047AB] text-white border-[#003680]'
-                                                : 'bg-[#0047AB]/10 text-[#0047AB] border-[#0047AB]/20'
-                                            }`}
-                                          >
-                                            <Icon className="w-3.5 h-3.5" />
-                                          </div>
-                                          <span className="text-xs font-bold text-[#1A1A1A] truncate max-w-[120px]">
-                                            {node.name}
-                                          </span>
-                                        </div>
-                                        <span
-                                          className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded font-bold ${
-                                            node.status === 'healthy'
-                                              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                              : 'bg-rose-50 text-rose-800 border border-rose-200'
-                                          }`}
-                                        >
-                                          {node.type}
+                                    <div key={actualTier} className="space-y-2 relative">
+                                      {/* Tier Label */}
+                                      <div className="flex items-center justify-between text-[11px] font-mono text-[#6E6258] border-b border-[#EADCC9] pb-1 font-bold">
+                                        <span className="text-[#0047AB] flex items-center gap-1.5">
+                                          <span className="w-2.5 h-2.5 rounded-full bg-[#0047AB] border border-black" />
+                                          {actualTier === 0
+                                            ? 'TIER 0: PERSISTENCE & DATABASES'
+                                            : actualTier === 1
+                                            ? 'TIER 1: CACHES & EVENT LOGS'
+                                            : actualTier === 2
+                                            ? 'TIER 2: WORKERS & CORE APIS'
+                                            : actualTier === 3
+                                            ? 'TIER 3: INGRESS ROUTERS & GATEWAYS'
+                                            : `TIER ${actualTier}: CLIENT APPLICATIONS`}
+                                        </span>
+                                        <span className="text-[#8A7B6D]">
+                                          Boot Rank: #{actualTier + 1}
                                         </span>
                                       </div>
 
-                                      <div className="pt-1 border-t border-[#F2E8DC] flex items-center justify-between text-[10px] font-mono text-[#6E6258]">
-                                        <span className="truncate max-w-[130px]">
-                                          {node.dependencies.length === 0
-                                            ? 'Root Dependency'
-                                            : `Deps: ${node.dependencies.length}`}
-                                        </span>
-                                        <span className="flex items-center gap-1 font-bold text-[#0047AB]">
-                                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                          <span>Ready</span>
-                                        </span>
+                                      {/* Oval / Capsule Nodes in this Tier (matches wireframe drawing) */}
+                                      <div className="flex flex-wrap items-center justify-center gap-3 py-1">
+                                        {tierNodes.map((node) => {
+                                          const Icon = iconMap[node.type] || Server;
+                                          const isSelected = selectedNodeId === node.id;
+                                          const isDownstream =
+                                            blastInfo?.downstreamBlast.includes(node.id);
+                                          const isUpstream =
+                                            blastInfo?.upstreamDeps.includes(node.id);
+
+                                          return (
+                                            <div
+                                              key={node.id}
+                                              onClick={() =>
+                                                setSelectedNodes((prev) => ({
+                                                  ...prev,
+                                                  [msg.id]: node.id,
+                                                }))
+                                              }
+                                              className={cn(
+                                                'px-4 py-2.5 rounded-full border-2 border-[#1A1A1A] transition-all cursor-pointer flex items-center gap-2.5 shadow-[2px_2px_0px_#1A1A1A] hover:scale-[1.02]',
+                                                isSelected
+                                                  ? 'bg-[#0047AB] text-white ring-2 ring-[#1A1A1A] scale-[1.03]'
+                                                  : isDownstream
+                                                  ? 'bg-rose-100 text-rose-950 border-rose-900 ring-2 ring-rose-600'
+                                                  : isUpstream
+                                                  ? 'bg-emerald-100 text-emerald-950 border-emerald-900 ring-2 ring-emerald-600'
+                                                  : 'bg-white text-[#1A1A1A] hover:bg-[#FAF3EA]'
+                                              )}
+                                            >
+                                              {/* Node Icon */}
+                                              <div
+                                                className={cn(
+                                                  'w-6 h-6 rounded-full border border-[#1A1A1A] flex items-center justify-center shrink-0 p-1',
+                                                  isSelected
+                                                    ? 'bg-white text-[#0047AB]'
+                                                    : 'bg-[#FAF3EA] text-[#0047AB]'
+                                                )}
+                                              >
+                                                <Icon className="w-3.5 h-3.5" />
+                                              </div>
+
+                                              {/* Node Name */}
+                                              <div className="flex flex-col">
+                                                <span className="text-xs font-black tracking-tight leading-tight">
+                                                  {node.name}
+                                                </span>
+                                                <span
+                                                  className={cn(
+                                                    'text-[9px] font-mono uppercase font-bold',
+                                                    isSelected ? 'text-blue-100' : 'text-[#6E6258]'
+                                                  )}
+                                                >
+                                                  {node.type}
+                                                  {node.dependencies.length > 0 &&
+                                                    ` &bull; ${node.dependencies.length} deps`}
+                                                </span>
+                                              </div>
+
+                                              {/* Status indicator */}
+                                              <span
+                                                className={cn(
+                                                  'w-2 h-2 rounded-full border border-black shrink-0',
+                                                  node.status === 'healthy'
+                                                    ? 'bg-emerald-500 animate-pulse'
+                                                    : 'bg-rose-500'
+                                                )}
+                                              />
+                                            </div>
+                                          );
+                                        })}
                                       </div>
+
+                                      {/* Connector arrow pointing to next layer */}
+                                      {tierIndex < decoded.topologicalLevels.length - 1 && (
+                                        <div className="flex items-center justify-center text-[#8A7B6D] py-0.5">
+                                          <ArrowDown className="w-3.5 h-3.5" />
+                                        </div>
+                                      )}
                                     </div>
                                   );
                                 })}
-                              </div>
-                            </motion.div>
-                          );
-                        })}
-                    </motion.div>
-                  )}
-
-                  {/* TAB 2: DYNAMIC YAML CODE */}
-                  {visualizeTab === 'yaml' && (
-                    <motion.div
-                      key="visualize-yaml"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-2"
-                    >
-                      <div className="flex items-center justify-between text-[11px] font-mono text-[#6E6258] bg-[#F4EBE0] px-3 py-1.5 rounded-xl border border-[#E5D7C5]">
-                        <span>Spec: horizon.recovery.io/v1alpha1 &bull; AutonomousRecoveryPipeline</span>
-                        <button
-                          onClick={() => handleCopyYaml(activeArchitecture.yamlPipeline)}
-                          className="text-[#0047AB] font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                        >
-                          {copiedYaml ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                          <span>{copiedYaml ? 'Copied!' : 'Copy YAML'}</span>
-                        </button>
-                      </div>
-
-                      <pre className="p-4 rounded-2xl bg-[#1A1A1A] border border-black text-[11px] font-mono text-cyan-300 leading-relaxed overflow-x-auto select-all shadow-inner">
-                        <code>{activeArchitecture.yamlPipeline}</code>
-                      </pre>
-                    </motion.div>
-                  )}
-
-                  {/* TAB 3: KAHN RECOVERY ROLLOUT */}
-                  {visualizeTab === 'recovery' && (
-                    <motion.div
-                      key="visualize-recovery"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-2.5"
-                    >
-                      <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-[#1A1A1A] space-y-0.5 shadow-xs">
-                        <span className="font-bold flex items-center gap-1.5 text-[#0047AB]">
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span>Kahn’s Topological Recovery Sequence</span>
-                        </span>
-                        <p className="text-[11px] text-[#5A4E44] font-medium leading-relaxed">
-                          Deterministic bottom-up execution. Databases restore and satisfy health readiness probes before application pods accept ingress traffic.
-                        </p>
-                      </div>
-
-                      {activeArchitecture.topologicalLevels.map((levelNodes, idx) => (
-                        <div
-                          key={idx}
-                          className="p-3 rounded-xl bg-white border border-[#E5D7C5] flex items-center justify-between shadow-xs"
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-6 h-6 rounded-full bg-[#0047AB]/10 border border-[#0047AB]/25 text-[#0047AB] text-xs font-mono font-bold flex items-center justify-center shrink-0">
-                              {idx + 1}
-                            </div>
-                            <div>
-                              <div className="text-xs font-bold text-[#1A1A1A]">
-                                Stage {idx + 1}: Restore {levelNodes.join(', ')}
-                              </div>
-                              <div className="text-[10px] text-[#6E6258] font-mono">
-                                Parallel batch execution &bull; Health probe: HTTP 200 / SQL Ping
-                              </div>
                             </div>
                           </div>
+                        )}
 
-                          <div>
-                            {idx === 0 ? (
-                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
-                                <KeyRound className="w-3 h-3 text-amber-700" />
-                                <span>BridgeKey Gate</span>
-                              </span>
-                            ) : (
-                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
-                                Autonomous
-                              </span>
-                            )}
+                        {/* ── TAB 2: YAML SPEC CODE ── */}
+                        {currentTab === 'yaml' && (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-[11px] font-mono text-[#6E6258] bg-[#F4EBE0] px-3 py-1.5 rounded-xl border border-[#E5D7C5]">
+                              <span>Spec: horizon.recovery.io/v1alpha1 &bull; AutonomousRecoveryPipeline</span>
+                              <button
+                                onClick={() => handleCopyYaml(msg.id, decoded.yamlPipeline)}
+                                className="text-[#0047AB] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                              >
+                                {copiedYamlId === msg.id ? (
+                                  <Check className="w-3 h-3 text-emerald-600" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                                <span>{copiedYamlId === msg.id ? 'Copied!' : 'Copy YAML'}</span>
+                              </button>
+                            </div>
+
+                            <pre className="p-4 rounded-2xl bg-[#1A1A1A] border-2 border-[#1A1A1A] text-[11px] font-mono text-cyan-300 leading-relaxed overflow-x-auto select-all shadow-inner">
+                              <code>{decoded.yamlPipeline}</code>
+                            </pre>
                           </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                        )}
+
+                        {/* ── TAB 3: KAHN RECOVERY ROLLOUT SEQUENCE ── */}
+                        {currentTab === 'rollout' && (
+                          <div className="space-y-2.5">
+                            <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-xs text-[#1A1A1A] space-y-0.5">
+                              <span className="font-bold flex items-center gap-1.5 text-[#0047AB]">
+                                <RotateCcw className="w-3.5 h-3.5" />
+                                <span>Kahn’s Topological Recovery Sequence</span>
+                              </span>
+                              <p className="text-[11px] text-[#5A4E44] font-medium leading-relaxed">
+                                Deterministic bottom-up execution. Databases restore and satisfy health readiness probes before application pods accept ingress traffic.
+                              </p>
+                            </div>
+
+                            {decoded.topologicalLevels.map((levelNodes, idx) => (
+                              <div
+                                key={idx}
+                                className="p-3 rounded-xl bg-white border-2 border-[#1A1A1A] flex items-center justify-between shadow-[2px_2px_0px_#1A1A1A]"
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-6 h-6 rounded-full bg-[#0047AB] text-white border border-[#1A1A1A] text-xs font-mono font-bold flex items-center justify-center shrink-0">
+                                    {idx + 1}
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-bold text-[#1A1A1A]">
+                                      Stage {idx + 1}: Restore {levelNodes.join(', ')}
+                                    </div>
+                                    <div className="text-[10px] text-[#6E6258] font-mono">
+                                      Parallel batch execution &bull; Health probe: HTTP 200 / SQL Ping
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div>
+                                  {idx === 0 ? (
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                                      <KeyRound className="w-3 h-3 text-amber-700" />
+                                      <span>BridgeKey Gate</span>
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                      Autonomous
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    );
+                  })()}
+                </div>
               </div>
-            </motion.div>
+            );
+          })}
+
+          {/* Live Thinking Stream Animation */}
+          {isProcessing && (
+            <div className="p-4 rounded-2xl bg-white border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] space-y-2 w-full max-w-[95%]">
+              <div className="flex items-center gap-2 text-xs text-[#0047AB] font-bold">
+                <div className="w-5 h-5 rounded-md overflow-hidden bg-[#0A1128] border border-[#1A1A1A] flex items-center justify-center p-0.5 shrink-0 animate-pulse">
+                  <img src="/logo.png" alt="Horizon Agent" className="w-full h-full object-contain" />
+                </div>
+                <span>Sarvam AI Processing (sarvam-105b)...</span>
+              </div>
+              <div className="text-[11px] font-mono text-[#5A4E44] flex items-center gap-2 p-2 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5]">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#0047AB] animate-ping shrink-0" />
+                <span>{thinkingStep}</span>
+              </div>
+            </div>
           )}
-        </AnimatePresence>
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* ── BOTTOM SECTION: Suggestions Chips & Rounded Composer Bar (from wireframe) ── */}
+        <div className="pt-3 border-t-2 border-[#1A1A1A] space-y-2.5 shrink-0">
+          {/* Quick Scenario / Question Chips */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-[10px] font-mono uppercase font-bold text-[#8A7B6D] shrink-0 flex items-center gap-1">
+              <Zap className="w-3 h-3 text-[#0047AB]" />
+              <span>{chatMode === 'agent' ? 'Scenarios:' : 'Questions:'}</span>
+            </span>
+            {(chatMode === 'agent' ? AGENT_SUGGESTIONS : ASK_SUGGESTIONS).map((sug) => (
+              <button
+                key={sug.id}
+                onClick={() => handleSendMessage(sug.prompt)}
+                disabled={isProcessing}
+                className="shrink-0 px-3 py-1 rounded-full bg-white hover:bg-[#FAF3EA] border-2 border-[#1A1A1A] text-[10px] font-bold text-[#1A1A1A] transition-all cursor-pointer flex items-center gap-1.5 shadow-[2px_2px_0px_#1A1A1A] hover:translate-x-0.5 hover:translate-y-0.5"
+              >
+                <sug.icon className="w-3 h-3 text-[#0047AB]" />
+                <span>{sug.title}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Rounded Input Composer Bar */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSendMessage();
+            }}
+            className="relative rounded-2xl border-2 border-[#1A1A1A] bg-white shadow-[4px_4px_0px_#1A1A1A] p-2 flex items-center gap-2"
+          >
+            <div className="pl-1 shrink-0">
+              <div className="w-7 h-7 rounded-lg overflow-hidden bg-[#0A1128] border border-[#1A1A1A] flex items-center justify-center p-0.5">
+                <img src="/logo.png" alt="Horizon Logo" className="w-full h-full object-contain" />
+              </div>
+            </div>
+
+            <textarea
+              value={inputPrompt}
+              onChange={(e) => setInputPrompt(e.target.value)}
+              placeholder={
+                chatMode === 'agent'
+                  ? "Describe infrastructure to build DAG: 'E-commerce with MySQL, Redis, and Stripe', 'Fintech payments'..."
+                  : "Ask SRE question: 'How does Kahn sort prevent cascade outages?', 'Compare PostgreSQL vs ScyllaDB'..."
+              }
+              rows={1}
+              disabled={isProcessing}
+              className="flex-1 py-1 px-1.5 text-xs sm:text-sm text-[#1A1A1A] placeholder-[#8A7B6D] focus:outline-none bg-transparent resize-none font-medium leading-relaxed"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+            />
+
+            <button
+              type="submit"
+              disabled={!inputPrompt.trim() || isProcessing}
+              className="rounded-xl px-4 py-2 text-xs font-bold border-2 border-[#1A1A1A] bg-[#0047AB] text-white shadow-[2px_2px_0px_#1A1A1A] hover:bg-[#003680] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer flex items-center gap-1.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-3.5 h-3.5" />
+              <span>{chatMode === 'agent' ? 'Synthesize' : 'Ask'}</span>
+            </button>
+          </form>
+        </div>
       </div>
     </motion.div>
   );
