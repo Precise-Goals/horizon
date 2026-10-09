@@ -1,7 +1,7 @@
 /**
  * Horizon Docker Agent Client Bridge
  * Operates in 100% passive In-Memory Simulator mode by default.
- * Zero automatic network calls to port 5174 on startup or interval, guaranteeing zero ERR_CONNECTION_REFUSED console spam.
+ * Zero automatic network calls to any external port on startup or interval, guaranteeing zero ERR_CONNECTION_REFUSED console spam.
  */
 
 export interface DockerBridgeStatus {
@@ -13,7 +13,6 @@ export interface DockerBridgeStatus {
 }
 
 class DockerBridgeService {
-  private agentUrl = 'http://127.0.0.1:5174';
   private status: DockerBridgeStatus = {
     connected: false,
     dockerAvailable: false,
@@ -45,7 +44,7 @@ class DockerBridgeService {
   }
 
   /**
-   * Only attempts a probe if explicitly called by operator action.
+   * Passive simulator status return. Zero network requests.
    */
   public async probeAgent(): Promise<DockerBridgeStatus> {
     return this.status;

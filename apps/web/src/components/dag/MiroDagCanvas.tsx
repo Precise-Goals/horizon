@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import type { DecodedArchitecture } from '../../engine/dagArchitectAgent';
-import type { SystemNode, NodeType } from '../../types';
 import {
   Database,
   Server,
@@ -9,8 +8,6 @@ import {
   RotateCcw,
   ZoomIn,
   ZoomOut,
-  Maximize2,
-  Activity,
   Move,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -71,24 +68,28 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     };
   }, [selectedNodeId, architecture]);
 
-  // Initial hierarchical tree layout calculation (Ingress at top, persistence at bottom)
+  // Initial spacious hierarchical tree layout calculation (Ingress at top, persistence at bottom)
   const computeInitialTreeLayout = useCallback(() => {
-    const containerWidth = containerRef.current?.clientWidth || 840;
+    const containerWidth = containerRef.current?.clientWidth || 940;
     const initialPositions: Record<string, Point> = {};
 
     const levels = architecture.topologicalLevels.slice().reverse(); // Reverse so Tier 3 (Ingress) is at top
     const totalLevels = levels.length;
-    const levelHeight = totalLevels > 1 ? Math.min(130, 420 / totalLevels) : 120;
-    const topMargin = 70;
+    
+    // Generous vertical tier spacing: 145px to 175px between levels
+    const levelHeight = totalLevels > 1 ? Math.max(145, Math.min(175, 540 / Math.max(1, totalLevels - 1))) : 160;
+    const topMargin = 85;
 
     levels.forEach((tierNodeIds, tierIdx) => {
       const y = topMargin + tierIdx * levelHeight;
       const count = tierNodeIds.length;
-      const nodeSpacing = Math.min(220, (containerWidth - 120) / Math.max(1, count));
-      const startX = containerWidth / 2 - ((count - 1) * nodeSpacing) / 2;
+      
+      // Generous horizontal spacing between nodes: at least 260px leaving 80px+ gap between 180px cards
+      const nodeSpacing = count === 1 ? 0 : Math.max(260, Math.min(340, (containerWidth - 160) / Math.max(1, count - 1)));
+      const startX = count === 1 ? containerWidth / 2 : containerWidth / 2 - ((count - 1) * nodeSpacing) / 2;
 
       tierNodeIds.forEach((nodeId, nodeIdx) => {
-        const x = startX + nodeIdx * nodeSpacing;
+        const x = count === 1 ? containerWidth / 2 : startX + nodeIdx * nodeSpacing;
         initialPositions[nodeId] = { x, y };
       });
     });
@@ -101,7 +102,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     computeInitialTreeLayout();
   }, [computeInitialTreeLayout]);
 
-  // Dragging event listeners
+  // Dragging event handlers with closure safety
   const handleMouseDownNode = (e: React.MouseEvent, nodeId: string) => {
     e.stopPropagation();
     const currentPos = positions[nodeId] || { x: 0, y: 0 };
@@ -115,16 +116,18 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!draggingNodeId || !dragStartRef.current) return;
-      const dx = (e.clientX - dragStartRef.current.mouseX) / zoom;
-      const dy = (e.clientY - dragStartRef.current.mouseY) / zoom;
+      const dragSnapshot = dragStartRef.current;
+      const targetNodeId = draggingNodeId;
+      if (!targetNodeId || !dragSnapshot) return;
+
+      const dx = (e.clientX - dragSnapshot.mouseX) / zoom;
+      const dy = (e.clientY - dragSnapshot.mouseY) / zoom;
+      const nextX = Math.max(90, Math.min(1300, dragSnapshot.initialNodePos.x + dx));
+      const nextY = Math.max(40, Math.min(900, dragSnapshot.initialNodePos.y + dy));
 
       setPositions((prev) => ({
         ...prev,
-        [draggingNodeId]: {
-          x: Math.max(90, Math.min(950, dragStartRef.current!.initialNodePos.x + dx)),
-          y: Math.max(40, Math.min(520, dragStartRef.current!.initialNodePos.y + dy)),
-        },
+        [targetNodeId]: { x: nextX, y: nextY },
       }));
     };
 
@@ -145,23 +148,23 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
   }, [draggingNodeId, zoom]);
 
   const handleZoom = (delta: number) => {
-    setZoom((prev) => Math.max(0.75, Math.min(1.35, prev + delta)));
+    setZoom((prev) => Math.max(0.7, Math.min(1.4, prev + delta)));
   };
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        'miro-dag-canvas relative w-full h-[520px] rounded-2xl overflow-hidden select-none border border-[#E5D7C5]',
-        'bg-[#FAF6F0] bg-[radial-gradient(#C2B29F_1.5px,transparent_1.5px)] [background-size:22px_22px]',
+        'miro-dag-canvas relative w-full h-[640px] sm:h-[680px] rounded-2xl overflow-hidden select-none border border-[#E5D7C5]',
+        'bg-[#FAF6F0] bg-[radial-gradient(#C2B29F_1.5px,transparent_1.5px)] [background-size:24px_24px]',
         className
       )}
       onClick={() => onSelectNode(null)}
     >
       {/* ── Miro Toolbar & Controls Bar ── */}
-      <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-none">
+      <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-20 pointer-events-none">
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="px-3 py-1.5 rounded-xl bg-white/90 backdrop-blur-xs border border-[#E5D7C5] shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center gap-2">
+          <div className="px-3.5 py-1.5 rounded-xl bg-white/90 backdrop-blur-xs border border-[#E5D7C5] shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center gap-2.5">
             <span className="w-2 h-2 rounded-full bg-[#0047AB] animate-pulse" />
             <span className="text-xs font-bold text-[#1A1A1A]">{architecture.architectureName}</span>
             <span className="text-[10px] font-mono text-[#8A7B6D]">
@@ -193,14 +196,14 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
             title="Reset Tree Layout"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Reset Tree</span>
+            <span className="hidden sm:inline">Reset Spacing</span>
           </button>
         </div>
       </div>
 
       {/* ── Interactive Canvas Scaled Area ── */}
       <div
-        className="w-full h-full relative transition-transform duration-75 origin-center"
+        className="w-full h-full relative transition-transform duration-75 origin-center overflow-visible"
         style={{ transform: `scale(${zoom})` }}
       >
         {/* SVG Directed Bezier Curves connecting nodes */}
@@ -264,10 +267,10 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
               const endX = targetPos.x;
               const endY = targetPos.y - nodeHalfHeight;
 
-              // Smooth cubic bezier curve control points
+              // Smooth cubic bezier curve control points with generous spacing
               const deltaY = Math.abs(endY - startY);
-              const controlY1 = startY + Math.max(30, deltaY * 0.45);
-              const controlY2 = endY - Math.max(30, deltaY * 0.45);
+              const controlY1 = startY + Math.max(40, deltaY * 0.45);
+              const controlY2 = endY - Math.max(40, deltaY * 0.45);
 
               // Determine highlights
               const isUpstreamEdge =
@@ -328,7 +331,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
                 transform: 'translate(-50%, -50%)',
               }}
               className={cn(
-                'absolute z-15 w-[190px] p-3 rounded-2xl border transition-all duration-150 select-none cursor-grab active:cursor-grabbing',
+                'absolute z-15 w-[185px] p-3 rounded-2xl border transition-all duration-150 select-none cursor-grab active:cursor-grabbing',
                 'shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.8)]',
                 isSelected
                   ? 'bg-white border-[#0047AB] ring-2 ring-[#0047AB] shadow-lg scale-105'
@@ -393,7 +396,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
       </div>
 
       {/* ── Miro Canvas Footer Note ── */}
-      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between text-[10px] font-mono text-[#8A7B6D] pointer-events-none z-20">
+      <div className="absolute bottom-2.5 left-3.5 right-3.5 flex items-center justify-between text-[10px] font-mono text-[#8A7B6D] pointer-events-none z-20">
         <span>* Drag nodes to customize topology layout</span>
         <span>Click node to isolate blast radius</span>
       </div>

@@ -18,82 +18,84 @@
    Rich Cobalt Blue (#0047AB) with physical tactile skeuomorphism.
    ===================================================================== */
 @theme {
-  --color-horizon-bg:           #FFF8F0;
-  --color-horizon-surface:      #FAF3EA;
-  --color-horizon-card:         #FFFFFF;
-  --color-horizon-well:         #F3E9DD;
-  --color-horizon-border:       rgba(26, 26, 26, 0.12);
-  --color-horizon-ink:          #1A1A1A;
-  --color-horizon-charcoal:     #333333;
-  --color-horizon-graphite:     #666666;
-  --color-cobalt:               #0047AB;
-  --color-cobalt-deep:          #003380;
-  --color-cobalt-light:         #1C64D9;
-  --color-cobalt-dim:           rgba(0, 71, 171, 0.08);
-  --color-cobalt-glow:          rgba(0, 71, 171, 0.25);
-  --color-cream:                #FFF8F0;
-  --color-cream-subtle:         #FAF3EA;
-  --color-cream-deep:           #F2E7D8;
-  --color-success:              #0F8E52;
-  --color-warning:              #D97706;
-  --color-danger:               #DC2626;
+  --color-horizon-bg: #fff8f0;
+  --color-horizon-surface: #faf3ea;
+  --color-horizon-card: #ffffff;
+  --color-horizon-well: #f3e9dd;
+  --color-horizon-border: rgba(26, 26, 26, 0.12);
+  --color-horizon-ink: #1a1a1a;
+  --color-horizon-charcoal: #333333;
+  --color-horizon-graphite: #666666;
+  --color-cobalt: #0047ab;
+  --color-cobalt-deep: #003380;
+  --color-cobalt-light: #1c64d9;
+  --color-cobalt-dim: rgba(0, 71, 171, 0.08);
+  --color-cobalt-glow: rgba(0, 71, 171, 0.25);
+  --color-cream: #fff8f0;
+  --color-cream-subtle: #faf3ea;
+  --color-cream-deep: #f2e7d8;
+  --color-success: #0f8e52;
+  --color-warning: #d97706;
+  --color-danger: #dc2626;
 }
 
 /* =====================================================================
    CSS VARIABLES — Light Mode Dominating Cream & Cobalt Bridge
    ===================================================================== */
 @theme inline {
-  --font-sans:    'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-heading: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  --font-sans:
+    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading:
+    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
-  --color-background:           var(--background);
-  --color-foreground:           var(--foreground);
-  --color-card:                 var(--card);
-  --color-card-foreground:      var(--card-foreground);
-  --color-popover:              var(--popover);
-  --color-popover-foreground:   var(--popover-foreground);
-  --color-primary:              var(--primary);
-  --color-primary-foreground:   var(--primary-foreground);
-  --color-secondary:            var(--secondary);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted:                var(--muted);
-  --color-muted-foreground:     var(--muted-foreground);
-  --color-accent:               var(--accent);
-  --color-accent-foreground:    var(--accent-foreground);
-  --color-destructive:          var(--destructive);
-  --color-border:               var(--border);
-  --color-input:                var(--input);
-  --color-ring:                 var(--ring);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 
-  --radius-sm:  0.375rem;
-  --radius-md:  0.625rem;
-  --radius-lg:  0.875rem;
-  --radius-xl:  1.125rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
   --radius-2xl: 1.5rem;
   --radius-3xl: 2rem;
 }
 
 :root {
-  --background:           #FFF8F0;
-  --foreground:           #1A1A1A;
-  --card:                 #FFFFFF;
-  --card-foreground:      #1A1A1A;
-  --popover:              #FFFFFF;
-  --popover-foreground:   #1A1A1A;
-  --primary:              #0047AB;
-  --primary-foreground:   #FFF8F0;
-  --secondary:            #F5EDE2;
-  --secondary-foreground: #1A1A1A;
-  --muted:                #F2E7D8;
-  --muted-foreground:     #666666;
-  --accent:               #0047AB;
-  --accent-foreground:    #FFF8F0;
-  --destructive:          #DC2626;
-  --border:               rgba(26, 26, 26, 0.12);
-  --input:                rgba(26, 26, 26, 0.14);
-  --ring:                 #0047AB;
-  --radius:               0.875rem;
+  --background: #fff8f0;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #0047ab;
+  --primary-foreground: #fff8f0;
+  --secondary: #f5ede2;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f2e7d8;
+  --muted-foreground: #666666;
+  --accent: #0047ab;
+  --accent-foreground: #fff8f0;
+  --destructive: #dc2626;
+  --border: rgba(26, 26, 26, 0.12);
+  --input: rgba(26, 26, 26, 0.14);
+  --ring: #0047ab;
+  --radius: 0.875rem;
 }
 
 /* =====================================================================
@@ -106,10 +108,15 @@
   }
 
   html {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:
+      "Poppins",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
     color-scheme: light;
-    background-color: #FFF8F0;
-    color: #1A1A1A;
+    background-color: #fff8f0;
+    color: #1a1a1a;
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -117,33 +124,61 @@
   }
 
   body {
-    background-color: #FFF8F0;
-    color: #1A1A1A;
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #fff8f0;
+    color: #1a1a1a;
+    font-family:
+      "Poppins",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
     line-height: 1.6;
     margin: 0;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family:
+      "Poppins",
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
     font-weight: 800;
-    color: #1A1A1A;
+    color: #1a1a1a;
     letter-spacing: -0.025em;
     line-height: 1.15;
   }
 
-  code, pre, kbd, samp {
-    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
   }
 }
 
 /* =====================================================================
    CUSTOM SCROLLBAR
    ===================================================================== */
-::-webkit-scrollbar        { width: 6px; height: 6px; }
-::-webkit-scrollbar-track  { background: #F5EDE2; }
-::-webkit-scrollbar-thumb  { background: rgba(26, 26, 26, 0.22); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #0047AB; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f5ede2;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(26, 26, 26, 0.22);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #0047ab;
+}
 
 /* =====================================================================
    TACTILE SKEUOMORPHISM SURFACES & CARDS
@@ -152,20 +187,23 @@
 /* Porcelain Skeuomorphic Card & Bento Grid Cards */
 .skeuo-card,
 .bento-card {
-  background: #FFFFFF;
+  background: #ffffff;
   border: 1px solid rgba(26, 26, 26, 0.11);
   border-radius: 2.25rem;
-  box-shadow: 
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
     0 1px 3px rgba(26, 26, 26, 0.05),
     0 6px 20px -2px rgba(26, 26, 26, 0.06);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease;
 }
 
 .skeuo-card:hover,
 .bento-card:hover {
   border-color: rgba(0, 71, 171, 0.3);
-  box-shadow: 
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 1),
     0 2px 6px rgba(26, 26, 26, 0.06),
     0 12px 32px -4px rgba(0, 71, 171, 0.12);
@@ -173,10 +211,10 @@
 
 /* Debossed Well (Countersunk meter, terminal recess, or stat container) */
 .skeuo-well {
-  background: #F4EBE0;
-  border: 1px solid rgba(26, 26, 26, 0.10);
+  background: #f4ebe0;
+  border: 1px solid rgba(26, 26, 26, 0.1);
   border-radius: 1.5rem;
-  box-shadow: 
+  box-shadow:
     inset 0 2px 4px rgba(26, 26, 26, 0.07),
     inset 0 1px 2px rgba(26, 26, 26, 0.04),
     0 1px 0 rgba(255, 255, 255, 0.9);
@@ -184,11 +222,11 @@
 
 /* COBALT BLUE BACKGROUND PATCHES (Rich contrast zones in between cream) */
 .cobalt-patch {
-  background: linear-gradient(145deg, #003380 0%, #0047AB 55%, #00398A 100%);
+  background: linear-gradient(145deg, #003380 0%, #0047ab 55%, #00398a 100%);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 2.5rem;
-  color: #FFF8F0;
-  box-shadow: 
+  color: #fff8f0;
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
     0 4px 12px rgba(0, 51, 128, 0.2),
     0 16px 40px -8px rgba(0, 71, 171, 0.35);
@@ -200,21 +238,21 @@
 .cobalt-patch h2,
 .cobalt-patch h3,
 .cobalt-patch h4 {
-  color: #FFF8F0 !important;
+  color: #fff8f0 !important;
 }
 
 .cobalt-patch p {
-  color: #E0ECFF !important;
+  color: #e0ecff !important;
 }
 
 /* Tactile Primary Cobalt Button */
 .skeuo-btn-primary {
-  background: linear-gradient(180deg, #1A62D6 0%, #0047AB 100%);
+  background: linear-gradient(180deg, #1a62d6 0%, #0047ab 100%);
   border: 1px solid #003680;
   border-radius: 0.875rem;
-  color: #FFF8F0;
+  color: #fff8f0;
   font-weight: 700;
-  box-shadow: 
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.35),
     0 2px 4px rgba(0, 71, 171, 0.25),
     0 6px 16px -2px rgba(0, 71, 171, 0.28);
@@ -223,28 +261,28 @@
 }
 
 .skeuo-btn-primary:hover {
-  background: linear-gradient(180deg, #246DE0 0%, #0050BD 100%);
-  box-shadow: 
+  background: linear-gradient(180deg, #246de0 0%, #0050bd 100%);
+  box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
     0 4px 8px rgba(0, 71, 171, 0.35),
     0 8px 22px -2px rgba(0, 71, 171, 0.35);
 }
 
 .skeuo-btn-primary:active {
-  background: linear-gradient(180deg, #003F99 0%, #0047AB 100%);
+  background: linear-gradient(180deg, #003f99 0%, #0047ab 100%);
   box-shadow: inset 0 2px 4px rgba(0, 20, 60, 0.45);
   transform: translateY(1px);
 }
 
 /* Tactile Secondary Cream Porcelain Button */
 .skeuo-btn-secondary {
-  background: linear-gradient(180deg, #FFFFFF 0%, #F5EDE2 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f5ede2 100%);
   border: 1px solid rgba(26, 26, 26, 0.18);
   border-radius: 0.875rem;
-  color: #1A1A1A;
+  color: #1a1a1a;
   font-weight: 600;
-  box-shadow: 
-    inset 0 1px 0 #FFFFFF,
+  box-shadow:
+    inset 0 1px 0 #ffffff,
     0 1px 3px rgba(26, 26, 26, 0.08),
     0 3px 6px -1px rgba(26, 26, 26, 0.04);
   transition: all 0.15s ease;
@@ -252,16 +290,16 @@
 }
 
 .skeuo-btn-secondary:hover {
-  background: linear-gradient(180deg, #FFFFFF 0%, #EFE5D7 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #efe5d7 100%);
   border-color: rgba(0, 71, 171, 0.4);
-  color: #0047AB;
-  box-shadow: 
-    inset 0 1px 0 #FFFFFF,
+  color: #0047ab;
+  box-shadow:
+    inset 0 1px 0 #ffffff,
     0 2px 6px rgba(0, 71, 171, 0.15);
 }
 
 .skeuo-btn-secondary:active {
-  background: #EAE0D1;
+  background: #eae0d1;
   box-shadow: inset 0 2px 3px rgba(26, 26, 26, 0.12);
   transform: translateY(1px);
 }
@@ -278,23 +316,51 @@
 }
 
 .skeuo-led-healthy {
-  background: radial-gradient(circle at 35% 35%, #6EE7B7 0%, #10B981 60%, #047857 100%);
-  box-shadow: 0 0 6px #10B981, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  background: radial-gradient(
+    circle at 35% 35%,
+    #6ee7b7 0%,
+    #10b981 60%,
+    #047857 100%
+  );
+  box-shadow:
+    0 0 6px #10b981,
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 
 .skeuo-led-degraded {
-  background: radial-gradient(circle at 35% 35%, #FDE68A 0%, #F59E0B 60%, #B45309 100%);
-  box-shadow: 0 0 6px #F59E0B, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fde68a 0%,
+    #f59e0b 60%,
+    #b45309 100%
+  );
+  box-shadow:
+    0 0 6px #f59e0b,
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 
 .skeuo-led-down {
-  background: radial-gradient(circle at 35% 35%, #FCA5A5 0%, #EF4444 60%, #B91C1C 100%);
-  box-shadow: 0 0 6px #EF4444, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  background: radial-gradient(
+    circle at 35% 35%,
+    #fca5a5 0%,
+    #ef4444 60%,
+    #b91c1c 100%
+  );
+  box-shadow:
+    0 0 6px #ef4444,
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 
 .skeuo-led-cobalt {
-  background: radial-gradient(circle at 35% 35%, #93C5FD 0%, #1E6BFF 60%, #0047AB 100%);
-  box-shadow: 0 0 6px #1E6BFF, inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  background: radial-gradient(
+    circle at 35% 35%,
+    #93c5fd 0%,
+    #1e6bff 60%,
+    #0047ab 100%
+  );
+  box-shadow:
+    0 0 6px #1e6bff,
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
 }
 
 /* Badge Pill (Tactile debossed tag) */
@@ -306,19 +372,21 @@
   border-radius: 9999px;
   font-size: 0.6875rem;
   font-weight: 700;
-  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   border: 1px solid rgba(26, 26, 26, 0.12);
-  background: #F4EBE0;
-  color: #1A1A1A;
-  box-shadow: inset 0 1px 2px rgba(26, 26, 26, 0.06), 0 1px 0 #FFFFFF;
+  background: #f4ebe0;
+  color: #1a1a1a;
+  box-shadow:
+    inset 0 1px 2px rgba(26, 26, 26, 0.06),
+    0 1px 0 #ffffff;
 }
 
 /* Divider */
 .horizon-divider {
   border: none;
-  border-top: 1px solid rgba(26, 26, 26, 0.10);
+  border-top: 1px solid rgba(26, 26, 26, 0.1);
   margin: 0;
 }
 
@@ -326,7 +394,7 @@
 .text-display {
   font-size: clamp(3rem, 8vw, 6.25rem);
   font-weight: 900;
-  color: #1A1A1A;
+  color: #1a1a1a;
   letter-spacing: -0.04em;
   line-height: 0.95;
 }
@@ -334,7 +402,7 @@
 .text-hero {
   font-size: clamp(1.85rem, 4vw, 3.25rem);
   font-weight: 850;
-  color: #1A1A1A;
+  color: #1a1a1a;
   letter-spacing: -0.03em;
   line-height: 1.1;
 }
@@ -347,24 +415,33 @@
   color: #555555;
 }
 
-.titlehero{
-    font-size: 12rem;
-    /* 1. Set background first */
-    background: url(../public/horizon.jpg);
-    
-    /* 2. Apply clip properties */
-    -webkit-background-clip: text;
-    background-clip: text;
-    
-    background-position: 60% 34%;
-    background-size: cover;
-    background-repeat: no-repeat;
-    /* 3. Hide original text color */
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+.titlehero {
+  font-size: clamp(100%, 10vw, 14rem);
+  /* 1. Set background first */
+  background: url(../public/horizon.jpg);
 
+  /* 2. Apply clip properties */
+  -webkit-background-clip: text;
+  background-clip: text;
+
+  background-position: 60% 50%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* 3. Hide original text color */
+  filter: brightness(0.9);
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 h2#lifecycle-heading {
-    font-size: 2.75rem;
+  font-size: 2.75rem;
+}
+h1.text-\[17vw\].sm\:text-\[16vw\].md\:text-\[15vw\].lg\:text-\[14vw\].font-black.uppercase.tracking-tighter.leading-none.text-transparent.bg-clip-text.bg-gradient-to-b.from-white.via-zinc-200.to-zinc-600\/30.text-center.sm\:text-left.drop-shadow-\[0_4px_30px_rgba\(255\,255\,255\,0\.06\)\] {
+  color: transparent;
+  background: url(/public/horizon.jpg);
+  background-clip: text;
+  object-fit: cover;
+  background-position: 60% 50%;
+  background-size: cover;
+  filter: brightness(0.95) drop-shadow(0px 0px 7rem #092192);
 }
