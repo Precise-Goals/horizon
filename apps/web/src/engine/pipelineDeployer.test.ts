@@ -151,6 +151,42 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     expect(finalProgress.failedNodeId).toBe('cache-tier');
     expect(finalProgress.nodes[1].status).toBe('failed');
     expect(finalProgress.nodes[2].status).toBe('pending');
-    expect(logs.some((l) => l.includes('[HEALING VERIFICATION REJECTED]'))).toBe(true);
+    expect(logs.some((l) => l.includes('[REMEDY PIPELINE INCOMPLETE]'))).toBe(true);
+  });
+
+  it('computes remedy pipeline checksum on failure, verifies completion, and resumes green one by one', async () => {
+    const logs: string[] = [];
+    const remedyChecksumsCaptured: { nodeId: string; checksum: string }[] = [];
+
+    const finalProgress = await deployer.execute({
+      pipelineName: 'test-remedy-checksum-pipeline',
+      nodes: mockNodes,
+      autoRemediate: true,
+      stepDelayMs: 20,
+      isNodeFailing: (nodeId) => nodeId === 'cache-tier',
+      onRemedyChecksum: (nodeId, remedyChecksum) => {
+        remedyChecksumsCaptured.push({ nodeId, checksum: remedyChecksum });
+      },
+      onLog: (l) => logs.push(l),
+    });
+
+    expect(finalProgress.phase).toBe('completed');
+    expect(remedyChecksumsCaptured.length).toBe(1);
+    expect(remedyChecksumsCaptured[0].nodeId).toBe('cache-tier');
+    expect(remedyChecksumsCaptured[0].checksum.startsWith('0x')).toBe(true);
+
+    // Verify cache-tier has remedyChecksum and remedyCompleted flag
+    const cacheNode = finalProgress.nodes.find((n) => n.nodeId === 'cache-tier')!;
+    expect(cacheNode.status).toBe('verified_green');
+    expect(cacheNode.remedyCompleted).toBe(true);
+    expect(cacheNode.remedyChecksum).toBe(remedyChecksumsCaptured[0].checksum);
+
+    // Verify log confirms remedy completion before sequential resumption
+    expect(logs.some((l) => l.includes('[REMEDY PIPELINE VERIFIED COMPLETE]'))).toBe(true);
+    expect(logs.some((l) => l.includes('Resuming deployment pipeline one-by-one'))).toBe(true);
+
+    // Downstream service-tier successfully resumed and completed green
+    const serviceNode = finalProgress.nodes.find((n) => n.nodeId === 'service-tier')!;
+    expect(serviceNode.status).toBe('verified_green');
   });
 });

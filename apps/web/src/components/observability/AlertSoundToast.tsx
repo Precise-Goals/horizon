@@ -33,20 +33,21 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
-          role="alert"
-          aria-live="assertive"
-          initial={{ opacity: 0, y: -24, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.94 }}
-          transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-          className={cn(
-            'fixed top-5 right-5 z-[9999] w-[calc(100vw-2.5rem)] sm:w-[380px]',
-            'p-4 rounded-2xl bg-[#FFF8F0] border-2 border-[#1A1A1A]',
-            'shadow-[5px_5px_0px_#1A1A1A] font-sans space-y-3',
-            className
-          )}
-        >
+        <div className="fixed inset-0 z-[899] flex items-center justify-center p-4 pointer-events-none">
+          <motion.div
+            role="alert"
+            aria-live="assertive"
+            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 16 }}
+            transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
+            className={cn(
+              'pointer-events-auto w-[calc(100vw-2rem)] max-w-[420px]',
+              'p-5 rounded-2xl bg-[#FFF8F0] border-2 border-[#1A1A1A]',
+              'shadow-[6px_6px_0px_#1A1A1A] font-sans space-y-3.5',
+              className
+            )}
+          >
           {/* Header Row: Title & Close Button */}
           <div className="flex items-center justify-between gap-2 border-b border-[#E8DAC8] pb-2">
             <div className="flex items-center gap-2">
@@ -142,7 +143,8 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
             </span>
           </div>
         </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    )}
+  </AnimatePresence>
   );
 };

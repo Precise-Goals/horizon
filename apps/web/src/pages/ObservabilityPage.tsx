@@ -1924,7 +1924,14 @@ spec:
                     </div>
                     <div className="text-[10px] truncate opacity-90">
                       {isGreen ? (
-                        <span className="text-emerald-700 font-bold">0x{node.checksum?.slice(2, 8)}...</span>
+                        <div className="space-y-0.5">
+                          <span className="text-emerald-700 font-bold block">0x{node.checksum?.slice(2, 8)}...</span>
+                          {node.remedyChecksum && (
+                            <span className="text-[9px] text-purple-700 font-bold flex items-center gap-0.5" title={`Remedy Pipeline Checksum: ${node.remedyChecksum}`}>
+                              <span>🔧 0x{node.remedyChecksum.slice(2, 8)}</span>
+                            </span>
+                          )}
+                        </div>
                       ) : isVerifying ? (
                         <span className="text-amber-800">Hashing...</span>
                       ) : isFailed ? (

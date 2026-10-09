@@ -827,7 +827,16 @@ export const ArchitectPage: React.FC = () => {
                                           {node.nodeName}
                                         </div>
                                         <div className="truncate text-[9px] opacity-80">
-                                          {isGreen ? `0x${node.checksum?.slice(2, 6)}...` : isChecking ? 'Hashing...' : 'Pending'}
+                                          {isGreen ? (
+                                            <div className="space-y-0.5">
+                                              <span>{`0x${node.checksum?.slice(2, 6)}...`}</span>
+                                              {node.remedyChecksum && (
+                                                <span className="text-[8px] text-purple-700 font-bold block" title={`Remedy: ${node.remedyChecksum}`}>
+                                                  🔧 {`0x${node.remedyChecksum.slice(2, 6)}`}
+                                                </span>
+                                              )}
+                                            </div>
+                                          ) : isChecking ? 'Hashing...' : 'Pending'}
                                         </div>
                                       </motion.div>
                                     );
