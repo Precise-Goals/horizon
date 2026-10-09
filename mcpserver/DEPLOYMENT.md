@@ -52,11 +52,17 @@ Configure the form with the following exact values:
 | **Name** | `horizon-mcp-server` | Any unique name you choose |
 | **Region** | `Oregon (US West)` or `Frankfurt (EU Central)` | Choose region closest to your users |
 | **Branch** | `main` | Production branch |
-| **Root Directory** | `mcpserver` | **Critical:** Must point to the `mcpserver` directory |
+| **Root Directory** | `mcpserver` | **Recommended:** Pointing this to `mcpserver` isolates the Python app from root `package.json` |
 | **Runtime** | `Python 3` | Uses Python 3.11 specified in `runtime.txt` |
 | **Build Command** | `pip install -r requirements.txt` | Installs pinned production dependencies |
 | **Start Command** | `uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1` | Single worker optimized for 512MB RAM |
 | **Instance Type** | `Free` (0.1 CPU, 512 MB RAM) | $0/month free tier |
+
+> [!TIP]
+> **Resolving "Could not open requirements file: No such file or directory: requirements.txt"**
+> If you already created a service and left **Root Directory** blank:
+> - **Method 1**: In Render Dashboard, go to your service > **Settings** > scroll to **Root Directory** > set to `mcpserver` > click **Save Changes** and **Manual Deploy**.
+> - **Method 2**: If leaving **Root Directory** blank (repository root), set **Build Command** to `pip install -r requirements.txt` and **Start Command** to `uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1` (or `cd mcpserver && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1`). Both are supported via root fallbacks.
 
 ### Step 3: Configure Health Check Path
 Scroll down to **Advanced Settings**:

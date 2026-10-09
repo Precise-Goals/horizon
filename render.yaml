@@ -1,0 +1,30 @@
+# ==============================================================================
+# Horizon MCP Server — Render Infrastructure as Code (render.yaml Blueprint)
+# ==============================================================================
+services:
+  - type: web
+    name: horizon-mcp-server
+    runtime: python
+    plan: free
+    region: singapore # Closest to India for lowest latency on free tier (or frankfurt / oregon)
+    rootDir: mcpserver
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: SARVAM_API_KEY
+        sync: false # Set in Render dashboard or link
+      - key: SARVAM_BASE_URL
+        value: "https://api.sarvam.ai"
+      - key: SARVAM_MODEL
+        value: "sarvam-105b"
+      - key: MST_TESTNET_RPC
+        value: "https://testnetrpc.mstblockchain.com"
+      - key: MST_CHAIN_ID
+        value: "91562037"
+      - key: ENVIRONMENT
+        value: "production"
+      - key: CORS_ORIGINS
+        value: "*"
+    healthCheckPath: /health
