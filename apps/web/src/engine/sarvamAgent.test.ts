@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, spyOn } from 'bun:test';
 import { sarvamAgent } from './sarvamAgent';
 import { dockerBridge } from './dockerBridge';
 
@@ -58,12 +58,17 @@ describe('Sarvam AI SRE Copilot & Domain Guardrail Suite', () => {
   });
 
   it('askSreAdvisor returns fluent multilingual SRE responses', async () => {
-    const hindiRes = await sarvamAgent.askSreAdvisor('माइक्रोसर्विसेज रिकवरी कैसे होती है?');
-    expect(hindiRes).toContain('माइक्रोसर्विसेज');
-    expect(hindiRes.endsWith('।') || hindiRes.endsWith('.')).toBe(true);
+    const chatSpy = spyOn(sarvamAgent, 'chat').mockResolvedValue('');
+    try {
+      const hindiRes = await sarvamAgent.askSreAdvisor('माइक्रोसर्विसेज रिकवरी कैसे होती है?');
+      expect(hindiRes).toContain('माइक्रोसर्विसेज');
+      expect(hindiRes.endsWith('।') || hindiRes.endsWith('.')).toBe(true);
 
-    const esRes = await sarvamAgent.askSreAdvisor('¿Cómo funciona la recuperación de microservicios?');
-    expect(esRes).toContain('recuperación');
-    expect(esRes.endsWith('.')).toBe(true);
+      const esRes = await sarvamAgent.askSreAdvisor('¿Cómo funciona la recuperación de microservicios?');
+      expect(esRes).toContain('recuperación');
+      expect(esRes.endsWith('.')).toBe(true);
+    } finally {
+      chatSpy.mockRestore();
+    }
   });
 });

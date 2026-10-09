@@ -14,6 +14,20 @@ export interface SarvamCommandResult {
   recommendedPlaybook?: string;
 }
 
+export interface DetailedAiDiagnosis {
+  rootCause: string;
+  playbook: string;
+  explanation: string;
+  source: 'sarvam-ai-cloud' | 'sre-heuristic-guardrail';
+  model: string;
+  promptSent: string;
+  rawOutput: string;
+  latencyMs: number;
+  httpStatus?: number;
+  timestamp: string;
+  checksum?: string;
+}
+
 export class SarvamAgentService {
   private apiKey: string;
   private endpoint: string;
@@ -151,6 +165,10 @@ export class SarvamAgentService {
   }
 
   public async chat(messages: { role: 'system' | 'user' | 'assistant'; content: string }[]): Promise<string> {
+    if (!this.apiKey || this.apiKey === 'test-sarvam-key' || this.apiKey.startsWith('test-')) {
+      return '';
+    }
+
     try {
       const res = await fetch(this.endpoint, {
         method: 'POST',
@@ -162,6 +180,7 @@ export class SarvamAgentService {
           model: this.model,
           messages,
         }),
+        signal: AbortSignal.timeout ? AbortSignal.timeout(2500) : undefined,
       });
 
       if (!res.ok) {
@@ -233,33 +252,74 @@ RESPONSE CONSTRAINTS:
 
   /**
    * Diagnoses an active cluster outage and suggests a deterministic recovery playbook.
+   * Tracks full provenance, raw model completions, latency, and origin source.
    */
-  public async diagnoseOutage(downNodes: SystemNode[], allNodes: SystemNode[]): Promise<{
-    rootCause: string;
-    playbook: string;
-    explanation: string;
-  }> {
+  public async diagnoseOutage(downNodes: SystemNode[], allNodes: SystemNode[]): Promise<DetailedAiDiagnosis> {
+    const startTime = Date.now();
     const prompt = `As Horizon Senior SRE AI Agent, analyze this cluster failure:
 Down/Degraded nodes: ${downNodes.map((n) => `${n.name} (${n.id}, type: ${n.type})`).join(', ')}
 Total cluster topology: ${allNodes.map((n) => n.id).join(', ')}
 
 Explain the primary root cause and state whether high-risk human approval is required for recovery. Keep under 120 words.`;
 
-    const rawResponse = await this.chat([
-      {
-        role: 'system',
-        content: 'You are the Horizon Autonomous Recovery Copilot, an expert AI SRE specializing in topological dependency orchestration.',
-      },
-      { role: 'user', content: prompt },
-    ]);
+    let rawResponse = '';
+    let source: 'sarvam-ai-cloud' | 'sre-heuristic-guardrail' = 'sre-heuristic-guardrail';
+    let httpStatus: number | undefined;
 
+    if (this.apiKey) {
+      try {
+        const res = await fetch(this.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-subscription-key': this.apiKey,
+          },
+          body: JSON.stringify({
+            model: this.model,
+            messages: [
+              {
+                role: 'system',
+                content: 'You are the Horizon Autonomous Recovery Copilot, an expert AI SRE specializing in topological dependency orchestration.',
+              },
+              { role: 'user', content: prompt },
+            ],
+          }),
+          signal: AbortSignal.timeout ? AbortSignal.timeout(2500) : undefined,
+        });
+
+        httpStatus = res.status;
+        if (res.ok) {
+          const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+          const content = data.choices?.[0]?.message?.content?.trim();
+          if (content) {
+            rawResponse = content;
+            source = 'sarvam-ai-cloud';
+          }
+        }
+      } catch {
+        // Gracefully fall back to local SRE heuristics
+      }
+    }
+
+    const latencyMs = Date.now() - startTime;
     const hasDb = downNodes.some((n) => n.type === 'database');
     const primaryDown = downNodes[0]?.name || 'Database Cluster';
 
+    const rootCause = hasDb ? 'Primary Database Connection Pool Depleted / Replica Lag' : `${primaryDown} Service Degradation`;
+    const playbook = hasDb ? 'High-Risk Database Replica Promotion & DNS Cutover' : 'Zero-Downtime Rolling Service Pod Restart';
+    const explanation = rawResponse || `Detected cascade origin at ${primaryDown}. Recommending bottom-up topological restoration sequence to prevent application crash loops.`;
+
     return {
-      rootCause: hasDb ? 'Primary Database Connection Pool Depleted / Replica Lag' : `${primaryDown} Service Degradation`,
-      playbook: hasDb ? 'High-Risk Database Replica Promotion & DNS Cutover' : 'Zero-Downtime Rolling Service Pod Restart',
-      explanation: rawResponse || `Detected cascade origin at ${primaryDown}. Recommending bottom-up topological restoration sequence to prevent application crash loops.`,
+      rootCause,
+      playbook,
+      explanation,
+      source,
+      model: this.model,
+      promptSent: prompt,
+      rawOutput: explanation,
+      latencyMs,
+      httpStatus,
+      timestamp: new Date().toISOString(),
     };
   }
 

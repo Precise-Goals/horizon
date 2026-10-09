@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, spyOn } from 'bun:test';
 import { clusterState } from '../engine/state';
 import { notificationHub } from '../engine/notificationHub';
 import { sarvamAgent } from '../engine/sarvamAgent';
@@ -113,18 +113,72 @@ describe('Observability & Real-time Telemetry Pipeline Suite', () => {
     clusterState.setNodeStatus('db-primary', 'down');
     expect(clusterState.getNode('db-primary')?.status).toBe('down');
 
-    // Sarvam AI SRE diagnosis
-    const downNodes = clusterState.getNodes().filter((n) => n.status === 'down');
-    const allNodes = clusterState.getNodes();
-    const diagnosis = await sarvamAgent.diagnoseOutage(downNodes, allNodes);
+    const fetchSpy = spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: 'Primary database connection pool depleted. Trigger replica promotion.' } }],
+        }),
+        { status: 200 }
+      )
+    );
 
-    expect(diagnosis.rootCause).toBeDefined();
-    expect(diagnosis.playbook).toBeDefined();
-    expect(diagnosis.explanation).toBeDefined();
+    try {
+      // Sarvam AI SRE diagnosis with full provenance
+      const downNodes = clusterState.getNodes().filter((n) => n.status === 'down');
+      const allNodes = clusterState.getNodes();
+      const diagnosis = await sarvamAgent.diagnoseOutage(downNodes, allNodes);
 
-    // AI remediation execution
-    clusterState.setNodeStatus('db-primary', 'healthy');
-    expect(clusterState.getNode('db-primary')?.status).toBe('healthy');
+      expect(diagnosis.rootCause).toBeDefined();
+      expect(diagnosis.playbook).toBeDefined();
+      expect(diagnosis.explanation).toBeDefined();
+      expect(diagnosis.source).toBe('sarvam-ai-cloud');
+      expect(diagnosis.model).toBeDefined();
+      expect(diagnosis.rawOutput).toBeDefined();
+      expect(diagnosis.latencyMs).toBeGreaterThanOrEqual(0);
+
+      // AI remediation execution
+      clusterState.setNodeStatus('db-primary', 'healthy');
+      expect(clusterState.getNode('db-primary')?.status).toBe('healthy');
+    } finally {
+      fetchSpy.mockRestore();
+    }
+  });
+
+  it('validates 7-pipeline cryptographic SHA-256 checksum manifest generation', async () => {
+    const { computeSha256, generateFullRecoveryChecksumManifest } = await import('../lib/pipelineChecksum');
+
+    // Test deterministic SHA-256
+    const hash1 = await computeSha256('horizon-payload-v1');
+    const hash2 = await computeSha256('horizon-payload-v1');
+    expect(hash1).toBe(hash2);
+    expect(hash1.startsWith('0x')).toBe(true);
+    expect(hash1.length).toBe(66); // '0x' + 64 hex chars
+
+    // Test full 7-pipeline recovery manifest
+    const manifest = await generateFullRecoveryChecksumManifest({
+      telemetry: { targetNode: 'db-primary', latencyMs: 999.0, errorRate: 1.0, consecutiveMisses: 3 },
+      incident: { id: 'INC-999', severity: 'P1', source: 'Datadog APM', blastRadius: ['redis-cache'] },
+      dagPlan: { tiers: [{ tier: 0, services: ['db-primary'], action: 'Failover' }] },
+      aiDiagnosis: { source: 'sarvam-ai-cloud', model: 'sarvam-2b', rootCause: 'DB pool depleted', rawOutput: 'Promote replica' },
+      governance: { chainId: 91562037, contract: '0x3EDad...', signer: '0x735...', signature: '0xabc...' },
+      execution: { recoveredNodes: ['db-primary', 'redis-cache'], resolvedAt: new Date().toISOString(), elapsedSec: 24.8 },
+    });
+
+    expect(manifest).toHaveLength(7);
+    manifest.forEach((stage, idx) => {
+      expect(stage.stage).toBe(idx + 1);
+      expect(stage.checksum.startsWith('0x')).toBe(true);
+      expect(stage.checksum.length).toBe(66);
+    });
+
+    // Check specific stages
+    expect(manifest[0].pipelineId).toBe('pipe-telemetry-ingestion');
+    expect(manifest[1].pipelineId).toBe('pipe-anomaly-flapping-guard');
+    expect(manifest[2].pipelineId).toBe('pipe-kahn-dag-sequencing');
+    expect(manifest[3].pipelineId).toBe('pipe-real-ai-sre-reasoning');
+    expect(manifest[4].pipelineId).toBe('pipe-eip712-governance-gate');
+    expect(manifest[5].pipelineId).toBe('pipe-execution-self-healing');
+    expect(manifest[6].pipelineId).toBe('pipe-merkle-audit-anchoring');
   });
 
   it('validates multi-service Dynatrace OneAgent telemetry cluster matrix', () => {
