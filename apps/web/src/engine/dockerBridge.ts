@@ -1,8 +1,7 @@
 /**
  * Horizon Docker Agent Client Bridge
- * Pings the local Docker agent on http://127.0.0.1:5174.
- * Enables seamless Hybrid Mode: uses real local Docker containers if agent is running,
- * or gracefully falls back to the high-fidelity in-memory simulator if offline.
+ * Connects to local Docker agent on http://127.0.0.1:5174 when explicitly enabled.
+ * Defaults to high-fidelity In-Memory Simulator with zero network noise or ERR_CONNECTION_REFUSED spam.
  */
 
 export interface DockerBridgeStatus {
@@ -22,10 +21,14 @@ class DockerBridgeService {
     mode: 'IN_MEMORY_SIMULATOR',
   };
   private listeners: Set<() => void> = new Set();
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
-    this.probeAgent();
-    setInterval(() => this.probeAgent(), 6000);
+    // Only probe if user explicitly enabled local Docker Agent in localStorage.
+    // Prevents noisy ERR_CONNECTION_REFUSED console spam in default browser sessions.
+    if (typeof window !== 'undefined' && localStorage.getItem('horizon_enable_docker_bridge') === 'true') {
+      this.probeAgent();
+    }
   }
 
   public subscribe(listener: () => void): () => void {
@@ -37,10 +40,43 @@ class DockerBridgeService {
     this.listeners.forEach((l) => l());
   }
 
+  public isEnabled(): boolean {
+    return typeof window !== 'undefined' && localStorage.getItem('horizon_enable_docker_bridge') === 'true';
+  }
+
+  public setEnabled(enable: boolean): void {
+    if (typeof window === 'undefined') return;
+    if (enable) {
+      localStorage.setItem('horizon_enable_docker_bridge', 'true');
+      this.probeAgent();
+    } else {
+      localStorage.removeItem('horizon_enable_docker_bridge');
+      if (this.pollTimer) {
+        clearInterval(this.pollTimer);
+        this.pollTimer = null;
+      }
+      this.status = {
+        connected: false,
+        dockerAvailable: false,
+        containers: [],
+        mode: 'IN_MEMORY_SIMULATOR',
+      };
+      this.notify();
+    }
+  }
+
   public async probeAgent(): Promise<DockerBridgeStatus> {
     try {
-      const res = await fetch(`${this.agentUrl}/health`, { signal: AbortSignal.timeout(1500) });
-      if (res.ok) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1200);
+
+      const res = await fetch(`${this.agentUrl}/health`, {
+        signal: controller.signal,
+      }).catch(() => null);
+
+      clearTimeout(timeoutId);
+
+      if (res && res.ok) {
         const data = (await res.json()) as {
           status: string;
           agent: string;
@@ -56,10 +92,21 @@ class DockerBridgeService {
           mode: 'LIVE_DOCKER_AGENT',
         };
         this.notify();
+
+        // While connected, poll gently every 10s
+        if (!this.pollTimer) {
+          this.pollTimer = setInterval(() => this.probeAgent(), 10000);
+        }
         return this.status;
       }
     } catch {
       // Offline fallback
+    }
+
+    // If agent is offline, stop any recurring interval immediately to prevent console spam
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
     }
 
     this.status = {
