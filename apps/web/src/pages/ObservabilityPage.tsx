@@ -61,6 +61,7 @@ import {
   type PipelineValidationResult,
 } from '../engine/customDagPipeline';
 import { cn } from '../lib/utils';
+import { AlertSoundToast } from '../components/observability/AlertSoundToast';
 
 const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
@@ -151,6 +152,13 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   const [isAiAgentWorking, setIsAiAgentWorking] = useState(false);
   const [autoRemediate, setAutoRemediate] = useState(true);
   const [activeDrill, setActiveDrill] = useState<string>('db-primary');
+
+  // Continuous Alert Sound and Toast Window states using /alert.mp3
+  const alertAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [isAlertSounding, setIsAlertSounding] = useState<boolean>(false);
+  const [isAlertSilenced, setIsAlertSilenced] = useState<boolean>(false);
+  const [isAlertToastOpen, setIsAlertToastOpen] = useState<boolean>(false);
+  const [failingNodeDetails, setFailingNodeDetails] = useState<{ id: string; name: string; incidentId?: string } | null>(null);
 
   // Right pane tab: 'terminal' | 'yaml' | 'mcp'
   const [rightPaneTab, setRightPaneTab] = useState<'terminal' | 'yaml' | 'mcp'>('terminal');
@@ -315,6 +323,15 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
             return s;
           })
         );
+
+        if (progress.failedNodeId) {
+          const failedN = progress.nodes.find((n) => n.nodeId === progress.failedNodeId);
+          if (failedN) {
+            startAlertAudio(failedN.nodeId, failedN.nodeName);
+          }
+        } else if (progress.phase === 'completed') {
+          stopAlertAudio();
+        }
       },
       onLog: (msg) => {
         setAiLogs((prev) => [...prev, msg]);
@@ -335,6 +352,8 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
   // Handler for resetting to the nominal baseline cluster
   const handleResetToDefaultCluster = () => {
+    stopAlertAudio();
+    setIsAlertToastOpen(false);
     clusterState.resetToDefaultTopology();
     setServices([
       { id: 'db-primary', name: 'PostgreSQL Primary', type: 'database', status: 'healthy', latencyMs: 4.2, errorRate: 0.0, consecutiveMisses: 0 },
@@ -390,6 +409,56 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     reader.readAsText(file);
     e.target.value = '';
   };
+
+  // Starts continuous alert loop with /alert.mp3 until failure is solved or operator clicks Stop Alert
+  const startAlertAudio = useCallback((nodeId: string, nodeName: string, incidentId?: string) => {
+    setFailingNodeDetails({ id: nodeId, name: nodeName, incidentId });
+    setIsAlertToastOpen(true);
+    setIsAlertSilenced(false);
+
+    if (!soundEnabled) return;
+
+    try {
+      if (!alertAudioRef.current) {
+        alertAudioRef.current = new Audio('/alert.mp3');
+        alertAudioRef.current.loop = true;
+      }
+      alertAudioRef.current.currentTime = 0;
+      const playPromise = alertAudioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setIsAlertSounding(true);
+          })
+          .catch((err) => {
+            console.warn('Audio playback waiting for user gesture or browser permission:', err);
+            setIsAlertSounding(false);
+          });
+      }
+    } catch (err) {
+      console.warn('Audio initialization exception:', err);
+    }
+  }, [soundEnabled]);
+
+  // Stops the tune in the popup toast window, while remedy workflow stays as planned
+  const stopAlertAudio = useCallback(() => {
+    if (alertAudioRef.current) {
+      alertAudioRef.current.pause();
+      alertAudioRef.current.currentTime = 0;
+    }
+    setIsAlertSounding(false);
+    setIsAlertSilenced(true);
+  }, []);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (alertAudioRef.current) {
+        alertAudioRef.current.pause();
+        alertAudioRef.current = null;
+      }
+    };
+  }, []);
 
   // Audio synthesizer for authentic PagerDuty chime
   const playPagerChime = useCallback(() => {
@@ -491,6 +560,9 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       summary: `Synthetic sliding-window health probe tripped 3/3 missed heartbeats. APM latency spiked to 999ms with 100% error rate. Cascading impact across ${blast.length} downstream microservices.`,
     };
     setActiveIncident(newIncident);
+
+    // Start continuous /alert.mp3 audio loop and open Alert: Node Failure popup toast
+    startAlertAudio(target.id, target.name, incidentId);
 
     // Broadcast to notificationHub
     notificationHub.broadcastIncident({
@@ -674,6 +746,10 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
 
     setActiveIncident((prev) => (prev ? { ...prev, status: 'RESOLVED' } : null));
     setIsAiAgentWorking(false);
+    stopAlertAudio();
+    setTimeout(() => {
+      setIsAlertToastOpen(false);
+    }, 3500);
   };
 
   // Dedicated Auto-Remediation Effect:
@@ -702,6 +778,8 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       clearTimeout(autoTimerRef.current);
       autoTimerRef.current = null;
     }
+    stopAlertAudio();
+    setIsAlertToastOpen(false);
     setActiveIncident(null);
     setIsAiAgentWorking(false);
     setAiDiagnosis(null);
@@ -2174,6 +2252,20 @@ spec:
           </Card>
         </div>
       </div>
+
+      {/* Floating Alert Sound & Node Failure Toast with Stop Alert Action */}
+      <AlertSoundToast
+        isOpen={isAlertToastOpen}
+        nodeName={failingNodeDetails?.name || 'Unknown Node'}
+        nodeId={failingNodeDetails?.id}
+        incidentId={failingNodeDetails?.incidentId}
+        isSounding={isAlertSounding}
+        isSilenced={isAlertSilenced}
+        autoRemediate={autoRemediate}
+        isResolved={activeIncident?.status === 'RESOLVED'}
+        onStopAlert={stopAlertAudio}
+        onDismiss={() => setIsAlertToastOpen(false)}
+      />
     </motion.div>
   );
 };
