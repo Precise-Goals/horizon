@@ -223,6 +223,9 @@ export class SynchronousPipelineDeployer {
 
     emit();
 
+    // Set of nodes for which we have already triggered a complete pipeline restart
+    const restartedForNodes = new Set<string>();
+
     // Iterate through each synchronous node
     for (let i = 0; i < sortedNodes.length; i++) {
       if (this.isCancelled) {
@@ -257,7 +260,7 @@ export class SynchronousPipelineDeployer {
       const isSimulatedFail = options.isNodeFailing ? options.isNodeFailing(node.id) : false;
       const currentClusterNode = clusterState.getNode(node.id);
       const isClusterDown = currentClusterNode ? (currentClusterNode.status === 'down' || currentClusterNode.status === 'degraded') : false;
-      const nodeHasFailed = isSimulatedFail || isClusterDown;
+      const nodeHasFailed = (isSimulatedFail || isClusterDown) && !stateItem.remedyCompleted;
 
       if (nodeHasFailed) {
         // --- FAILURE DETECTED: STOP SYNCHRONOUS PROGRESSION ---
@@ -364,10 +367,25 @@ export class SynchronousPipelineDeployer {
           this.currentProgress.phase = 'running';
 
           log(`✅ [AUTO REMEDY SUCCESS] "${stateItem.nodeName}" restarted & verified green.`);
-          log(`   Resuming deployment pipeline dynamically. Subsequent nodes proceeding one by one.`);
           log(`   New Checksum: ${healedChecksum.slice(0, 18)}... [STATUS: GREEN]`);
           emit();
 
+          // If not restarted yet for this node, restart the entire deployment pipeline completely from Node 1 (index 0)
+          if (!restartedForNodes.has(node.id)) {
+            restartedForNodes.add(node.id);
+            log(`🔄 [PIPELINE COMPLETE RESTART] Failure on "${stateItem.nodeName}" resolved & node restarted. Restarting full deployment pipeline from Node 1...`);
+            for (let k = 0; k < sortedNodes.length; k++) {
+              if (this.currentProgress.nodes[k].nodeId !== node.id) {
+                this.currentProgress.nodes[k].status = 'pending';
+              }
+            }
+            i = -1; // Next iteration will evaluate index 0
+            emit();
+            await new Promise((r) => setTimeout(r, Math.min(delay, 200)));
+            continue;
+          }
+
+          log(`   Resuming deployment pipeline dynamically. Subsequent nodes proceeding one by one.`);
           await new Promise((r) => setTimeout(r, delay));
         } else {
           // --- AUTO-REMEDY IS OFF: HALT AND WAIT FOR OPERATOR ---
@@ -458,10 +476,25 @@ export class SynchronousPipelineDeployer {
           this.currentProgress.failedNodeId = null;
 
           log(`✅ [MANUAL REMEDY SUCCESS] "${stateItem.nodeName}" restarted & restored to nominal health.`);
-          log(`   Resuming deployment pipeline dynamically. Subsequent nodes proceeding one by one.`);
           log(`   Node Checksum: ${healedChecksum.slice(0, 18)}... [STATUS: GREEN]`);
           emit();
 
+          // If not restarted yet for this node, restart the entire deployment pipeline completely from Node 1 (index 0)
+          if (!restartedForNodes.has(node.id)) {
+            restartedForNodes.add(node.id);
+            log(`🔄 [PIPELINE COMPLETE RESTART] Manual remedy verified on "${stateItem.nodeName}". Restarting full deployment pipeline completely from Node 1...`);
+            for (let k = 0; k < sortedNodes.length; k++) {
+              if (this.currentProgress.nodes[k].nodeId !== node.id) {
+                this.currentProgress.nodes[k].status = 'pending';
+              }
+            }
+            i = -1; // Next iteration will evaluate index 0
+            emit();
+            await new Promise((r) => setTimeout(r, Math.min(delay, 200)));
+            continue;
+          }
+
+          log(`   Resuming deployment pipeline dynamically. Subsequent nodes proceeding one by one.`);
           await new Promise((r) => setTimeout(r, delay));
         }
       } else {

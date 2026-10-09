@@ -94,6 +94,7 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     expect(logs.some((l) => l.includes('[DEPLOYMENT HALTED]'))).toBe(true);
     expect(logs.some((l) => l.includes('[AUTO REMEDY: ON]'))).toBe(true);
     expect(logs.some((l) => l.includes('[AUTO REMEDY SUCCESS]'))).toBe(true);
+    expect(logs.some((l) => l.includes('[PIPELINE COMPLETE RESTART]'))).toBe(true);
   });
 
   it('halts on node failure when auto-remedy is OFF, waits for manual fix, and resumes green', async () => {
@@ -131,6 +132,7 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     expect(finalProgress.nodes[2].status).toBe('verified_green');
     expect(logs.some((l) => l.includes('[MANUAL OPERATOR ACTION RECEIVED]'))).toBe(true);
     expect(logs.some((l) => l.includes('[MANUAL REMEDY SUCCESS]'))).toBe(true);
+    expect(logs.some((l) => l.includes('[PIPELINE COMPLETE RESTART]'))).toBe(true);
   });
 
   it('strictly refuses to proceed to node success if healing verification fails', async () => {
@@ -186,6 +188,7 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     expect(logs.some((l) => l.includes('Resuming deployment pipeline one-by-one'))).toBe(true);
     expect(logs.some((l) => l.includes('[DYNAMIC RESTART]'))).toBe(true);
     expect(logs.some((l) => l.includes('[DYNAMIC RESUME]'))).toBe(true);
+    expect(logs.some((l) => l.includes('[PIPELINE COMPLETE RESTART]'))).toBe(true);
 
     // Downstream service-tier successfully resumed and completed green
     const serviceNode = finalProgress.nodes.find((n) => n.nodeId === 'service-tier')!;

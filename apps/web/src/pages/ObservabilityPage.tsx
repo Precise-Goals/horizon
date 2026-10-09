@@ -212,6 +212,11 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     { id: 'web-frontend', name: 'Client Portal', type: 'frontend', status: 'healthy', latencyMs: 22.0, errorRate: 0.0, consecutiveMisses: 0 },
   ]);
 
+  const servicesRef = useRef<ServiceProbe[]>(services);
+  useEffect(() => {
+    servicesRef.current = services;
+  }, [services]);
+
   // Dynamic Custom DAG YAML Pipeline state
   const [customYaml, setCustomYaml] = useState<string>(ECOMMERCE_TEMPLATE_YAML);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('ecommerce');
@@ -346,8 +351,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   }, []);
 
   // Handler for deploying custom pipeline to the live cluster with synchronous node-by-node SHA-256 verification
-  const handleApplyCustomPipeline = async () => {
-    if (!pipelineValidation.isValid || pipelineValidation.nodes.length === 0 || isDeploying) return;
+  const handleApplyCustomPipeline = async (forceRestart = false) => {
+    if (!pipelineValidation.isValid || pipelineValidation.nodes.length === 0) return;
+    if (isDeploying && !forceRestart) return;
+
+    if (isDeploying && forceRestart) {
+      pipelineDeployer.cancel();
+      await new Promise((r) => setTimeout(r, 80));
+    }
 
     setIsDeploying(true);
     setRightPaneTab('terminal');
@@ -357,7 +368,7 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       const isDb = n.type === 'database';
       const isCache = n.type === 'cache';
       const isGw = n.type === 'gateway';
-      const existingProbe = services.find((s) => s.id === n.id);
+      const existingProbe = servicesRef.current.find((s) => s.id === n.id);
       return {
         id: n.id,
         name: n.name || n.id,
@@ -377,15 +388,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       topologicalLevels: pipelineValidation.topologicalLevels,
       autoRemediate: autoRemediate,
       isNodeFailing: (nodeId) => {
-        const probe = services.find((s) => s.id === nodeId);
-        return probe ? probe.status === 'down' : false;
+        const probe = servicesRef.current.find((s) => s.id === nodeId);
+        const clusterNode = clusterState.getNode(nodeId);
+        const isClusterDown = clusterNode ? (clusterNode.status === 'down' || clusterNode.status === 'degraded') : false;
+        return (probe ? probe.status === 'down' : false) || isClusterDown;
       },
       verifyHealing: (nodeId) => {
-        const probe = services.find((s) => s.id === nodeId);
         const clusterNode = clusterState.getNode(nodeId);
-        const isClusterHealthy = clusterNode ? clusterNode.status === 'healthy' : true;
-        const isProbeHealthy = probe ? probe.status !== 'down' : true;
-        return isClusterHealthy && isProbeHealthy;
+        return clusterNode ? clusterNode.status === 'healthy' : true;
       },
       onProgress: (progress) => {
         setDeployProgress(progress);
@@ -836,6 +846,14 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     setTimeout(() => {
       setIsAlertToastOpen(false);
     }, 3500);
+
+    // 🚀 AUTOMATIC PIPELINE RESTART UPON FAILURE RESOLUTION:
+    // When failure is resolved, automatically restart and run the deployment pipeline completely from Node 1
+    // so the operator does not have to manually run the deployment pipeline
+    appendLog('🔄 [AUTO DEPLOYMENT RESTART] Outage resolved! Automatically restarting and running full deployment pipeline completely from step 1...');
+    setTimeout(() => {
+      handleApplyCustomPipeline(true);
+    }, 450);
   };
 
   // Dedicated Auto-Remediation Effect:
@@ -1706,7 +1724,7 @@ spec:
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Deploy Button with Live Progress State */}
             <button
-              onClick={handleApplyCustomPipeline}
+              onClick={() => handleApplyCustomPipeline(true)}
               disabled={!pipelineValidation.isValid || isDeploying}
               className={cn(
                 'px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-md transition-all cursor-pointer flex items-center gap-2',
