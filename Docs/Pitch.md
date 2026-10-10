@@ -33,6 +33,60 @@ Use this analogy whenever speaking to non-technical judges or investors:
 
 ---
 
+## 2.5 The Master Demo-Video Synced Pitch Script (Starts with "Horizon")
+*Use this exact script for your live demo video recording or presentation. Every section includes exact on-screen video actions that parallel your spoken words, starting with the word **"Horizon"** on second zero.*
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│               DEMO VIDEO TIMELINE & APPLICATION WALKTHROUGH MAPPING                    │
+├─────────┬───────────────────────────────┬──────────────────────────────────────────────┤
+│ 0:00    │ Scene 1: Platform Overview    │ Hero Dashboard, APM Telemetry & Cluster State│
+│ 0:25    │ Scene 2: Failure & Alert Stop │ Chaos Simulation, 3-Probe Miss, Stop Alert   │
+│ 0:50    │ Scene 3: Dynamic DAG & Kahn   │ YAML Pipeline, Streaming/Ticketing, Blast Rad│
+│ 1:15    │ Scene 4: Checksums & Remediation│ Synchronous Checksum, Auto-Remedy, Green Stepper│
+│ 1:45    │ Scene 5: Cryptographic Gate   │ EIP-712 BridgeKey Wallet Approval on Tier 0  │
+│ 2:10    │ Scene 6: Sarvam AI Copilot    │ Architect Page, Hindi Ask Mode, Quick Prompts│
+│ 2:35    │ Scene 7: On-Chain Audit & Win │ MST Blockchain Merkle Root, CERT-In Export   │
+└─────────┴───────────────────────────────┴──────────────────────────────────────────────┘
+```
+
+#### Scene 1: Platform Overview & System Topology [0:00 - 0:25]
+* **Demo Video Action**: Screen opens on [horizon-aiops.vercel.app](https://horizon-aiops.vercel.app). Shows the **Observability Dashboard** with the real-time APM telemetry stream, live latency curve wave, and neo-brutalist node status indicators (`PostgreSQL`, `Redis`, `Auth`, `API Gateway`, `Web Frontend`) all in healthy state.
+* **Spoken Pitch (Word #1 is "Horizon")**:
+  > *"**Horizon** is India’s sovereign autonomous infrastructure recovery platform, engineered to eliminate the multi-million-dollar nightmare of cascading cloud outages. Today, distributed enterprise systems operate as complex directed graphs of dependencies—databases sit under caches, caches under APIs, and APIs under frontends. When a foundational database crashes, current monitoring tools only display red alerts, while panicked engineers restart services out of order, triggering catastrophic thundering herds and multi-hour outages. Horizon fixes this by making infrastructure recovery a deterministic, mathematically verified science."*
+
+#### Scene 2: Chaos Injection, Flapping Guard & Siren Control [0:25 - 0:50]
+* **Demo Video Action**: Mouse clicks **"Simulate Failure"** on `db-primary` (connection pool exhaustion). The APM latency wave spikes. The 3-consecutive-miss sliding window trips and declares node down. The emergency siren (`alert.mp3`) starts playing loudly. A centered pop-up toast (`z-index: 899`) appears with *"Alert Node Failure"*. Mouse clicks the **"Stop Alert"** button; audio stops immediately while the remedy workflow continues uninterrupted.
+* **Spoken Pitch**:
+  > *"Watch what happens during a real outage. We inject a severe connection pool failure into our primary database. Horizon’s sliding-window detector filters out transient network jitter, confirming an outage only after three consecutive missed probes. Immediately, our sentinel sounds an audible alert and alerts the on-call team. With a single click on our centered alert toast, the operator silences the siren while Horizon’s autonomous recovery engine takes control in the background."*
+
+#### Scene 3: Dynamic DAG Pipelines & Topological Sequencing [0:50 - 1:15]
+* **Demo Video Action**: Screen scrolls to the **Dynamic DAG Pipeline Editor & Visualizer**. Presenter clicks pre-built industry scenario chips (*🎬 Live Video Streaming*, *🎟️ Live Ticket Booking*, *📰 High-Traffic Blogging*). The DAG graph updates dynamically. Presenter highlights the reverse-BFS blast radius and Kahn’s topological sort tiers.
+* **Spoken Pitch**:
+  > *"Rather than relying on static, outdated runbooks, Horizon models live infrastructure into an executable Directed Acyclic Graph. Our reverse-BFS algorithm maps the exact downstream blast radius in milliseconds. Then, Kahn’s Topological Sort calculates the only mathematically safe restoration order: foundational databases first, distributed caches second, core APIs third, and public ingress gateways last. No dependent service is permitted to restart until its underlying foundation is certified healthy."*
+
+#### Scene 4: Synchronous Checksum Verification & Sequential Auto-Remedy [1:15 - 1:45]
+* **Demo Video Action**: Mouse clicks **"Deploy Pipeline"**. Stepper verifies background cryptographic SHA-256 checksums node-by-node. It halts at the failed node. Presenter flips the **"Auto-Remedy"** toggle ON. The remediation playbook executes, verifies healing, dynamically restarts that node, and resumes deployment. Stepper nodes sequentially turn verified green strictly one-by-one in topological sequence.
+* **Spoken Pitch**:
+  > *"When we deploy the pipeline, Horizon evaluates cryptographic SHA-256 checksums across every synchronous node. If a checksum fails, deployment halts instantly to prevent corruption. With our Auto-Remedy toggle enabled, Horizon diagnoses the root cause, executes the remedy playbook, verifies healing, dynamically restarts that node, and automatically resumes deployment. Notice how each block turns verified green strictly one by one in topological sequence—zero race conditions, zero thundering herds."*
+
+#### Scene 5: Cryptographic Governance & EIP-712 Approval Gate [1:45 - 2:10]
+* **Demo Video Action**: Stepper reaches high-risk Tier 0 database failover. Pipeline pauses. A BridgeKey Web3 wallet modal pops up displaying the typed EIP-712 approval payload. Incident Commander approves and signs with their hardware/browser wallet. Signature is validated and the pipeline unfreezes.
+* **Spoken Pitch**:
+  > *"Enterprises cannot risk rogue AI executing destructive cutovers in production. Horizon enforces Risk-Tiered Governance: non-destructive container restarts execute autonomously, but hazardous actions like database promotions pause at a cryptographic gate. The Incident Commander reviews the structured message and signs it using their Web3 wallet. This hardware-backed EIP-712 signature guarantees absolute non-repudiation and safely unlocks the final recovery tier."*
+
+#### Scene 6: Sarvam AI Copilot & Sovereign Multilingual Architect [2:10 - 2:35]
+* **Demo Video Action**: Screen navigates to the **Architect Page**. Presenter shows prompt suggestions (*"Live Video Streaming & CDN Mesh"*, *"Flash-Sale Ticket Locking SRE"*). Switches to **Ask Mode** and submits an SRE question in Hindi (*"डेटाबेस फेलियर का मूल कारण क्या था?"*). Sarvam AI returns an instant, fluent diagnostic response in Hindi, with canonical English commands beneath.
+* **Spoken Pitch**:
+  > *"Over in our Architect studio, operators can synthesize custom pipelines using prompt suggestions or natural language commands. Powered by Sarvam AI—India’s sovereign 105B foundation model—our copilot features Read-Only Ask Mode in Hindi and regional languages for operations teams, while our canonical safety barrier guarantees that all machine execution commands remain 100% standard English to prevent translation hallucinations."*
+
+#### Scene 7: On-Chain Merkle Audit Vault & Measurable Impact [2:35 - 3:00]
+* **Demo Video Action**: Screen switches to the **Governance & Audit View**. Presenter displays the transaction link on the MST Testnet Block Explorer (Chain ID 91562037) with the anchored SHA-256 Merkle root. Clicks **"Export CERT-In Report"**. Final dashboard metrics flash on screen: **MTTR reduced from 45 minutes to 87 seconds (95% drop)** with 0 dependency violations.
+* **Spoken Pitch**:
+  > *"Every probe check, operator signature, and recovery transition is hashed into a Merkle root and anchored to the MST Blockchain. When CERT-In mandates a 6-hour incident disclosure, teams don't spend three days piecing together fragmented server logs—they export a tamper-evident audit report in one second. In live chaos drills, Horizon cuts Mean Time to Recovery from 45 minutes down to 87 seconds. Horizon transforms 3:00 AM panic into a single, mathematically verified click. Thank you."*
+
+---
+
 ## 3. Ready-to-Use Pitch Scripts by Scenario
 
 ```
