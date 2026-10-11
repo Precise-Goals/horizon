@@ -26,7 +26,7 @@ const clientEnvSchema = z.object({
   // Sarvam AI Intelligent Copilot
   VITE_SARVAM_API_KEY: z.string().min(1, 'VITE_SARVAM_API_KEY is required'),
   VITE_SARVAM_BASE_URL: z.string().url().default('https://api.sarvam.ai'),
-  VITE_SARVAM_MODEL: z.string().default('sarvam-105b'),
+  VITE_SARVAM_MODEL: z.string().default('sarvam-105b-conversations'),
 
   // Application Settings
   VITE_API_BASE: z.string().default('/api/v1'),

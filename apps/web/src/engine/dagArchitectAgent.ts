@@ -58,7 +58,12 @@ Rules:
       ]);
 
       if (sarvamRaw && sarvamRaw.trim().length > 0) {
-        const jsonMatch = sarvamRaw.match(/\{[\s\S]*\}/);
+        // Strip out markdown code fences if present
+        const cleaned = sarvamRaw
+          .replace(/```json\s*/gi, '')
+          .replace(/```\s*$/gi, '')
+          .trim();
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           const compiled = this.compileArchitectureFromJson(parsed, userPrompt);
@@ -186,8 +191,16 @@ Rules:
       return this.buildFintechMesh(aiSummary);
     }
 
-    if (lower.includes('streaming') || lower.includes('video') || lower.includes('transcode')) {
+    if (lower.includes('streaming') || lower.includes('video') || lower.includes('transcode') || lower.includes('ott')) {
       return this.buildStreamingPlatform(aiSummary);
+    }
+
+    if (lower.includes('ticket') || lower.includes('booking') || lower.includes('flash-sale') || lower.includes('seat')) {
+      return this.buildTicketBookingMesh(aiSummary);
+    }
+
+    if (lower.includes('blog') || lower.includes('cms') || lower.includes('publishing') || lower.includes('varnish') || lower.includes('article')) {
+      return this.buildBloggingCmsMesh(aiSummary);
     }
 
     if (lower.includes('k8s') || lower.includes('kubernetes') || lower.includes('multi-region') || lower.includes('cockroach') || lower.includes('mesh')) {
@@ -465,6 +478,83 @@ Rules:
       summary:
         aiSummary ||
         'Decoded distributed video ingestion, transcoding pipeline, and low-latency manifest delivery. ScyllaDB foundational tier recovers first.',
+      cycleDetected: false,
+      nodes,
+      edges,
+      topologicalLevels,
+      yamlPipeline,
+    };
+  }
+
+  /**
+   * Pre-built: High-Concurrency Live Ticket Booking Flash-Sale Mesh
+   */
+  private buildTicketBookingMesh(aiSummary?: string): DecodedArchitecture {
+    const nodes: SystemNode[] = [
+      { id: 'db-cockroach-ledger', name: 'CockroachDB Seating Ledger', type: 'database', status: 'healthy', dependencies: [] },
+      { id: 'redis-seat-locks', name: 'Redis Distributed Seat Locks', type: 'cache', status: 'healthy', dependencies: ['db-cockroach-ledger'] },
+      { id: 'rabbitmq-booking-queue', name: 'RabbitMQ Booking Queue', type: 'cache', status: 'healthy', dependencies: ['db-cockroach-ledger', 'redis-seat-locks'] },
+      { id: 'seat-allocation-worker', name: 'Seat Allocation Worker', type: 'application', status: 'healthy', dependencies: ['rabbitmq-booking-queue', 'redis-seat-locks'] },
+      { id: 'stripe-checkout-service', name: 'Stripe Checkout API', type: 'application', status: 'healthy', dependencies: ['seat-allocation-worker', 'db-cockroach-ledger'] },
+      { id: 'cloudfront-edge-gateway', name: 'AWS CloudFront Ingress WAF', type: 'gateway', status: 'healthy', dependencies: ['stripe-checkout-service'] },
+    ];
+
+    const edges = [
+      { source: 'db-cockroach-ledger', target: 'redis-seat-locks', relationship: 'Seeds Inventory Limits' },
+      { source: 'db-cockroach-ledger', target: 'rabbitmq-booking-queue', relationship: 'Persists Reservation CDC' },
+      { source: 'redis-seat-locks', target: 'seat-allocation-worker', relationship: 'Validates 10-Min Seat Locks' },
+      { source: 'rabbitmq-booking-queue', target: 'seat-allocation-worker', relationship: 'Consumes Reservation Events' },
+      { source: 'seat-allocation-worker', target: 'stripe-checkout-service', relationship: 'Authorizes Payment Capture' },
+      { source: 'stripe-checkout-service', target: 'cloudfront-edge-gateway', relationship: 'Routes Checkout Traffic' },
+    ];
+
+    const topologicalLevels = this.computeLevels(nodes);
+    const yamlPipeline = this.generateYamlSpec('ticket-booking-flash-sale', nodes, topologicalLevels);
+
+    return {
+      architectureName: 'Live Ticket Booking Flash-Sale Mesh',
+      summary:
+        aiSummary ||
+        'Decoded high-concurrency ticket booking mesh: CockroachDB distributed ACID transactions, Redis in-memory mutex locks, RabbitMQ booking queue, and CloudFront edge bot mitigation.',
+      cycleDetected: false,
+      nodes,
+      edges,
+      topologicalLevels,
+      yamlPipeline,
+    };
+  }
+
+  /**
+   * Pre-built: High-Traffic Blogging & Publishing CMS Mesh
+   */
+  private buildBloggingCmsMesh(aiSummary?: string): DecodedArchitecture {
+    const nodes: SystemNode[] = [
+      { id: 'db-postgres-cms', name: 'PostgreSQL Content Store', type: 'database', status: 'healthy', dependencies: [] },
+      { id: 'varnish-edge-cache', name: 'Varnish HTTP Reverse Proxy Cache', type: 'cache', status: 'healthy', dependencies: ['db-postgres-cms'] },
+      { id: 'redis-article-feed', name: 'Redis Article & Author Feed Cache', type: 'cache', status: 'healthy', dependencies: ['db-postgres-cms'] },
+      { id: 'algolia-indexer-worker', name: 'Algolia Search Indexer Worker', type: 'application', status: 'healthy', dependencies: ['db-postgres-cms', 'redis-article-feed'] },
+      { id: 'nextjs-isr-frontend', name: 'Next.js ISR Publishing Service', type: 'application', status: 'healthy', dependencies: ['varnish-edge-cache', 'algolia-indexer-worker'] },
+      { id: 'cloudflare-waf-gateway', name: 'Cloudflare WAF CDN Gateway', type: 'gateway', status: 'healthy', dependencies: ['nextjs-isr-frontend'] },
+    ];
+
+    const edges = [
+      { source: 'db-postgres-cms', target: 'varnish-edge-cache', relationship: 'Populates SSR Content' },
+      { source: 'db-postgres-cms', target: 'redis-article-feed', relationship: 'Syncs Feed Metadata' },
+      { source: 'db-postgres-cms', target: 'algolia-indexer-worker', relationship: 'Streams Article Revisions' },
+      { source: 'redis-article-feed', target: 'algolia-indexer-worker', relationship: 'Caches Search Tokens' },
+      { source: 'varnish-edge-cache', target: 'nextjs-isr-frontend', relationship: 'Accelerates Cache Hits' },
+      { source: 'algolia-indexer-worker', target: 'nextjs-isr-frontend', relationship: 'Powers Instant Search' },
+      { source: 'nextjs-isr-frontend', target: 'cloudflare-waf-gateway', relationship: 'Delivers Edge Traffic' },
+    ];
+
+    const topologicalLevels = this.computeLevels(nodes);
+    const yamlPipeline = this.generateYamlSpec('blogging-publishing-cms', nodes, topologicalLevels);
+
+    return {
+      architectureName: 'High-Traffic Blogging & Publishing CMS Mesh',
+      summary:
+        aiSummary ||
+        'Decoded digital publishing CMS mesh: PostgreSQL primary content store, Varnish HTTP edge caching, Redis feed cache, Algolia full-text search indexer, and Next.js ISR edge frontends.',
       cycleDetected: false,
       nodes,
       edges,

@@ -5,7 +5,7 @@
  */
 import { serve } from 'bun';
 
-const PORT = 5174;
+const PORT = Number(process.env.DOCKER_AGENT_PORT || 5176);
 const CONTAINERS = [
   'simulated_postgres-primary_1',
   'simulated_redis-cache_1',

@@ -36,7 +36,8 @@ export class SarvamAgentService {
   constructor() {
     this.apiKey = env.VITE_SARVAM_API_KEY;
     this.endpoint = `${env.VITE_SARVAM_BASE_URL.replace(/\/$/, '')}/v1/chat/completions`;
-    this.model = env.VITE_SARVAM_MODEL;
+    const cfg = env.VITE_SARVAM_MODEL;
+    this.model = (!cfg || cfg === 'sarvam-105b') ? 'sarvam-105b-conversations' : cfg;
   }
 
   /**
@@ -128,8 +129,9 @@ export class SarvamAgentService {
       return cleaned;
     }
 
-    // If exceeds ~520 characters, trim strictly at the last complete sentence boundary within 520 chars
-    if (cleaned.length > 520) {
+    // Only trim unstructured text if it lacks structured markdown formatting (e.g. headers, lists)
+    const hasMarkdownStructure = /^(#+|\*|-|\d+\.|\|)/m.test(cleaned);
+    if (!hasMarkdownStructure && cleaned.length > 520) {
       const slice = cleaned.slice(0, 520);
       const lastSentenceEnd = Math.max(
         slice.lastIndexOf('. '),
@@ -169,30 +171,52 @@ export class SarvamAgentService {
       return '';
     }
 
-    try {
-      const res = await fetch(this.endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'api-subscription-key': this.apiKey,
-        },
-        body: JSON.stringify({
-          model: this.model,
-          messages,
-        }),
-        signal: AbortSignal.timeout ? AbortSignal.timeout(2500) : undefined,
-      });
+    const modelsToTry = [
+      this.model,
+      this.model === 'sarvam-105b-conversations' ? 'sarvam-105b' : 'sarvam-105b-conversations',
+    ];
 
-      if (!res.ok) {
-        throw new Error(`Sarvam API returned HTTP ${res.status}: ${res.statusText}`);
+    for (const modelName of modelsToTry) {
+      try {
+        const res = await fetch(this.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-subscription-key': this.apiKey,
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages,
+            temperature: 0.3,
+            max_tokens: 1024,
+          }),
+          signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
+        });
+
+        if (!res.ok) {
+          throw new Error(`Sarvam API returned HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const data = (await res.json()) as {
+          choices?: {
+            message?: {
+              content?: string | null;
+              reasoning_content?: string | null;
+            };
+          }[];
+        };
+
+        const choice = data.choices?.[0]?.message;
+        const rawContent = choice?.content?.trim() || choice?.reasoning_content?.trim() || '';
+        if (rawContent) {
+          return rawContent;
+        }
+      } catch (err: unknown) {
+        console.warn(`[SarvamAgent] Notice for model ${modelName}:`, err);
       }
-
-      const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-      return data.choices?.[0]?.message?.content?.trim() || '';
-    } catch (err: unknown) {
-      console.warn('Sarvam AI request notice: using local SRE heuristics.', err);
-      return '';
     }
+
+    return '';
   }
 
   /**
@@ -283,14 +307,24 @@ Explain the primary root cause and state whether high-risk human approval is req
               },
               { role: 'user', content: prompt },
             ],
+            temperature: 0.3,
+            max_tokens: 512,
           }),
-          signal: AbortSignal.timeout ? AbortSignal.timeout(2500) : undefined,
+          signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
         });
 
         httpStatus = res.status;
         if (res.ok) {
-          const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
-          const content = data.choices?.[0]?.message?.content?.trim();
+          const data = (await res.json()) as {
+            choices?: {
+              message?: {
+                content?: string | null;
+                reasoning_content?: string | null;
+              };
+            }[];
+          };
+          const choice = data.choices?.[0]?.message;
+          const content = choice?.content?.trim() || choice?.reasoning_content?.trim();
           if (content) {
             rawResponse = content;
             source = 'sarvam-ai-cloud';
