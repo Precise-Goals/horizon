@@ -8,6 +8,9 @@
     "packages/*"
   ],
   "scripts": {
+    "start": "bun scripts/dev-all.ts",
+    "dev:all": "bun scripts/dev-all.ts",
+    "mcp": "bun scripts/run-mcp.ts",
     "build": "bun --filter horizon-web build",
     "dev": "bun --filter horizon-web dev",
     "lint": "bun --filter horizon-web lint",
