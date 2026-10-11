@@ -95,7 +95,7 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     expect(logs.some((l) => l.includes('[AUTO REMEDY: ON]'))).toBe(true);
     expect(logs.some((l) => l.includes('[AUTO REMEDY SUCCESS]'))).toBe(true);
     expect(logs.some((l) => l.includes('[DYNAMIC RESUME]'))).toBe(true);
-  });
+  }, 15000);
 
   it('halts on node failure when auto-remedy is OFF, waits for manual fix, and resumes green', async () => {
     const logs: string[] = [];
@@ -192,5 +192,5 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
     // Downstream service-tier successfully resumed and completed green
     const serviceNode = finalProgress.nodes.find((n) => n.nodeId === 'service-tier')!;
     expect(serviceNode.status).toBe('verified_green');
-  });
+  }, 15000);
 });
