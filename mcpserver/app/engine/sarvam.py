@@ -209,5 +209,13 @@ class SarvamAiEngine:
             "yaml": yaml_pipeline,
         }
 
+    @staticmethod
+    def sanitize_user_prompt(prompt: str, max_length: int = 1000) -> str:
+        """Sanitizes user copilot prompt against injection characters and length overflows."""
+        cleaned = prompt.strip()[:max_length]
+        cleaned = "".join(c for c in cleaned if c.isprintable() or c in "\n\r\t")
+        return cleaned
+
 
 sarvam_engine = SarvamAiEngine()
+
