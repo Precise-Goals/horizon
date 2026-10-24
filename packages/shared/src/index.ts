@@ -155,3 +155,14 @@ export const AuditEntrySchema = z.object({
   anchorTx: z.string().optional(),
 });
 export type AuditEntry = z.infer<typeof AuditEntrySchema>;
+
+// ============================================================================
+// 6. Resilience & Circuit Breaker Contracts
+// ============================================================================
+
+export const CircuitBreakerStateSchema = z.enum(['CLOSED', 'OPEN', 'HALF_OPEN']);
+export type CircuitBreakerState = z.infer<typeof CircuitBreakerStateSchema>;
+
+export const FailureSeveritySchema = z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
+export type FailureSeverity = z.infer<typeof FailureSeveritySchema>;
+
