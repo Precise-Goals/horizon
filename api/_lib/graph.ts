@@ -137,4 +137,28 @@ export class DependencyGraphEngine {
 
     return levels;
   }
+
+  /**
+   * Computes the deepest dependent chain (critical path) downstream from a target node.
+   */
+  calculateCriticalPath(startNodeId: string): string[] {
+    const visited = new Set<string>();
+    const findLongest = (curr: string): string[] => {
+      visited.add(curr);
+      const dependents = Array.from(this.reverseAdjacency.get(curr) || []);
+      if (dependents.length === 0) return [curr];
+      let longestSuffix: string[] = [];
+      for (const next of dependents) {
+        if (!visited.has(next)) {
+          const path = findLongest(next);
+          if (path.length > longestSuffix.length) {
+            longestSuffix = path;
+          }
+        }
+      }
+      return [curr, ...longestSuffix];
+    };
+    return findLongest(startNodeId);
+  }
 }
+
