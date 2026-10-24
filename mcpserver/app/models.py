@@ -197,3 +197,10 @@ class PlaybookExecutionTelemetry(BaseModel):
     risk: StepRisk
     output_log: str = ""
 
+
+class IncidentResolutionSummary(BaseModel):
+    incident_id: str
+    total_downtime_seconds: float
+    nodes_recovered: List[str]
+    root_cause: str
+    resolved_by: str = 'autonomous_orchestrator'
