@@ -1,6 +1,6 @@
 # Horizon — Pitch Master Guide (`Pitch.md`)
 ## The Complete Pitch Playbook: Scripts, Analogies, Slide Decks & Defense Q&A
-*Document Version: 1.0.0 | Author: Horizon Strategy & GTM Team | Target Audience: Judges, Investors, CTOs, Enterprise Clients*
+*Document Version: 1.0.0 | Specification: Horizon Architecture & Resilience System | Target Audience: Judges, Investors, CTOs, Enterprise Clients*
 
 ---
 
@@ -247,7 +247,7 @@ If you are presenting slides or sharing a PDF deck, follow this exact structure:
 
 ### Slide 10: Summary & The Vision
 * **Visual:** Big bold metric: **"95% Reduction in MTTR — From 45 Minutes to 87 Seconds."**
-* **Contact Information:** Team names, email, and live app link.
+* **Contact Information:** Platform contact and live platform link.
 * **Speaker Script:** *"Horizon is transforming infrastructure resilience from a 3:00 AM panic into a deterministic, verifiable science. We invite you to test our live cluster demo. Thank you."*
 
 ---

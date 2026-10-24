@@ -1,8 +1,8 @@
 # Horizon — Master Pitch Presentation Deck (`PPTDeck.md`)
 ## Sovereign Autonomous Enterprise Infrastructure Recovery Platform
 **Based on Technical Research Paper: *Horizon: Dependency-Aware Autonomous Infrastructure Recovery — Architecture, Prior-Art Analysis and Patentability Assessment* (October 2026)**  
-*Authors & Inventors: Sarthak Tulsidas Patil, Karan Verma, Sneha Sharma, Sneha Patidar*  
-*Repository: [Precise-Goals/horizon](https://github.com/Precise-Goals/horizon) | Live Platform: [horizon-aiops.vercel.app](https://horizon-aiops.vercel.app)*  
+*Autonomous Platform Architecture & Engineering*  
+*Repository: [horizon-resilience/horizon](https://github.com/horizon-resilience/horizon) | Live Platform: [horizon-aiops.vercel.app](https://horizon-aiops.vercel.app)*  
 *Document Version: 2.0.0 | Format: Ready-to-Present Slide Deck & Pitch Defense Manual*
 
 ---
@@ -51,10 +51,10 @@
   1. **Graph Theory**: Kahn’s Topological Sorting $O(V+E)$ + Reverse-BFS blast-radius mapping.
   2. **Cryptographic Governance**: EIP-712 human Commander approval gates + MST Blockchain immutable audit trail.
   3. **Sovereign Intelligence**: Sarvam-105B multilingual Indic SRE copilot + Model Context Protocol (MCP) native integration.
-* **Presented by**: Sarthak Tulsidas Patil, Karan Verma, Sneha Sharma, Sneha Patidar
+* **Presented by**: Platform Core Architecture
 
 ### Speaker Notes (15-20 Seconds)
-> *"Judges and investors, good morning. When a modern cloud system crashes, restarting components at random doesn't fix the problem—it multiplies it. We are team Horizon, and we have built India's sovereign autonomous infrastructure recovery platform. We replace the panic of 3:00 AM engineering war rooms with mathematical certainty, cryptographic governance, and sovereign AI."*
+> *"Judges and investors, good morning. When a modern cloud system crashes, restarting components at random doesn't fix the problem—it multiplies it. This is Horizon, and we have built India's sovereign autonomous infrastructure recovery platform. We replace the panic of 3:00 AM engineering war rooms with mathematical certainty, cryptographic governance, and sovereign AI."*
 
 ---
 
@@ -406,7 +406,7 @@
 #### 6-Phase Indian Patent Office (IPO) Roadmap
 
 ```
-[Phase 1: Freeze Disclosure]    ──► Lock commit hash & inventor contributions (Patil, Verma, Sharma, Patidar)
+[Phase 1: Freeze Disclosure]    ──► Lock commit hash & inventor contributions (Architecture & Resilience Core)
          │
 [Phase 2: Formal Search]        ──► Commission search across USPTO, EPO, WIPO, and Indian Patent Office
          │
@@ -582,7 +582,7 @@
 - **High-Impact Closing Slide**:
   - Bold Typography: **"Zero Panic. Zero Thundering Herds. Mathematically Proven Recovery."**
   - QR Code & Links: GitHub Repository | Live Vercel Demo | Research Paper PDF | Video Pitch.
-  - Team Contact Information: Sarthak Tulsidas Patil, Karan Verma, Sneha Sharma, Sneha Patidar.
+  - Team Contact Information: Platform Core Architecture.
 
 ### Slide Content
 ### Horizon: The Future of Infrastructure Resilience
@@ -599,7 +599,7 @@
   * **Mentorship & IP Counsel**: Guiding our Indian provisional patent filing and deep-tech enterprise GTM.
 
 > **Experience the Live Platform**: [horizon-aiops.vercel.app](https://horizon-aiops.vercel.app)  
-> **Source Code**: [github.com/Precise-Goals/horizon](https://github.com/Precise-Goals/horizon)
+> **Source Code**: [github.com/horizon-resilience/horizon](https://github.com/horizon-resilience/horizon)
 
 ### Speaker Notes (Closing Statement)
 > *"Judges, cloud infrastructure is the backbone of the digital economy. When it breaks, we cannot rely on tired engineers guessing at 3:00 AM. Horizon transforms infrastructure recovery from a frantic art into a deterministic, verifiable science. We invite you to test our live cluster demo right now. Thank you!"*

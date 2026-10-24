@@ -252,7 +252,7 @@ Content-Type: application/json
 ### 1. Clone & Install Frontend
 ```bash
 # Clone the repository
-git clone https://github.com/Precise-Goals/horizon.git
+git clone https://github.com/horizon-resilience/horizon.git
 cd horizon
 
 # Install root & frontend dependencies with Bun

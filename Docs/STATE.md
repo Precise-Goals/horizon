@@ -1,7 +1,7 @@
 # Horizon Platform — Project State
 
 **1. Current Phase**: Monolithic Vercel-Ready Architecture with Live MST Blockchain Testnet & Sarvam AI
-**2. Project Remote**: `https://github.com/Precise-Goals/horizon.git`
+**2. Project Remote**: `https://github.com/horizon-resilience/horizon.git`
 
 **3. Completed**:
 - **Monolithic Architecture Migration (Zero Python Server Dependency)**:

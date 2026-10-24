@@ -294,4 +294,4 @@ Year 2 (Scale & Enterprise Direct):
 4. **Q3 2027:** Launch the **Horizon Playbook Marketplace**, enabling enterprise SRE teams to publish, license, and monetize community-audited self-healing playbooks.
 
 ---
-*Authored by the Horizon Platform Architecture & Core Strategy Team.*
+*Authored by Horizon Platform Architecture & Engineering.*
