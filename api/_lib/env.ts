@@ -50,3 +50,20 @@ const parseServerEnv = () => {
 };
 
 export const serverEnv = parseServerEnv();
+
+/**
+ * Validates whether a provided wallet address format complies with standard 40-hex EVM spec.
+ */
+export function isValidEvmAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address.trim());
+}
+
+/**
+ * Evaluates whether a signer wallet address matches the authorized operators list.
+ */
+export function isAuthorizedWallet(address: string): boolean {
+  if (!isValidEvmAddress(address)) return false;
+  const normalized = address.trim().toLowerCase();
+  return serverEnv.AUTHORIZED_WALLETS_LIST.some((w) => w.toLowerCase() === normalized);
+}
+
