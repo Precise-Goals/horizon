@@ -545,3 +545,8 @@ def test_sarvam_indic_response_formatter():
     from app.engine.sarvam import sarvam_engine
     res = sarvam_engine.format_indic_response('Incident resolved', 'hi')
     assert res.startswith('[HI]')
+
+def test_tier_zero_nodes_filter():
+    from app.engine.topology import topology_engine
+    tier0 = topology_engine.get_tier_zero_nodes()
+    assert 'db-primary' in tier0
