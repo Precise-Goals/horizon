@@ -106,3 +106,21 @@ export const getPlaybookForType = (type: string): PlaybookStep[] => {
   if (type === 'cache') return JSON.parse(JSON.stringify(PLAYBOOKS.cache_purge.steps));
   return JSON.parse(JSON.stringify(PLAYBOOKS.service_restart.steps));
 };
+
+/**
+ * Validates whether an estimated recovery step execution duration falls within safety thresholds.
+ */
+export const validatePlaybookExecutionTimeout = (durationMs: number, maxAllowedMs = 60000): boolean => {
+  return durationMs > 0 && durationMs <= maxAllowedMs;
+};
+
+/**
+ * Computes estimated total execution duration based on step count and risk tier weights.
+ */
+export const calculatePlaybookTotalEstimatedDuration = (steps: PlaybookStep[]): number => {
+  return steps.reduce((acc, step) => {
+    const baseWeight = step.risk === 'high' ? 5000 : 1500;
+    return acc + baseWeight;
+  }, 0);
+};
+
