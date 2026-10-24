@@ -529,3 +529,14 @@ def test_sarvam_prompt_sanitization():
     assert "\x08" not in cleaned
     assert "What happened to database?" in cleaned
 
+
+def test_blockchain_merkle_leaf_formatting():
+    """Verifies deterministic SHA-256 leaf hash calculation for audit anchoring."""
+    from app.engine.blockchain import blockchain_engine
+    leaf = blockchain_engine.format_audit_merkle_leaf("INC-100", "RESTART_POD", "Commander")
+    assert leaf.startswith("0x")
+    assert len(leaf) == 66
+    leaf2 = blockchain_engine.format_audit_merkle_leaf("INC-100", "RESTART_POD", "Commander")
+    assert leaf == leaf2
+
+
