@@ -79,5 +79,16 @@ class Settings(BaseModel):
         )
     )
 
+    def get_allowed_origins_list(self) -> list[str]:
+        """Returns parsed list of allowed CORS origins."""
+        if self.CORS_ORIGINS == "*":
+            return ["*"]
+        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+
+    def is_production(self) -> bool:
+        """Determines whether server environment is configured for production."""
+        return self.ENVIRONMENT.lower() in ("production", "prod")
+
 
 settings = Settings()
+
