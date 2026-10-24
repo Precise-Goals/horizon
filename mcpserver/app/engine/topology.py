@@ -955,3 +955,6 @@ class TopologyEngine:
 
 topology_engine = TopologyEngine()
 
+
+    def get_tier_zero_nodes(self) -> List[str]:
+        return [nid for nid, n in self._nodes.items() if getattr(n.type, 'value', str(n.type)).lower() in ('database', 'cache')]
