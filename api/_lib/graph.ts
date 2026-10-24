@@ -160,5 +160,15 @@ export class DependencyGraphEngine {
     };
     return findLongest(startNodeId);
   }
+
+  /**
+   * Calculates isolated upstream prerequisites and downstream blast impact for a given node.
+   */
+  computeNodeIsolationRadius(nodeId: string): { upstream: string[]; downstream: string[] } {
+    const upstream = Array.from(this.adjacency.get(nodeId) || []);
+    const downstream = this.getBlastRadius(nodeId).filter((id) => id !== nodeId);
+    return { upstream, downstream };
+  }
 }
+
 
