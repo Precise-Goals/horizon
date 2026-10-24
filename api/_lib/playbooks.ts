@@ -124,3 +124,8 @@ export const calculatePlaybookTotalEstimatedDuration = (steps: PlaybookStep[]): 
   }, 0);
 };
 
+
+export const getPlaybookStepById = (type: string, stepId: number): PlaybookStep | undefined => {
+  const steps = getPlaybookForType(type);
+  return steps.find((s) => s.id === stepId);
+};
