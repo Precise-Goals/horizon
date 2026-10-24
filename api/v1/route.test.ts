@@ -77,4 +77,14 @@ describe('Serverless API Route Functions (api/v1)', () => {
     expect(body.uptime_pct).toBeGreaterThanOrEqual(0);
     expect(body.timestamp).toBeDefined();
   });
+
+  it('GET /api/v1/governance/status reports on-chain chain id and wallet counts', async () => {
+    const res = await app.request('/api/v1/governance/status');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(body.governance_active).toBe(true);
+    expect(body.chain_id).toBe(91562037);
+    expect(body.dual_path_mode).toBe('EIP-712-enforced');
+  });
 });

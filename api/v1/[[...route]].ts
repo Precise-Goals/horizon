@@ -154,8 +154,8 @@ app.get('/governance/status', (c) => {
   const pendingApprovals = activeIncidents.filter((i) => i.status === 'awaiting_approval');
   return c.json({
     governance_active: true,
-    chain_id: serverEnv.CHAIN_ID,
-    authorized_wallets_count: serverEnv.AUTHORIZED_WALLETS_LIST.length,
+    chain_id: 91562037,
+    network: 'MST Testnet',
     pending_approvals: pendingApprovals.length,
     dual_path_mode: 'EIP-712-enforced',
   });
