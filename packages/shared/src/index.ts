@@ -166,3 +166,19 @@ export type CircuitBreakerState = z.infer<typeof CircuitBreakerStateSchema>;
 export const FailureSeveritySchema = z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']);
 export type FailureSeverity = z.infer<typeof FailureSeveritySchema>;
 
+export const NetworkPartitionEventSchema = z.object({
+  isolated_nodes: z.array(z.string()),
+  quorum_maintained: z.boolean(),
+  partition_timestamp: z.number(),
+  split_brain_prevented: z.boolean().default(true),
+});
+export type NetworkPartitionEvent = z.infer<typeof NetworkPartitionEventSchema>;
+
+export const ConsensusHealthSchema = z.object({
+  active_nodes: z.number().int().nonnegative(),
+  required_quorum: z.number().int().positive(),
+  has_consensus: z.boolean(),
+});
+export type ConsensusHealth = z.infer<typeof ConsensusHealthSchema>;
+
+
