@@ -185,3 +185,5 @@ export type ConsensusHealth = z.infer<typeof ConsensusHealthSchema>;
 
 export const IncidentPrioritySchema = z.enum(['P1_CRITICAL', 'P2_HIGH', 'P3_MEDIUM', 'P4_LOW']);
 export type IncidentPriority = z.infer<typeof IncidentPrioritySchema>;
+
+export const SLAThresholdSchema = z.object({ target_rto: z.number().positive(), target_rpo: z.number().positive() });
