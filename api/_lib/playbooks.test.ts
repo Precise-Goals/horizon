@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'bun:test';
-import { getPlaybookForType, PLAYBOOKS } from './playbooks';
+import {
+  getPlaybookForType,
+  PLAYBOOKS,
+  validatePlaybookExecutionTimeout,
+  calculatePlaybookTotalEstimatedDuration,
+} from './playbooks';
 import { PlaybookStepSchema } from '../../packages/shared/src/index';
 
 describe('Playbooks Engine (API Logic)', () => {
@@ -44,5 +49,15 @@ describe('Playbooks Engine (API Logic)', () => {
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
     }
+  });
+
+  it('validates execution timeout and duration calculator', () => {
+    expect(validatePlaybookExecutionTimeout(1500)).toBe(true);
+    expect(validatePlaybookExecutionTimeout(0)).toBe(false);
+    expect(validatePlaybookExecutionTimeout(75000)).toBe(false);
+
+    const dbSteps = getPlaybookForType('database');
+    const estimated = calculatePlaybookTotalEstimatedDuration(dbSteps);
+    expect(estimated).toBeGreaterThan(5000);
   });
 });
