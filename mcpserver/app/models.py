@@ -177,3 +177,23 @@ class ProbeResult(BaseModel):
     error_rate: float
     message: str
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class NodeHealthSnapshot(BaseModel):
+    node_id: str
+    status: NodeStatus
+    healthy: bool
+    consecutive_failures: int = 0
+    cpu_percent: float = 0.0
+    memory_percent: float = 0.0
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
+class PlaybookExecutionTelemetry(BaseModel):
+    incident_id: str
+    step_id: int
+    duration_ms: float
+    status: str
+    risk: StepRisk
+    output_log: str = ""
+
