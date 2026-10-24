@@ -219,3 +219,15 @@ async def test_rest_nodes_and_graph(async_client: AsyncClient):
     graph = res_graph.json()
     assert graph["hasCycle"] is False
     assert len(graph["topologicalLevels"]) >= 3
+
+
+@pytest.mark.asyncio
+async def test_rest_node_urgency_endpoint(async_client: AsyncClient):
+    """Verifies that GET /api/v1/urgency/{node_id} calculates correct pager severity."""
+    res = await async_client.get("/api/v1/urgency/db-primary")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["node_id"] == "db-primary"
+    assert data["severity"] == "P1_CRITICAL"
+    assert data["escalate_pager"] is True
+
