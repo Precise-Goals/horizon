@@ -926,5 +926,31 @@ class TopologyEngine:
     def reset_topology(self):
         self._reset_to_default_topology()
 
+    def calculate_node_pager_urgency(self, node_id: str) -> Dict[str, Any]:
+        """Calculates incident pager escalation urgency based on blast radius severity."""
+        blast = self.calculate_blast_radius(node_id)
+        impact_count = len(blast)
+        node = self._nodes.get(node_id)
+        is_tier_0 = node.type.value in ("database", "cache") if node else False
+
+        if impact_count >= 3 or is_tier_0:
+            severity = "P1_CRITICAL"
+            escalate_pager = True
+        elif impact_count >= 2:
+            severity = "P2_HIGH"
+            escalate_pager = True
+        else:
+            severity = "P3_MEDIUM"
+            escalate_pager = False
+
+        return {
+            "node_id": node_id,
+            "blast_count": impact_count,
+            "blast_nodes": blast,
+            "severity": severity,
+            "escalate_pager": escalate_pager,
+        }
+
 
 topology_engine = TopologyEngine()
+
