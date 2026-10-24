@@ -109,5 +109,11 @@ class BlockchainEngine:
             "explorerProofUrl": f"{self.explorer_url}/address/{self.contract_address}",
         }
 
+    def format_audit_merkle_leaf(self, incident_id: str, action_type: str, actor: str) -> str:
+        """Computes standardized deterministic SHA-256 leaf hash for on-chain audit tree."""
+        raw_payload = f"{incident_id}:{action_type}:{actor}:{self.chain_id}".encode("utf-8")
+        return "0x" + hashlib.sha256(raw_payload).hexdigest()
+
 
 blockchain_engine = BlockchainEngine()
+
