@@ -518,3 +518,14 @@ async def test_tool_broadcast_incident_custom_channels_and_webhook(async_client:
         )
         assert direct_res["webhookDispatched"] is True
         assert direct_res["webhookStatus"] == 200
+
+
+def test_sarvam_prompt_sanitization():
+    """Verifies that Sarvam AI engine sanitizes input prompts and strips null bytes."""
+    from app.engine.sarvam import sarvam_engine
+    raw = "What happened to database? \x00\x08DROP TABLE;"
+    cleaned = sarvam_engine.sanitize_user_prompt(raw)
+    assert "\x00" not in cleaned
+    assert "\x08" not in cleaned
+    assert "What happened to database?" in cleaned
+
