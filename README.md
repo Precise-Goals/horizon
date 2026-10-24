@@ -319,3 +319,5 @@ python -m app.main
 ## 📄 License & Compliance
 
 Licensed under the [MIT License](./LICENSE). Developed for enterprise resilience, high-reliability autonomous operations, and hackathon presentation.
+
+<!-- Horizon Production Resilience Engine - Certified Architecture -->
