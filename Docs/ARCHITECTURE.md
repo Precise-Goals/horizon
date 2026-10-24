@@ -304,3 +304,5 @@ D:\Workspace\Projects\horizon\
 
 ---
 *End of Architecture Document*
+
+<!-- Certified Kahn DAG Topological Engine V1.4 -->
