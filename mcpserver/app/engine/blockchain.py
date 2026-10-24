@@ -117,3 +117,6 @@ class BlockchainEngine:
 
 blockchain_engine = BlockchainEngine()
 
+
+    def get_explorer_tx_url(self, tx_hash: str) -> str:
+        return f'{self.explorer_url}/tx/{tx_hash}'
