@@ -13,6 +13,8 @@ import {
   IncidentSchema,
   ApprovalRequestSchema,
   AuditEntrySchema,
+  CircuitBreakerStateSchema,
+  FailureSeveritySchema,
 } from './index';
 
 describe('@horizon/shared Schema Specifications', () => {
@@ -242,6 +244,19 @@ describe('@horizon/shared Schema Specifications', () => {
       });
       expect(entry.actor).toBe('Commander-Agent');
       expect(entry.data.stepId).toBe(1);
+    });
+
+    it('validates CircuitBreakerState and FailureSeverity contracts', () => {
+      expect(CircuitBreakerStateSchema.parse('CLOSED')).toBe('CLOSED');
+      expect(CircuitBreakerStateSchema.parse('OPEN')).toBe('OPEN');
+      expect(CircuitBreakerStateSchema.parse('HALF_OPEN')).toBe('HALF_OPEN');
+      expect(() => CircuitBreakerStateSchema.parse('UNKNOWN')).toThrow();
+
+      expect(FailureSeveritySchema.parse('CRITICAL')).toBe('CRITICAL');
+      expect(FailureSeveritySchema.parse('HIGH')).toBe('HIGH');
+      expect(FailureSeveritySchema.parse('MEDIUM')).toBe('MEDIUM');
+      expect(FailureSeveritySchema.parse('LOW')).toBe('LOW');
+      expect(() => FailureSeveritySchema.parse('FATAL')).toThrow();
     });
   });
 });
