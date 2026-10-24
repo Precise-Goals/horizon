@@ -336,6 +336,13 @@ async def get_graph_analysis_endpoint():
     }
 
 
+@app.get("/api/v1/urgency/{node_id}", tags=["Topology"])
+async def evaluate_node_urgency(node_id: str):
+    """Evaluates incident pager escalation urgency for a given node."""
+    return topology_engine.calculate_node_pager_urgency(node_id)
+
+
+
 @app.get("/api/v1/topology/templates", tags=["Topology"])
 async def get_topology_templates_endpoint():
     """Returns standard pre-built DAG YAML pipeline templates for instant failure simulation."""
