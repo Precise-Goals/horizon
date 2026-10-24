@@ -135,5 +135,20 @@ app.get('/incidents', (c) => {
   return c.json(activeIncidents);
 });
 
+// 6. Metrics Summary
+app.get('/metrics/summary', (c) => {
+  const healthyCount = clusterNodes.filter((n) => n.status === 'healthy').length;
+  const degradedCount = clusterNodes.length - healthyCount;
+  return c.json({
+    total_nodes: clusterNodes.length,
+    healthy_nodes: healthyCount,
+    degraded_nodes: degradedCount,
+    active_incidents: activeIncidents.filter((i) => i.status !== 'resolved').length,
+    uptime_pct: clusterNodes.length > 0 ? (healthyCount / clusterNodes.length) * 100 : 100,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 export { app };
 export default handle(app);
+
