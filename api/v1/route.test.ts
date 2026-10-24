@@ -66,4 +66,15 @@ describe('Serverless API Route Functions (api/v1)', () => {
     const healBody = await healRes.json();
     expect(healBody.message).toContain('healed');
   });
+
+  it('GET /api/v1/metrics/summary returns cluster telemetry aggregates', async () => {
+    const res = await app.request('/api/v1/metrics/summary');
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(body.total_nodes).toBeGreaterThan(0);
+    expect(body.healthy_nodes).toBeDefined();
+    expect(body.uptime_pct).toBeGreaterThanOrEqual(0);
+    expect(body.timestamp).toBeDefined();
+  });
 });
