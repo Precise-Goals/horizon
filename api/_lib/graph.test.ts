@@ -141,4 +141,13 @@ describe('DependencyGraphEngine (API Logic)', () => {
     expect(criticalPath.length).toBeGreaterThanOrEqual(3);
     expect(criticalPath).toContain('web-frontend');
   });
+
+  it('computes isolated upstream dependencies and downstream blast for a node', () => {
+    const engine = new DependencyGraphEngine(sampleNodes);
+    const isolation = engine.computeNodeIsolationRadius('auth-service');
+
+    expect(isolation.upstream).toContain('db-primary');
+    expect(isolation.upstream).toContain('redis-cache');
+    expect(isolation.downstream).toContain('api-gateway');
+  });
 });
