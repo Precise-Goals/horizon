@@ -67,3 +67,8 @@ export function isAuthorizedWallet(address: string): boolean {
   return serverEnv.AUTHORIZED_WALLETS_LIST.some((w) => w.toLowerCase() === normalized);
 }
 
+
+export function getRpcFallbackUrl(chainId: number): string {
+  if (chainId === 91562037) return 'https://testnetrpc.mstblockchain.com';
+  return 'https://rpc.ankr.com/eth';
+}
