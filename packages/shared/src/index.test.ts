@@ -15,6 +15,8 @@ import {
   AuditEntrySchema,
   CircuitBreakerStateSchema,
   FailureSeveritySchema,
+  NetworkPartitionEventSchema,
+  ConsensusHealthSchema,
 } from './index';
 
 describe('@horizon/shared Schema Specifications', () => {
@@ -257,6 +259,23 @@ describe('@horizon/shared Schema Specifications', () => {
       expect(FailureSeveritySchema.parse('MEDIUM')).toBe('MEDIUM');
       expect(FailureSeveritySchema.parse('LOW')).toBe('LOW');
       expect(() => FailureSeveritySchema.parse('FATAL')).toThrow();
+    });
+
+    it('validates NetworkPartitionEvent and ConsensusHealth schemas', () => {
+      const partition = NetworkPartitionEventSchema.parse({
+        isolated_nodes: ['db-primary', 'redis-cache'],
+        quorum_maintained: true,
+        partition_timestamp: 1775601000,
+      });
+      expect(partition.split_brain_prevented).toBe(true);
+      expect(partition.isolated_nodes.length).toBe(2);
+
+      const health = ConsensusHealthSchema.parse({
+        active_nodes: 5,
+        required_quorum: 3,
+        has_consensus: true,
+      });
+      expect(health.has_consensus).toBe(true);
     });
   });
 });
