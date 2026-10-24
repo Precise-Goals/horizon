@@ -172,3 +172,8 @@ export class DependencyGraphEngine {
 }
 
 
+
+  hasDirectDependency(fromId: string, toId: string): boolean {
+    const deps = this.adjacency.get(fromId);
+    return deps ? deps.has(toId) : false;
+  }
