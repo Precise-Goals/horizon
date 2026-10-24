@@ -132,4 +132,13 @@ describe('DependencyGraphEngine (API Logic)', () => {
     expect(flattened.indexOf('auth-service')).toBeLessThan(flattened.indexOf('api-gateway'));
     expect(flattened.indexOf('api-gateway')).toBeLessThan(flattened.indexOf('web-frontend'));
   });
+
+  it('computes downstream critical path from root database node', () => {
+    const engine = new DependencyGraphEngine(sampleNodes);
+    const criticalPath = engine.calculateCriticalPath('db-primary');
+
+    expect(criticalPath[0]).toBe('db-primary');
+    expect(criticalPath.length).toBeGreaterThanOrEqual(3);
+    expect(criticalPath).toContain('web-frontend');
+  });
 });
