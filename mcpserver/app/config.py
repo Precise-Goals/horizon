@@ -92,3 +92,6 @@ class Settings(BaseModel):
 
 settings = Settings()
 
+
+    def get_server_port(self) -> int:
+        return self.PORT
