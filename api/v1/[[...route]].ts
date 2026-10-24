@@ -149,6 +149,19 @@ app.get('/metrics/summary', (c) => {
   });
 });
 
+// 7. Governance Status
+app.get('/governance/status', (c) => {
+  const pendingApprovals = activeIncidents.filter((i) => i.status === 'awaiting_approval');
+  return c.json({
+    governance_active: true,
+    chain_id: serverEnv.CHAIN_ID,
+    authorized_wallets_count: serverEnv.AUTHORIZED_WALLETS_LIST.length,
+    pending_approvals: pendingApprovals.length,
+    dual_path_mode: 'EIP-712-enforced',
+  });
+});
+
 export { app };
 export default handle(app);
+
 
