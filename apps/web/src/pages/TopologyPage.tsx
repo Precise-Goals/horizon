@@ -3,6 +3,7 @@ import { motion, type BezierDefinition } from 'framer-motion';
 import { Link } from 'react-router';
 import { TopologyGraph } from '../components/topology/TopologyGraph';
 import { Card } from '../components/common/Card';
+import { Globe } from '../components/common/Globe';
 import {
   Network,
   ShieldCheck,
@@ -17,16 +18,16 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, duration: 0.3 },
+    transition: { staggerChildren: 0.06, duration: 0.25 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 14 },
+  hidden: { opacity: 0, y: 10 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.38, ease: EASE },
+    transition: { duration: 0.3, ease: EASE },
   },
 };
 
@@ -36,83 +37,93 @@ export const TopologyPage: React.FC = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-6 sm:space-y-8 font-sans w-full"
+      className="space-y-8 font-sans w-full text-[#0A0A0A] relative"
     >
       {/* Return Navigation & Live Pill */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors bg-white px-3.5 py-1.5 rounded-full border border-[#E5E5E5] shadow-xs"
         >
-          <span>&larr; Return to Home</span>
+          <span>&larr; Return to Overview</span>
         </Link>
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-mono text-emerald-800 font-bold">O(V + E) Acyclic DAG Active</span>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] text-[11px] font-mono text-[#0A0A0A] shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF] animate-pulse" />
+          <span className="font-semibold">O(V + E) Acyclic DAG Active</span>
         </div>
       </motion.div>
 
-      {/* Header */}
-      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
-              Dependency DAG Topology
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
-              <Network className="w-3.5 h-3.5 text-[#0047AB]" />
-              TOPOLOGICAL RESOLVER
-            </span>
+      {/* Signature Two-Line Header */}
+      <motion.div variants={itemVariants} className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 text-[10px] font-mono font-medium text-[#0A0A0A] border border-[#E5E5E5]">
+            <Network className="w-3.5 h-3.5 text-[#2DD4BF]" />
+            <span>KAHN'S BFS TOPOLOGICAL RESOLVER</span>
           </div>
-          <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
-            Dynamic Directed Acyclic Graph (DAG) visualizing parent-child service relationships, reverse dependency traversal, and failure blast radius.
+
+          <h1 className="tracking-tight leading-[1.02]">
+            <span className="block font-['Instrument_Serif',serif] font-normal text-[#A3A3A3] text-4xl sm:text-5xl lg:text-6xl">
+              Topological Mesh,
+            </span>
+            <span className="block font-['Instrument_Serif',serif] italic font-normal text-[#0A0A0A] text-4xl sm:text-5xl lg:text-6xl">
+              acyclic dependency graph.
+            </span>
+          </h1>
+
+          <p className="text-xs sm:text-sm text-[#6B6B6B] max-w-xl leading-relaxed">
+            Directed Acyclic Graph (DAG) computing parent-child relationships, reverse dependency traversal, and cascading failure blast radius using Kahn's algorithm.
           </p>
         </div>
 
-        <Link to="/recovery">
-          <button className="skeuo-btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer">
+        <Link to="/recovery" className="z-10">
+          <button className="h-11 px-6 rounded-full bg-[#0A0A0A] text-white hover:bg-neutral-800 text-xs font-semibold inline-flex items-center gap-2 transition-all cursor-pointer shadow-sm">
             <span>Orchestrate Recovery</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </Link>
+
+        {/* Faint Stipple Globe Side-Peek Motif */}
+        <div className="absolute right-0 top-0 pointer-events-none opacity-20 hidden lg:block -mr-16 -mt-8">
+          <Globe size="200px" crop="side-peek" />
+        </div>
       </motion.div>
 
-      {/* Bento Metric Summary Strip */}
+      {/* Metric Summary Strip */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
+        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
             <span>Monitored Nodes</span>
-            <Server className="w-4 h-4 text-[#0047AB]" />
+            <Server className="w-4 h-4 text-[#0A0A0A]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#1A1A1A]">7 Nodes</div>
-          <div className="text-[11px] text-emerald-800 font-mono font-bold">Microservices & Pods</div>
+          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">7 Nodes</div>
+          <div className="text-[11px] text-[#2DD4BF] font-mono">Microservices & Pods</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>Graph Health</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
+        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
+            <span>Graph Structure</span>
+            <ShieldCheck className="w-4 h-4 text-[#2DD4BF]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">0 Cycles</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Cycle Deadlock Free</div>
+          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">0 Cycles</div>
+          <div className="text-[11px] text-[#6B6B6B] font-mono">Deadlock Free (Acyclic)</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
+        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
             <span>Topological Depth</span>
-            <Layers className="w-4 h-4 text-[#0047AB]" />
+            <Layers className="w-4 h-4 text-[#0A0A0A]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#1A1A1A]">4 Tiers</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Database to Gateway</div>
+          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">4 Tiers</div>
+          <div className="text-[11px] text-[#6B6B6B] font-mono">Database to Ingress</div>
         </Card>
 
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
+        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
             <span>Algorithm Complexity</span>
-            <Network className="w-4 h-4 text-[#0047AB]" />
+            <Network className="w-4 h-4 text-[#0A0A0A]" />
           </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">O(V + E)</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Kahn's Sort Verified</div>
+          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">O(V + E)</div>
+          <div className="text-[11px] text-[#6B6B6B] font-mono">Kahn's Sort Verified</div>
         </Card>
       </motion.div>
 
@@ -123,3 +134,4 @@ export const TopologyPage: React.FC = () => {
     </motion.div>
   );
 };
+export default TopologyPage;

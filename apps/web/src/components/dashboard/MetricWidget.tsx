@@ -4,21 +4,17 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface MetricWidgetProps {
-  title:      string;
-  value:      string | number;
-  trend?:     string;
+  title: string;
+  value: string | number;
+  trend?: string;
   isPositive?: boolean;
-  icon?:      React.ReactNode;
-  subtitle?:  string;
-  badge?:     string;
+  icon?: React.ReactNode;
+  subtitle?: string;
+  badge?: string;
   sparkline?: number[];
   className?: string;
 }
 
-/**
- * MetricWidget — Tactile porcelain KPI bento card with skeuomorphic sparkline well.
- * Cream background, ink black numbers, cobalt blue sparkline & accents.
- */
 export const MetricWidget: React.FC<MetricWidgetProps> = ({
   title,
   value,
@@ -30,15 +26,13 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
   sparkline = [20, 24, 22, 28, 26, 34, 32, 40],
   className,
 }) => {
-  /* ── Sparkline SVG ── */
-  const W = 120;
-  const H = 36;
-  const PAD = 3;
+  const W = 110;
+  const H = 32;
+  const PAD = 2;
 
-  const minV  = Math.min(...sparkline);
-  const maxV  = Math.max(...sparkline);
+  const minV = Math.min(...sparkline);
+  const maxV = Math.max(...sparkline);
   const range = maxV - minV || 1;
-  const gradId = `spark-${title.replace(/\W/g, '')}`;
 
   const pts = sparkline.map((v, i) => {
     const x = PAD + (i / (sparkline.length - 1)) * (W - 2 * PAD);
@@ -46,65 +40,49 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
   const lineD = `M ${pts.join(' L ')}`;
-  const areaD = pts.length
-    ? `M ${pts[0]} L ${pts.join(' L ')} L ${pts[pts.length - 1].split(',')[0]},${H} L ${pts[0].split(',')[0]},${H} Z`
-    : '';
 
-  const strokeColor = isPositive ? '#0047AB' : '#DC2626';
+  const strokeColor = isPositive ? '#2DD4BF' : '#EF4444';
 
   return (
     <motion.article
-      whileHover={{ y: -2, transition: { duration: 0.18 } }}
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
       className={cn(
-        'horizon-metric-widget skeuo-card rounded-[2rem] sm:rounded-[2.25rem] p-5 flex flex-col justify-between gap-4 overflow-hidden',
+        'horizon-metric-widget bg-white border border-[#E5E5E5] rounded-[20px] p-6 flex flex-col justify-between gap-4 text-[#0A0A0A] shadow-none hover:border-[#D4D4D4] hover:shadow-[0_1px_2px_rgba(0,0,0,.04),0_8px_24px_rgba(0,0,0,.04)] transition-all',
         className
       )}
       aria-label={`Metric: ${title}`}
     >
-      {/* Top row: title + icon */}
       <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-label text-[#555555] font-bold mb-0.5">{title}</p>
+        <div className="space-y-1">
+          <p className="text-[12px] font-mono uppercase tracking-[0.12em] text-[#6B6B6B]">{title}</p>
           {badge && (
-            <span className="horizon-badge text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20 mt-1">
+            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-mono font-medium text-[#0A0A0A] bg-neutral-100 border border-[#E5E5E5]">
               {badge}
             </span>
           )}
         </div>
         {icon && (
-          <div className="p-2 rounded-xl bg-[#F4EBE0] border border-[rgba(26,26,26,0.1)] text-[#0047AB] shadow-[inset_0_1px_2px_rgba(26,26,26,0.06),0_1px_0_#FFFFFF] flex-shrink-0">
+          <div className="p-2 rounded-lg bg-neutral-50 text-[#0A0A0A] border border-[#E5E5E5] flex-shrink-0">
             {icon}
           </div>
         )}
       </div>
 
-      {/* Value + skeuomorphic sparkline well */}
-      <div className="flex items-end justify-between gap-2">
+      <div className="flex items-end justify-between gap-3 my-1">
         <div
-          className="text-3xl sm:text-4xl font-black tracking-tight text-[#1A1A1A] font-mono leading-none tabular-nums"
+          className="text-2xl sm:text-3xl font-bold tracking-tight text-[#0A0A0A] font-mono leading-none tabular-nums"
           aria-live="polite"
         >
           {value}
         </div>
 
-        <div className="skeuo-well p-1 rounded-lg">
-          <svg
-            viewBox={`0 0 ${W} ${H}`}
-            className="w-[90px] h-[30px] flex-shrink-0"
-            aria-hidden="true"
-          >
-            <defs>
-              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"   stopColor={strokeColor} stopOpacity="0.25" />
-                <stop offset="100%" stopColor={strokeColor} stopOpacity="0.0"  />
-              </linearGradient>
-            </defs>
-            <path d={areaD} fill={`url(#${gradId})`} />
+        <div className="p-1 rounded-md">
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-[84px] h-[26px] flex-shrink-0" aria-hidden="true">
             <path
               d={lineD}
               fill="none"
               stroke={strokeColor}
-              strokeWidth="2.5"
+              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -112,31 +90,29 @@ export const MetricWidget: React.FC<MetricWidgetProps> = ({
         </div>
       </div>
 
-      {/* Footer: trend + subtitle */}
-      <div className="flex items-center justify-between gap-2 pt-3 border-t border-[rgba(26,26,26,0.08)] text-xs">
+      <div className="flex items-center justify-between gap-2 pt-3 border-t border-[#E5E5E5] text-xs">
         {trend ? (
           <div
             className={cn(
-              'inline-flex items-center gap-1 font-bold px-2 py-0.5 rounded-md border shadow-[inset_0_1px_1px_rgba(0,0,0,0.04)]',
+              'inline-flex items-center gap-1 font-mono text-[11px] font-medium px-2 py-0.5 rounded-full border',
               isPositive
-                ? 'text-[#0F8E52] bg-[#EBF7EE] border-[#0F8E52]/25'
-                : 'text-[#DC2626] bg-[#FDF2F2] border-[#DC2626]/25'
+                ? 'text-emerald-800 bg-emerald-50 border-emerald-200'
+                : 'text-red-700 bg-red-50 border-red-200'
             )}
           >
-            {isPositive
-              ? <TrendingUp  className="w-3.5 h-3.5" aria-hidden="true" />
-              : <TrendingDown className="w-3.5 h-3.5" aria-hidden="true" />
-            }
+            {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {trend}
           </div>
         ) : (
-          <span className="text-[#666666] font-mono font-medium">{subtitle || 'Live'}</span>
+          <span className="text-[#A3A3A3] font-mono text-[11px]">{subtitle || 'Live'}</span>
         )}
 
         {subtitle && trend && (
-          <span className="text-[#666666] font-medium truncate max-w-[160px]">{subtitle}</span>
+          <span className="text-[#6B6B6B] text-[11px] font-mono truncate max-w-[140px]">{subtitle}</span>
         )}
       </div>
     </motion.article>
   );
 };
+
+export default MetricWidget;

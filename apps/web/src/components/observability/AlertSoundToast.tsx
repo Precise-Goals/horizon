@@ -43,7 +43,7 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
             transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               'pointer-events-auto w-[calc(100vw-2rem)] max-w-[420px]',
-              'p-5 rounded-2xl bg-[#FFF8F0] border-2 border-[#1A1A1A]',
+              'p-5 rounded-2xl bg-[#FFFFFF] border-2 border-[#1A1A1A]',
               'shadow-[6px_6px_0px_#1A1A1A] font-sans space-y-3.5',
               className
             )}
@@ -71,7 +71,7 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
             {onDismiss && (
               <button
                 onClick={onDismiss}
-                className="p-1 rounded-lg text-stone-500 hover:text-[#1A1A1A] hover:bg-[#F2E5D5] transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-stone-500 hover:text-[#1A1A1A] hover:bg-[#141414] transition-colors cursor-pointer"
                 title="Dismiss toast"
               >
                 <X className="w-3.5 h-3.5" />
@@ -81,12 +81,12 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
 
           {/* Node Failure Details */}
           <div className="space-y-1 text-xs">
-            <div className="text-[#5A4E44]">
+            <div className="text-[#A0A0A0]">
               Target: <strong className="text-[#1A1A1A] font-bold">{nodeName}</strong>
-              {nodeId && <span className="font-mono text-[10px] text-[#8A7B6D] ml-1">({nodeId})</span>}
+              {nodeId && <span className="font-mono text-[10px] text-[#737373] ml-1">({nodeId})</span>}
             </div>
             {incidentId && (
-              <div className="text-[11px] font-mono text-[#6E6258]">
+              <div className="text-[11px] font-mono text-[#A0A0A0]">
                 Incident ID: <strong>{incidentId}</strong>
               </div>
             )}
@@ -123,7 +123,7 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
                   <span>Stop Alert</span>
                 </button>
               ) : (
-                <div className="w-full py-2 px-3 rounded-xl font-bold text-xs bg-[#FAF3EA] text-stone-600 border border-[#E5D7C5] flex items-center justify-center gap-1.5">
+                <div className="w-full py-2 px-3 rounded-xl font-bold text-xs bg-[#0A0A0A] text-stone-600 border border-[#1A1A1A] flex items-center justify-center gap-1.5">
                   <VolumeX className="w-3.5 h-3.5 text-stone-500" />
                   <span>Alert Sound Stopped</span>
                 </div>
@@ -132,9 +132,9 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
           )}
 
           {/* Remediation Workflow Notice */}
-          <div className="pt-2 border-t border-[#E8DAC8] flex items-center justify-between text-[10px] font-mono text-[#6E6258]">
+          <div className="pt-2 border-t border-[#E8DAC8] flex items-center justify-between text-[10px] font-mono text-[#A0A0A0]">
             <span>Remedy Workflow:</span>
-            <span className="font-bold text-[#0047AB]">
+            <span className="font-bold text-[#FF4D00]">
               {isResolved
                 ? 'Completed (100% Green)'
                 : autoRemediate

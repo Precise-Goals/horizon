@@ -28,7 +28,6 @@ const iconMap: Record<string, React.ElementType> = {
   payment: CreditCard,
 };
 
-// Node metadata for high-fidelity SRE telemetry
 const nodeTelemetryMap: Record<string, { port: string; region: string; latency: string }> = {
   'db-primary': { port: '5432', region: 'us-east-1a', latency: '4ms' },
   'db-replica': { port: '5433', region: 'us-east-1b', latency: '6ms' },
@@ -82,34 +81,34 @@ export const SystemHealthOverview: React.FC = () => {
   const downCount = nodes.filter((n) => n.status === 'down' || n.status === 'degraded').length;
 
   return (
-    <Card className="p-6 sm:p-7 flex flex-col justify-between">
+    <Card className="p-6 sm:p-8 flex flex-col justify-between">
       <div>
         {/* Header with Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[rgba(26,26,26,0.08)] mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#E5E5E5] mb-6">
           <div>
             <div className="flex items-center gap-2.5">
-              <h3 className="text-lg sm:text-xl font-black text-[#1A1A1A]">
+              <h3 className="text-base sm:text-lg font-semibold text-[#0A0A0A]">
                 Infrastructure Services Matrix
               </h3>
-              <span className="horizon-badge text-[11px] text-[#0047AB] bg-[#EBF1FA] border-[#0047AB]/20">
-                {nodes.length} Nodes Active
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-medium text-[#0A0A0A] bg-neutral-100 border border-[#E5E5E5]">
+                {nodes.length} Active Nodes
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#666666] mt-1">
-              Live probes across multi-tier database instances, distributed cache tiers, and edge gateways.
+            <p className="text-xs text-[#6B6B6B] mt-0.5">
+              Live continuous probes across database primaries, replica clusters, and distributed gateways.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Skeuomorphic Filter Tabs */}
-            <div className="inline-flex rounded-xl bg-[#F4EBE0] p-1 border border-[rgba(26,26,26,0.12)] shadow-[inset_0_1px_2px_rgba(26,26,26,0.06)] text-xs">
+            {/* Filter Tabs */}
+            <div className="inline-flex rounded-full bg-neutral-100 p-1 border border-[#E5E5E5] text-xs">
               <button
                 onClick={() => setFilter('all')}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg transition-all text-xs font-bold cursor-pointer',
+                  'px-3 py-1 rounded-full transition-all text-xs font-medium cursor-pointer',
                   filter === 'all'
-                    ? 'bg-white text-[#0047AB] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
-                    : 'text-[#666666] hover:text-[#1A1A1A]'
+                    ? 'bg-white text-[#0A0A0A] shadow-sm font-semibold'
+                    : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
                 )}
               >
                 All ({nodes.length})
@@ -117,10 +116,10 @@ export const SystemHealthOverview: React.FC = () => {
               <button
                 onClick={() => setFilter('database')}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg transition-all text-xs font-bold cursor-pointer',
+                  'px-3 py-1 rounded-full transition-all text-xs font-medium cursor-pointer',
                   filter === 'database'
-                    ? 'bg-white text-[#0047AB] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
-                    : 'text-[#666666] hover:text-[#1A1A1A]'
+                    ? 'bg-white text-[#0A0A0A] shadow-sm font-semibold'
+                    : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
                 )}
               >
                 Data Tier
@@ -128,10 +127,10 @@ export const SystemHealthOverview: React.FC = () => {
               <button
                 onClick={() => setFilter('service')}
                 className={cn(
-                  'px-3 py-1.5 rounded-lg transition-all text-xs font-bold cursor-pointer',
+                  'px-3 py-1 rounded-full transition-all text-xs font-medium cursor-pointer',
                   filter === 'service'
-                    ? 'bg-white text-[#0047AB] shadow-[0_1px_3px_rgba(26,26,26,0.08),inset_0_1px_0_#FFFFFF]'
-                    : 'text-[#666666] hover:text-[#1A1A1A]'
+                    ? 'bg-white text-[#0A0A0A] shadow-sm font-semibold'
+                    : 'text-[#6B6B6B] hover:text-[#0A0A0A]'
                 )}
               >
                 App Services
@@ -142,10 +141,11 @@ export const SystemHealthOverview: React.FC = () => {
               variant="secondary"
               size="sm"
               onClick={loadNodes}
-              className="p-2 h-9 w-9 rounded-xl"
+              className="p-2 h-9 w-9 rounded-full"
               title="Refresh telemetry probes"
+              aria-label="Refresh telemetry probes"
             >
-              <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
+              <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
             </Button>
           </div>
         </div>
@@ -162,38 +162,38 @@ export const SystemHealthOverview: React.FC = () => {
               <div
                 key={node.id}
                 className={cn(
-                  'p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between group relative overflow-hidden',
+                  'p-4 rounded-[16px] border transition-all duration-150 flex flex-col justify-between group relative overflow-hidden',
                   isDown
-                    ? 'bg-[#FFF5F5] border-red-300 shadow-[0_2px_8px_rgba(220,38,38,0.1)]'
+                    ? 'bg-red-50/50 border-red-200'
                     : isDegraded
-                    ? 'bg-[#FFFDF5] border-amber-300 shadow-[0_2px_8px_rgba(217,119,6,0.1)]'
-                    : 'bg-white border-[rgba(26,26,26,0.11)] shadow-[inset_0_1px_0_#FFFFFF,0_1px_3px_rgba(26,26,26,0.05)] hover:border-[#0047AB]/30 hover:shadow-[0_4px_12px_rgba(0,71,171,0.08)]'
+                    ? 'bg-amber-50/50 border-amber-200'
+                    : 'bg-white border-[#E5E5E5] hover:border-[#D4D4D4] hover:-translate-y-0.5 hover:shadow-[0_1px_2px_rgba(0,0,0,.04),0_8px_24px_rgba(0,0,0,.04)]'
                 )}
               >
                 {/* Node Header */}
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <div
                         className={cn(
-                          'p-2.5 rounded-xl border transition-colors flex-shrink-0',
+                          'p-2 rounded-lg border transition-colors flex-shrink-0',
                           isDown
-                            ? 'bg-red-100 text-red-700 border-red-200 animate-pulse'
-                            : 'bg-[#EBF1FA] text-[#0047AB] border-[#0047AB]/20'
+                            ? 'bg-red-100 text-red-600 border-red-200 animate-pulse'
+                            : 'bg-neutral-50 text-[#0A0A0A] border-[#E5E5E5]'
                         )}
                       >
-                        <Icon className="w-5 h-5" />
+                        <Icon className="w-4 h-4" />
                       </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-[#1A1A1A] leading-tight">
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-semibold text-[#0A0A0A] truncate">
                           {node.name}
                         </h4>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-xs font-mono text-[#666666]">
+                          <span className="text-[11px] font-mono text-[#6B6B6B]">
                             :{telemetry.port}
                           </span>
-                          <span className="text-xs text-[#999999]">•</span>
-                          <span className="text-xs font-mono text-[#666666]">
+                          <span className="text-[#A3A3A3] text-[10px]">•</span>
+                          <span className="text-[11px] font-mono text-[#6B6B6B]">
                             {telemetry.region}
                           </span>
                         </div>
@@ -204,27 +204,27 @@ export const SystemHealthOverview: React.FC = () => {
                     </Badge>
                   </div>
 
-                  {/* Debossed Telemetry Well */}
-                  <div className="skeuo-well flex items-center justify-between text-xs py-2 px-2.5 mb-3">
-                    <span className="text-[#666666] flex items-center gap-1.5 font-medium">
-                      <Clock className="w-3 h-3 text-[#0047AB]" />
-                      Probe Latency:
+                  {/* Telemetry Well */}
+                  <div className="flex items-center justify-between text-xs py-1.5 px-3 mb-3 rounded-lg bg-[#FAFAF9] border border-[#E5E5E5]">
+                    <span className="text-[#6B6B6B] flex items-center gap-1 font-mono text-[11px]">
+                      <Clock className="w-3 h-3 text-[#2DD4BF]" />
+                      Latency:
                     </span>
-                    <span className={cn('font-mono font-bold', isDown ? 'text-[#DC2626]' : 'text-[#0F8E52]')}>
+                    <span className={cn('font-mono font-medium text-[11px]', isDown ? 'text-red-600' : 'text-emerald-700')}>
                       {isDown ? 'TIMEOUT' : telemetry.latency}
                     </span>
                   </div>
                 </div>
 
                 {/* Node Footer Actions */}
-                <div className="flex items-center justify-between pt-2.5 border-t border-[rgba(26,26,26,0.08)]">
-                  <div className="text-xs text-[#666666] font-mono truncate max-w-[130px]">
+                <div className="flex items-center justify-between pt-2.5 border-t border-[#E5E5E5]">
+                  <div className="text-[11px] text-[#6B6B6B] font-mono truncate max-w-[120px]">
                     {node.dependencies.length > 0 ? (
                       <span title={`Depends on: ${node.dependencies.join(', ')}`}>
                         &larr; {node.dependencies.length} deps
                       </span>
                     ) : (
-                      <span className="text-[#0047AB] font-bold">Root Service</span>
+                      <span className="text-[#0A0A0A] font-medium">Root Service</span>
                     )}
                   </div>
 
@@ -232,14 +232,14 @@ export const SystemHealthOverview: React.FC = () => {
                     onClick={() => handleToggleFailure(node)}
                     disabled={mutatingId === node.id}
                     className={cn(
-                      'text-xs font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer border select-none',
+                      'text-xs font-medium px-3 py-1 rounded-full transition-all cursor-pointer border select-none',
                       isDown
-                        ? 'bg-[#EBF7EE] text-[#0A6C3D] border-[#0F8E52]/40 hover:bg-[#D8F0DE] shadow-[0_1px_2px_rgba(15,142,82,0.15)]'
-                        : 'bg-[#FDF2F2] text-[#B91C1C] border-[#DC2626]/25 hover:bg-[#FDE8E8]'
+                        ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
+                        : 'bg-white text-[#0A0A0A] hover:bg-neutral-50 border-[#E5E5E5]'
                     )}
                   >
                     {mutatingId === node.id ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin inline" />
+                      <RefreshCw className="w-3 h-3 animate-spin inline" />
                     ) : isDown ? (
                       'Recover'
                     ) : (
@@ -254,25 +254,27 @@ export const SystemHealthOverview: React.FC = () => {
       </div>
 
       {/* SRE Chaos Guide Footer */}
-      <div className="mt-6 pt-4 border-t border-[rgba(26,26,26,0.08)] flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-[#666666]">
+      <div className="mt-6 pt-4 border-t border-[#E5E5E5] flex flex-wrap items-center justify-between gap-3 text-xs text-[#6B6B6B]">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-[#0047AB] shrink-0" />
+          <Zap className="w-3.5 h-3.5 text-[#2DD4BF] shrink-0" />
           <span>
             {downCount > 0 ? (
-              <strong className="text-[#D97706] font-bold">{downCount} service(s) impacted — autonomous recovery sequence initialized.</strong>
+              <span className="text-amber-800 font-medium">{downCount} service(s) impacted — automated DAG recovery loop triggered.</span>
             ) : (
-              'Chaos engineering switch active: toggle failover on any node to verify blast radius.'
+              'Chaos switch active: trigger failover on any node to verify blast radius & Kahn sort.'
             )}
           </span>
         </div>
         <Link
           to="/topology"
-          className="inline-flex items-center gap-1.5 font-bold text-[#0047AB] hover:underline"
+          className="inline-flex items-center gap-1 font-medium text-[#0A0A0A] hover:underline transition-colors"
         >
-          <span>Open Full Dependency DAG</span>
-          <ArrowUpRight className="w-4 h-4" />
+          <span>Open Full DAG Topology</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
         </Link>
       </div>
     </Card>
   );
 };
+
+export default SystemHealthOverview;

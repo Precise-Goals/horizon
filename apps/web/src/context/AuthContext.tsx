@@ -29,6 +29,7 @@ export interface AuthContextType {
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginAsDemo: () => Promise<void>;
   connectBridgeKey: () => Promise<void>;
   connectOperatorKeypair: () => Promise<void>;
   disconnectWallet: () => void;
@@ -218,7 +219,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(operator);
     } catch (err: any) {
       console.error('[Firebase Login Failed]', err);
-      const message = err?.message || 'Authentication failed. Please verify your credentials.';
+      let message = err?.message || 'Authentication failed. Please verify your credentials.';
+      if (err?.code === 'auth/operation-not-allowed' || message.includes('operation-not-allowed')) {
+        message = 'Firebase: Email/Password sign-in is disabled in your Firebase project (horizon-e0a3e). Enable it in Firebase Console > Authentication > Sign-in method, or click "Launch Demo Operator Session" to proceed immediately.';
+      }
       setErrorMessage(message);
       throw new Error(message);
     } finally {
@@ -241,7 +245,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(operator);
     } catch (err: any) {
       console.error('[Firebase Registration Failed]', err);
-      const message = err?.message || 'Registration failed. Please check password complexity.';
+      let message = err?.message || 'Registration failed. Please check password complexity.';
+      if (err?.code === 'auth/operation-not-allowed' || message.includes('operation-not-allowed')) {
+        message = 'Firebase: Email/Password sign-in is disabled in your Firebase project (horizon-e0a3e). Enable it in Firebase Console > Authentication > Sign-in method, or click "Launch Demo Operator Session" to proceed immediately.';
+      }
       setErrorMessage(message);
       throw new Error(message);
     } finally {
@@ -269,6 +276,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const message = err?.message || 'Google sign-in failed. Please check popup permissions.';
       setErrorMessage(message);
       throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Instant Demo/Dev bypass for evaluation or unconfigured Firebase Console
+  const loginAsDemo = async (): Promise<void> => {
+    setErrorMessage(null);
+    setIsLoading(true);
+    try {
+      const demoUser: OperatorUser = {
+        uid: 'demo-sre-commander',
+        email: 'commander@horizon.io',
+        displayName: 'Lead SRE Commander',
+        role: 'Commander',
+      };
+      setUser(demoUser);
+      // Provision pre-authorized operator wallet state so onboarding completes immediately
+      const operatorWallet = await mstBlockchain.getOperatorWalletState();
+      setWallet(operatorWallet);
+      localStorage.setItem(STORAGE_KEY_WALLET, JSON.stringify(operatorWallet));
+    } catch (err: any) {
+      console.error('[Demo Login Failed]', err);
     } finally {
       setIsLoading(false);
     }
@@ -339,6 +369,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         login,
         register,
         loginWithGoogle,
+        loginAsDemo,
         connectBridgeKey,
         connectOperatorKeypair,
         disconnectWallet,
