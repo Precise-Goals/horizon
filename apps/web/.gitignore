@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Vite
+*.tsbuildinfo
+
+# Env files (Hidden & Ignored)
+.env
+.env.*
+.env.local
+!.env.example

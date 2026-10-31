@@ -43,31 +43,31 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Frosted Backdrop */}
       <div
-        className="fixed inset-0 bg-[#07090E]/80 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity animate-in fade-in duration-150"
         onClick={onClose}
       />
 
-      {/* Glass Dialog */}
+      {/* Surface Dialog */}
       <div
-        className={`relative w-full ${maxWidthStyles} overflow-hidden rounded-2xl bg-[#0D121E]/90 p-6 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/80 transition-all animate-in zoom-in-95 duration-200`}
+        className={`relative w-full ${maxWidthStyles} overflow-hidden rounded-[20px] bg-white p-6 sm:p-8 border border-[#E5E5E5] shadow-[0_24px_64px_rgba(0,0,0,0.08)] text-[#0A0A0A] transition-all animate-in zoom-in-95 duration-150`}
         role="dialog"
         aria-modal="true"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#1E6BFF]/40 to-transparent" />
-
-        <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-          <h3 className="text-lg font-semibold text-[#FFF8F0] tracking-tight">{title}</h3>
+        <div className="flex items-center justify-between pb-4 border-b border-[#E5E5E5]">
+          <h3 className="text-base sm:text-lg font-semibold text-[#0A0A0A] tracking-tight">{title}</h3>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#A3ADC2] hover:text-[#FFF8F0] hover:bg-white/[0.08] transition-colors"
-            aria-label="Close"
+            className="p-1.5 rounded-full text-[#A3A3A3] hover:text-[#0A0A0A] hover:bg-neutral-100 transition-colors cursor-pointer"
+            aria-label="Close dialog"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="mt-4">{children}</div>
+        <div className="pt-5">{children}</div>
       </div>
     </div>
   );
 };
+
+export default Modal;
