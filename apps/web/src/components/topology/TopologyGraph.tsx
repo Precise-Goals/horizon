@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
@@ -25,8 +24,6 @@ import {
   Flame,
   Radio,
   RotateCcw,
-  X,
-  SlidersHorizontal,
 } from 'lucide-react';
 
 export interface TopologyGraphProps {
@@ -36,9 +33,9 @@ export interface TopologyGraphProps {
 interface NodeLayoutMeta {
   id: string;
   name: string;
-  layer: number;
-  layerLabel: string;
-  layerName: string;
+  tier: number;
+  tierLabel: string;
+  tierName: string;
   recoveryStep: number;
   type: 'database' | 'application' | 'gateway' | 'cache';
   port: string;
@@ -57,9 +54,9 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
   'web-frontend': {
     id: 'web-frontend',
     name: 'Horizon Web UI',
-    layer: 3,
-    layerLabel: 'L3',
-    layerName: 'Client Ingress',
+    tier: 3,
+    tierLabel: 'TIER 3',
+    tierName: 'Client Ingress',
     recoveryStep: 5,
     type: 'application',
     port: ':3000',
@@ -70,15 +67,15 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-blue-50 border-blue-200',
     engine: 'React 19 / Vite Edge',
     description: 'Client-facing mission control dashboard and operator cockpit.',
-    x: 470,
-    y: 55,
+    x: 300,
+    y: 50,
   },
   'api-gateway': {
     id: 'api-gateway',
     name: 'API Gateway',
-    layer: 2,
-    layerLabel: 'L2',
-    layerName: 'Routing & Proxy',
+    tier: 2,
+    tierLabel: 'TIER 2',
+    tierName: 'Routing & Proxy',
     recoveryStep: 4,
     type: 'gateway',
     port: ':8080',
@@ -89,15 +86,15 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-indigo-50 border-indigo-200',
     engine: 'Envoy Reverse Proxy',
     description: 'TLS termination, rate limiting, and intelligent load routing.',
-    x: 470,
-    y: 185,
+    x: 300,
+    y: 165,
   },
   'auth-service': {
     id: 'auth-service',
     name: 'Auth Service',
-    layer: 1,
-    layerLabel: 'L1',
-    layerName: 'Microservice',
+    tier: 1,
+    tierLabel: 'TIER 1',
+    tierName: 'Microservice',
     recoveryStep: 3,
     type: 'application',
     port: ':5001',
@@ -108,15 +105,15 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-emerald-50 border-emerald-200',
     engine: 'EIP-712 / Go Auth Engine',
     description: 'Session state validation, HMAC token signing, and Web3 key authorization.',
-    x: 310,
-    y: 325,
+    x: 180,
+    y: 295,
   },
   'payment-service': {
     id: 'payment-service',
     name: 'Payment Service',
-    layer: 1,
-    layerLabel: 'L1',
-    layerName: 'Microservice',
+    tier: 1,
+    tierLabel: 'TIER 1',
+    tierName: 'Microservice',
     recoveryStep: 3,
     type: 'application',
     port: ':5002',
@@ -127,15 +124,15 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-purple-50 border-purple-200',
     engine: 'MST Escrow / Stripe Gateway',
     description: 'NFT subscription license checking and fiat/crypto payment settlement.',
-    x: 630,
-    y: 325,
+    x: 420,
+    y: 295,
   },
   'redis-cache': {
     id: 'redis-cache',
     name: 'Redis Cache',
-    layer: 0,
-    layerLabel: 'L0',
-    layerName: 'In-Memory Store',
+    tier: 0,
+    tierLabel: 'TIER 0',
+    tierName: 'In-Memory Store',
     recoveryStep: 2,
     type: 'cache',
     port: ':6379',
@@ -146,15 +143,15 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-amber-50 border-amber-200',
     engine: 'Redis 7.2 Memory Cluster',
     description: 'High-throughput session cache, rate-limit buckets, and pub/sub message bus.',
-    x: 210,
-    y: 480,
+    x: 105,
+    y: 435,
   },
   'db-primary': {
     id: 'db-primary',
     name: 'PostgreSQL Primary',
-    layer: 0,
-    layerLabel: 'L0',
-    layerName: 'Primary Database',
+    tier: 0,
+    tierLabel: 'TIER 0',
+    tierName: 'Primary Database',
     recoveryStep: 1,
     type: 'database',
     port: ':5432',
@@ -165,15 +162,15 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-blue-100 border-blue-300',
     engine: 'PostgreSQL 16 Primary ACID',
     description: 'Foundational system of record with continuous WAL replication archiving.',
-    x: 470,
-    y: 480,
+    x: 300,
+    y: 435,
   },
   'db-replica': {
     id: 'db-replica',
     name: 'PostgreSQL Replica',
-    layer: 0,
-    layerLabel: 'L0',
-    layerName: 'Standby Database',
+    tier: 0,
+    tierLabel: 'TIER 0',
+    tierName: 'Standby Database',
     recoveryStep: 2,
     type: 'database',
     port: ':5433',
@@ -184,8 +181,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     iconBg: 'bg-sky-50 border-sky-200',
     engine: 'PostgreSQL 16 Hot Standby',
     description: 'Real-time asynchronous read replica ready for automated failover promotion.',
-    x: 730,
-    y: 480,
+    x: 495,
+    y: 435,
   },
 };
 
@@ -203,75 +200,74 @@ const STATIC_EDGES: GraphEdgeConfig[] = [
     sourceId: 'api-gateway',
     targetId: 'web-frontend',
     label: 'User Traffic Ingress',
-    path: 'M 470 148 L 470 92',
+    path: 'M 300 129 L 300 86',
   },
   {
     id: 'edge-auth-to-gateway',
     sourceId: 'auth-service',
     targetId: 'api-gateway',
     label: 'Route Auth & JWT',
-    path: 'M 310 288 C 310 245, 430 255, 430 222',
+    path: 'M 180 259 C 180 220, 270 230, 270 201',
   },
   {
     id: 'edge-cache-to-gateway',
     sourceId: 'redis-cache',
     targetId: 'api-gateway',
     label: 'Session & Rate Limits',
-    path: 'M 210 443 C 170 330, 360 270, 400 222',
+    path: 'M 105 399 C 75 300, 220 250, 245 201',
   },
   {
     id: 'edge-cache-to-auth',
     sourceId: 'redis-cache',
     targetId: 'auth-service',
     label: 'Token Caching',
-    path: 'M 220 443 C 220 400, 280 405, 280 362',
+    path: 'M 120 399 C 120 360, 155 365, 155 331',
   },
   {
     id: 'edge-db-to-auth',
     sourceId: 'db-primary',
     targetId: 'auth-service',
     label: 'User Credentials Query',
-    path: 'M 430 443 C 430 400, 340 405, 340 362',
+    path: 'M 275 399 C 275 360, 205 365, 205 331',
   },
   {
     id: 'edge-auth-to-payment',
     sourceId: 'auth-service',
     targetId: 'payment-service',
     label: 'Identity Attestation',
-    path: 'M 400 325 C 470 325, 470 325, 540 325',
+    path: 'M 260 295 C 300 295, 300 295, 340 295',
   },
   {
     id: 'edge-db-to-payment',
     sourceId: 'db-primary',
     targetId: 'payment-service',
     label: 'Ledger Balance Query',
-    path: 'M 510 443 C 510 400, 630 405, 630 362',
+    path: 'M 325 399 C 325 360, 420 365, 420 331',
   },
   {
     id: 'edge-db-to-cache',
     sourceId: 'db-primary',
     targetId: 'redis-cache',
     label: 'Cache Warmup & Sync',
-    path: 'M 380 480 C 340 480, 340 480, 300 480',
+    path: 'M 220 435 C 200 435, 200 435, 185 435',
   },
   {
     id: 'edge-db-to-replica',
     sourceId: 'db-primary',
     targetId: 'db-replica',
     label: 'Continuous WAL Stream',
-    path: 'M 560 480 C 600 480, 600 480, 640 480',
+    path: 'M 380 435 C 400 435, 400 435, 415 435',
   },
 ];
 
 export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) => {
   const [nodes, setNodes] = useState<SystemNode[]>([]);
   const [edges, setEdges] = useState<{ dependent_id: string; depends_on_id: string }[]>([]);
-  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>('db-primary');
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'traffic' | 'recovery'>('traffic');
   const [filter, setFilter] = useState<'all' | 'data' | 'services' | 'edge'>('all');
-  const [isDrawerOpen, setIsDrawerOpen] = useState<boolean>(false);
 
   const loadTopology = useCallback(async () => {
     try {
@@ -350,15 +346,6 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
 
   const isSelectedDown = selectedNode?.status === 'down';
 
-  const handleSelectNode = (nodeId: string) => {
-    setSelectedNodeId(nodeId);
-    setIsDrawerOpen(true);
-  };
-
-  const handleCloseDrawer = () => {
-    setIsDrawerOpen(false);
-  };
-
   // Toggle simulate failure or restore
   const handleToggleState = async (nodeId: string, currentStatus: string) => {
     const nextStatus = currentStatus === 'down' ? 'healthy' : 'down';
@@ -395,9 +382,9 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
   };
 
   return (
-    <div className={cn('horizon-topology-graph w-full font-sans relative', className)}>
-      {/* Full Width Visualizer Card */}
-      <Card className="horizon-topology-card p-5 sm:p-6 flex flex-col justify-between min-h-[670px] relative overflow-hidden skeuo-card border-[#E5D7C5]">
+    <div className={cn('horizon-topology-graph grid grid-cols-1 xl:grid-cols-12 gap-6 items-start font-sans', className)}>
+      {/* Main Interactive Visualizer (Left Column, 8-span) */}
+      <Card className="horizon-topology-card p-5 sm:p-6 xl:col-span-8 flex flex-col justify-between min-h-[630px] relative overflow-hidden skeuo-card border-[#E5D7C5]">
         {/* Subtle Network Dot Grid */}
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(#0047AB_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
 
@@ -450,21 +437,9 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                   )}
                 >
                   <Layers className="w-3.5 h-3.5" />
-                  <span>Kahn Recovery Order</span>
+                  <span>Kahn Order</span>
                 </button>
               </div>
-
-              {/* Drawer Toggle (if node selected) */}
-              {selectedNodeId && !isDrawerOpen && (
-                <button
-                  type="button"
-                  onClick={() => setIsDrawerOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-[#0047AB]/10 border border-[#0047AB]/25 text-[#0047AB] hover:bg-[#0047AB]/20 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors"
-                >
-                  <SlidersHorizontal className="w-3.5 h-3.5" />
-                  <span>Inspect Service</span>
-                </button>
-              )}
 
               {/* Refresh DAG */}
               <Button
@@ -488,9 +463,9 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
               </span>
               {[
                 { id: 'all', label: 'All (7)' },
-                { id: 'data', label: 'L0 Data' },
-                { id: 'services', label: 'L1 Services' },
-                { id: 'edge', label: 'L2-3 Edge' },
+                { id: 'data', label: 'Tier 0' },
+                { id: 'services', label: 'Tier 1' },
+                { id: 'edge', label: 'Tier 2-3' },
               ].map((f) => (
                 <button
                   key={f.id}
@@ -531,87 +506,86 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
             )}
           </div>
 
-          {/* Interactive Topological DAG Canvas with Left Rail */}
-          <div className="relative w-full overflow-x-auto overflow-y-hidden rounded-2xl bg-[#FFFDF9] border border-[#E8DCCE] p-3 shadow-inner">
-            <div className="relative w-[880px] h-[550px] mx-auto select-none flex">
+          {/* Interactive Topological DAG Canvas with Dedicated Left Rail */}
+          <div className="relative w-full overflow-x-auto overflow-y-hidden rounded-2xl bg-[#FFFDF9] border border-[#E8DCCE] p-2 shadow-inner">
+            <div className="relative w-[710px] h-[500px] mx-auto select-none flex">
               {/* Dedicated Left-Side Rail Gutter (No text behind cards!) */}
-              <div className="w-[100px] h-full flex flex-col justify-between py-2 border-r border-[#EADCC9]/60 shrink-0 select-none z-10">
-                {/* L3: Ingress */}
-                <div className="h-[90px] flex flex-col justify-center pr-3">
+              <div className="w-[110px] h-full flex flex-col justify-between py-2 border-r border-[#EADCC9]/60 shrink-0 select-none z-10 pr-2">
+                {/* TIER 3: Ingress */}
+                <div className="h-[80px] flex flex-col justify-center">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-widest text-[9px] font-black border border-[#0047AB]/20">
-                      L3
+                    <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-wider text-[9px] font-black border border-[#0047AB]/20">
+                      TIER 3
                     </span>
                     <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase">
-                      Ingress
+                      INGRESS
                     </span>
                   </div>
-                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-0.5">
+                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Client Edge
                   </span>
                 </div>
 
-                {/* L2: Gateway */}
-                <div className="h-[95px] flex flex-col justify-center pr-3">
+                {/* TIER 2: Gateway */}
+                <div className="h-[85px] flex flex-col justify-center">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono tracking-widest text-[9px] font-black border border-indigo-200">
-                      L2
+                    <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono tracking-wider text-[9px] font-black border border-indigo-200">
+                      TIER 2
                     </span>
                     <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase">
-                      Gateway
+                      GATEWAY
                     </span>
                   </div>
-                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-0.5">
+                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Route & TLS
                   </span>
                 </div>
 
-                {/* L1: Microservices */}
-                <div className="h-[105px] flex flex-col justify-center pr-3">
+                {/* TIER 1: Core */}
+                <div className="h-[95px] flex flex-col justify-center">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono tracking-widest text-[9px] font-black border border-emerald-200">
-                      L1
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono tracking-wider text-[9px] font-black border border-emerald-200">
+                      TIER 1
                     </span>
                     <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase">
-                      Core
+                      CORE
                     </span>
                   </div>
-                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-0.5">
+                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Application
                   </span>
                 </div>
 
-                {/* L0: Storage */}
-                <div className="h-[105px] flex flex-col justify-center pr-3">
+                {/* TIER 0: Data */}
+                <div className="h-[95px] flex flex-col justify-center">
                   <div className="flex items-center gap-1.5">
-                    <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-widest text-[9px] font-black border border-[#0047AB]/25">
-                      L0
+                    <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-wider text-[9px] font-black border border-[#0047AB]/25">
+                      TIER 0
                     </span>
                     <span className="font-mono tracking-wider text-[10px] font-bold text-[#0047AB] uppercase">
-                      Data
+                      DATA
                     </span>
                   </div>
-                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-0.5">
+                  <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Root ACID
                   </span>
                 </div>
               </div>
 
-              {/* Main Node Canvas Area */}
-              <div className="relative flex-1 h-full overflow-hidden">
+              {/* Main Node Canvas Area (600px width) */}
+              <div className="relative w-[600px] h-full overflow-hidden">
                 {/* Subtle Horizontal Divider Lines (Zero text collisions!) */}
                 <div className="absolute inset-0 pointer-events-none flex flex-col justify-between py-2">
-                  <div className="h-[90px] border-b border-dashed border-[#E5D7C5]/40" />
+                  <div className="h-[80px] border-b border-dashed border-[#E5D7C5]/40" />
+                  <div className="h-[85px] border-b border-dashed border-[#E5D7C5]/40" />
                   <div className="h-[95px] border-b border-dashed border-[#E5D7C5]/40" />
-                  <div className="h-[105px] border-b border-dashed border-[#E5D7C5]/40" />
-                  <div className="h-[105px]" />
+                  <div className="h-[95px]" />
                 </div>
 
                 {/* SVG Connectors Canvas */}
                 <svg
                   className="absolute inset-0 w-full h-full pointer-events-none"
-                  viewBox="0 0 780 550"
-                  style={{ left: '-100px', width: '880px' }}
+                  viewBox="0 0 600 500"
                 >
                   <defs>
                     <marker
@@ -737,19 +711,17 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
 
                   // Dim card if filter does not match
                   let isFilteredOut = false;
-                  if (filter === 'data' && meta.layer !== 0) isFilteredOut = true;
-                  if (filter === 'services' && meta.layer !== 1) isFilteredOut = true;
-                  if (filter === 'edge' && meta.layer < 2) isFilteredOut = true;
+                  if (filter === 'data' && meta.tier !== 0) isFilteredOut = true;
+                  if (filter === 'services' && meta.tier !== 1) isFilteredOut = true;
+                  if (filter === 'edge' && meta.tier < 2) isFilteredOut = true;
 
                   const IconComponent = meta.icon;
-                  // Compensate for left gutter offset (100px)
-                  const adjustedX = meta.x - 100;
 
                   return (
                     <div
                       key={meta.id}
                       style={{
-                        left: `${adjustedX}px`,
+                        left: `${meta.x}px`,
                         top: `${meta.y}px`,
                         transform: 'translate(-50%, -50%)',
                       }}
@@ -760,11 +732,11 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       )}
                     >
                       <div
-                        onClick={() => handleSelectNode(meta.id)}
+                        onClick={() => setSelectedNodeId(meta.id)}
                         onMouseEnter={() => setHoveredNodeId(meta.id)}
                         onMouseLeave={() => setHoveredNodeId(null)}
                         className={cn(
-                          'horizon-dag-node w-[184px] rounded-2xl p-2.5 transition-all duration-150 cursor-pointer select-none',
+                          'horizon-dag-node w-[160px] rounded-2xl p-2.5 transition-all duration-150 cursor-pointer select-none',
                           'shadow-[0_2px_8px_rgba(26,26,26,0.06),0_1px_2px_rgba(26,26,26,0.04)]',
                           // Base Card Style (No movement on hover!)
                           !isSelected && !isDown && !isSimulatedBlast && 'bg-white border-2 border-[rgba(26,26,26,0.12)] hover:border-[#0047AB]/70 hover:shadow-[0_4px_16px_rgba(0,71,171,0.18)] hover:ring-2 hover:ring-[#0047AB]/20',
@@ -786,7 +758,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                         {/* Mode Tag / Sequence Pill */}
                         <div className="flex items-center justify-between gap-1 mb-1.5">
                           <span className="text-[9px] font-mono tracking-widest font-black px-1.5 py-0.5 rounded bg-[#F4EBE0] border border-[#E0D0BE] text-[#5A4E44] uppercase">
-                            {viewMode === 'recovery' ? `STEP ${meta.recoveryStep}` : meta.layerLabel}
+                            {viewMode === 'recovery' ? `STEP ${meta.recoveryStep}` : meta.tierLabel}
                           </span>
 
                           {/* Status Indicator Pill */}
@@ -852,218 +824,215 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
             </span>
           </div>
           <span className="font-mono text-[10px] tracking-wider text-[#8A7B6D] font-bold uppercase">
-            Click any service to slide out the impact inspector
+            Click any service to inspect topology & blast radius
           </span>
         </div>
+      </Card>
 
-        {/* Slide-out Topology Inspector Drawer */}
-        <AnimatePresence>
-          {isDrawerOpen && selectedNode && selectedNodeMeta && (
-            <motion.div
-              initial={{ x: '100%', opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="absolute top-0 right-0 bottom-0 w-full sm:w-[380px] bg-white border-l border-[#E5D7C5] shadow-2xl z-30 flex flex-col justify-between p-5 overflow-y-auto"
-            >
+      {/* Persistent Side-by-Side Service Inspector Column (Right Column, 4-span) */}
+      <Card className="horizon-impact-panel p-5 xl:col-span-4 h-[630px] flex flex-col justify-between skeuo-card border-[#E5D7C5] sticky top-6">
+        <div>
+          {/* Panel Header */}
+          <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#EADCC9] shrink-0">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 flex items-center justify-center">
+                <AlertOctagon className="w-4 h-4" />
+              </div>
               <div>
-                {/* Drawer Header */}
-                <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#EADCC9]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 flex items-center justify-center">
-                      <AlertOctagon className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-base font-black text-[#1A1A1A] tracking-tight">
-                        Service Inspector
-                      </h3>
-                      <p className="text-[10px] font-mono tracking-wider uppercase text-[#6E6258] font-bold">
-                        Topological Impact Analysis
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleCloseDrawer}
-                    className="p-1.5 rounded-lg text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#F5EDE2] transition-colors cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+                <h3 className="text-base font-black text-[#1A1A1A] tracking-tight">
+                  Service Inspector
+                </h3>
+                <p className="text-[10px] font-mono tracking-wider uppercase text-[#6E6258] font-bold">
+                  Topological Impact Analysis
+                </p>
+              </div>
+            </div>
+            {selectedNode && (
+              <Badge status={selectedNode.status as any}>
+                {selectedNode.status}
+              </Badge>
+            )}
+          </div>
+
+          {/* Scrollable Inspector Body with Constant Stable Container Height */}
+          {selectedNode && selectedNodeMeta ? (
+            <div className="overflow-y-auto max-h-[460px] space-y-3.5 pr-1">
+              {/* Target Service Overview Card */}
+              <div className="p-3.5 rounded-xl skeuo-well border-[#E5D7C5]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] text-[#8A7B6D] uppercase font-mono tracking-wider font-bold">
+                    Target Service
+                  </span>
+                  <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 rounded-md bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 uppercase">
+                    {selectedNodeMeta.tierLabel} &bull; {selectedNodeMeta.tierName}
+                  </span>
                 </div>
 
-                {/* Target Service Card */}
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl skeuo-well border-[#E5D7C5]">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-[#8A7B6D] uppercase font-mono tracking-wider font-bold">
-                        Target Service
-                      </span>
-                      <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 rounded-md bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 uppercase">
-                        {selectedNodeMeta.layerLabel} &bull; {selectedNodeMeta.layerName}
-                      </span>
+                <div className="flex items-center gap-2.5 mt-2">
+                  <div className={cn('w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs shrink-0', selectedNodeMeta.iconBg)}>
+                    {React.createElement(selectedNodeMeta.icon, {
+                      className: cn('w-5 h-5', selectedNodeMeta.iconColor),
+                    })}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-base font-black text-[#1A1A1A] truncate">
+                      {selectedNodeMeta.name}
                     </div>
-
-                    <div className="flex items-center gap-2.5 mt-2">
-                      <div className={cn('w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs', selectedNodeMeta.iconBg)}>
-                        {React.createElement(selectedNodeMeta.icon, {
-                          className: cn('w-5 h-5', selectedNodeMeta.iconColor),
-                        })}
-                      </div>
-                      <div>
-                        <div className="text-base font-black text-[#1A1A1A]">
-                          {selectedNodeMeta.name}
-                        </div>
-                        <div className="text-xs text-[#6E6258] font-medium font-mono text-[11px]">
-                          {selectedNodeMeta.engine}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#E5D7C5]/60 text-xs font-mono">
-                      <div className="p-2 rounded-lg bg-white/80 border border-[#D9C8B5]">
-                        <span className="text-[9px] text-[#8A7B6D] block tracking-wider uppercase font-bold">PORT / PROTOCOL</span>
-                        <span className="font-bold text-[#1A1A1A] text-[11px]">
-                          {selectedNodeMeta.port} ({selectedNodeMeta.protocol})
-                        </span>
-                      </div>
-                      <div className="p-2 rounded-lg bg-white/80 border border-[#D9C8B5]">
-                        <span className="text-[9px] text-[#8A7B6D] block tracking-wider uppercase font-bold">TELEMETRY P99</span>
-                        <span className="font-bold text-[#0047AB] text-[11px]">
-                          {selectedNodeMeta.latency}
-                        </span>
-                      </div>
+                    <div className="text-[11px] text-[#6E6258] font-mono truncate">
+                      {selectedNodeMeta.engine}
                     </div>
                   </div>
+                </div>
 
-                  {/* Upstream Prerequisites */}
-                  <div className="p-3.5 rounded-xl bg-white border border-[#E5D7C5] shadow-xs">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-bold text-[#1A1A1A] flex items-center gap-1.5">
-                        <Radio className="w-3.5 h-3.5 text-[#0047AB]" />
-                        <span>Upstream Prerequisites</span>
-                      </span>
-                      <span className="text-[10px] font-mono tracking-wider font-bold text-[#6E6258] uppercase">
-                        {upstreamDependencies.length} REQUIRED
-                      </span>
-                    </div>
-                    {upstreamDependencies.length === 0 ? (
-                      <p className="text-xs text-[#6E6258] italic font-medium">
-                        Root foundation service. Has zero upstream dependencies.
-                      </p>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {upstreamDependencies.map((depId) => {
-                          const depMeta = STATIC_NODE_METAS[depId];
-                          const depNode = nodes.find((n) => n.id === depId);
-                          return (
-                            <div
-                              key={depId}
-                              onClick={() => setSelectedNodeId(depId)}
-                              className="flex items-center justify-between p-2 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5] hover:border-[#0047AB]/40 cursor-pointer transition-colors text-xs"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#0047AB]" />
-                                <span className="font-bold text-[#1A1A1A]">
-                                  {depMeta?.name || depId}
-                                </span>
-                              </div>
-                              <Badge status={(depNode?.status || 'healthy') as any}>
-                                {depNode?.status || 'healthy'}
-                              </Badge>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#E5D7C5]/60 text-xs font-mono">
+                  <div className="p-2 rounded-lg bg-white/80 border border-[#D9C8B5]">
+                    <span className="text-[8px] text-[#8A7B6D] block tracking-wider uppercase font-bold">PORT / PROTOCOL</span>
+                    <span className="font-bold text-[#1A1A1A] text-[10px] truncate block">
+                      {selectedNodeMeta.port} ({selectedNodeMeta.protocol})
+                    </span>
                   </div>
-
-                  {/* Blast Radius Box (Cobalt Patch) */}
-                  <div className="p-4 rounded-xl cobalt-patch shadow-lg shadow-[#0047AB]/20">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Flame className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Cascaded Blast Radius</span>
-                      </span>
-                      <span className="text-[10px] font-mono tracking-wider font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 uppercase">
-                        {blastRadius.length} DOWNSTREAM
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-white/80 mt-2 font-medium">
-                      If <strong className="text-white underline">{selectedNodeMeta.name}</strong> fails, the following downstream systems are impaired:
-                    </p>
-
-                    <div className="mt-3 space-y-1.5">
-                      {blastRadius.length === 0 ? (
-                        <div className="text-xs text-emerald-200 flex items-center gap-1.5 py-1 font-semibold">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                          <span>Edge leaf node: 0 downstream dependencies cascaded.</span>
-                        </div>
-                      ) : (
-                        blastRadius.map((depId) => {
-                          const depMeta = STATIC_NODE_METAS[depId];
-                          return (
-                            <div
-                              key={depId}
-                              onClick={() => setSelectedNodeId(depId)}
-                              className="flex items-center justify-between p-2 rounded-lg bg-black/25 border border-white/10 hover:border-white/30 text-xs cursor-pointer transition-colors"
-                            >
-                              <span className="text-white font-semibold">
-                                {depMeta ? depMeta.name : depId}
-                              </span>
-                              <span className="text-[9px] font-mono tracking-wider text-amber-300 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/30 uppercase">
-                                {isSelectedDown ? 'IMPAIRED' : 'AT RISK'}
-                              </span>
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Autonomous Playbook Assignment */}
-                  <div className="p-3.5 rounded-xl skeuo-well border-[#E5D7C5] text-xs text-[#5A4E44]">
-                    <div className="flex items-center gap-1.5 font-bold text-[#1A1A1A] mb-1">
-                      <Activity className="w-3.5 h-3.5 text-[#0047AB]" />
-                      <span>Autonomous Playbook Assignment:</span>
-                    </div>
-                    <p className="leading-relaxed text-[11px]">
-                      {selectedNode.type === 'database'
-                        ? 'Playbook #PB-01: High-Risk Database Failover to read replica. EIP-712 Multi-Sig Commander approval required.'
-                        : selectedNode.type === 'cache'
-                        ? 'Playbook #PB-02: Automated Redis cache flush, container restart, and client pool reconnection.'
-                        : selectedNode.type === 'gateway'
-                        ? 'Playbook #PB-03: Zero-downtime Envoy ingress reload and dynamic DNS re-route to healthy pods.'
-                        : 'Playbook #PB-04: Graceful SIGTERM pod termination, Kubernetes rolling restart, and readiness probe poll.'}
-                    </p>
+                  <div className="p-2 rounded-lg bg-white/80 border border-[#D9C8B5]">
+                    <span className="text-[8px] text-[#8A7B6D] block tracking-wider uppercase font-bold">TELEMETRY P99</span>
+                    <span className="font-bold text-[#0047AB] text-[10px] block">
+                      {selectedNodeMeta.latency}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Action Controls Footer */}
-              <div className="mt-4 pt-3 border-t border-[#EADCC9]">
-                <Button
-                  variant={selectedNode.status === 'down' ? 'primary' : 'danger'}
-                  size="sm"
-                  onClick={() => handleToggleState(selectedNode.id, selectedNode.status)}
-                  className="w-full text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                >
-                  {selectedNode.status === 'down' ? (
-                    <>
-                      <RotateCcw className="w-4 h-4" />
-                      <span>Restore & Heal Service</span>
-                    </>
+              {/* Upstream Prerequisites */}
+              <div className="p-3 rounded-xl bg-white border border-[#E5D7C5] shadow-xs">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-[#1A1A1A] flex items-center gap-1.5">
+                    <Radio className="w-3.5 h-3.5 text-[#0047AB]" />
+                    <span>Upstream Prerequisites</span>
+                  </span>
+                  <span className="text-[9px] font-mono tracking-wider font-bold text-[#6E6258] uppercase">
+                    {upstreamDependencies.length} REQUIRED
+                  </span>
+                </div>
+                {upstreamDependencies.length === 0 ? (
+                  <p className="text-xs text-[#6E6258] italic font-medium">
+                    Root foundation service. Has zero upstream dependencies.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {upstreamDependencies.map((depId) => {
+                      const depMeta = STATIC_NODE_METAS[depId];
+                      const depNode = nodes.find((n) => n.id === depId);
+                      return (
+                        <div
+                          key={depId}
+                          onClick={() => setSelectedNodeId(depId)}
+                          className="flex items-center justify-between p-2 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5] hover:border-[#0047AB]/40 cursor-pointer transition-colors text-xs"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-[#0047AB]" />
+                            <span className="font-bold text-[#1A1A1A]">
+                              {depMeta?.name || depId}
+                            </span>
+                          </div>
+                          <Badge status={(depNode?.status || 'healthy') as any}>
+                            {depNode?.status || 'healthy'}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Blast Radius Box (Cobalt Patch) */}
+              <div className="p-3.5 rounded-xl cobalt-patch shadow-lg shadow-[#0047AB]/20">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-amber-300" />
+                    <span>Cascaded Blast Radius</span>
+                  </span>
+                  <span className="text-[9px] font-mono tracking-wider font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 uppercase">
+                    {blastRadius.length} DOWNSTREAM
+                  </span>
+                </div>
+
+                <p className="text-xs text-white/80 mt-2 font-medium">
+                  If <strong className="text-white underline">{selectedNodeMeta.name}</strong> fails, the following downstream systems are impaired:
+                </p>
+
+                <div className="mt-2.5 space-y-1.5">
+                  {blastRadius.length === 0 ? (
+                    <div className="text-xs text-emerald-200 flex items-center gap-1.5 py-1 font-semibold">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>Edge leaf node: 0 downstream dependencies cascaded.</span>
+                    </div>
                   ) : (
-                    <>
-                      <Flame className="w-4 h-4" />
-                      <span>Simulate Failure on Node</span>
-                    </>
+                    blastRadius.map((depId) => {
+                      const depMeta = STATIC_NODE_METAS[depId];
+                      return (
+                        <div
+                          key={depId}
+                          onClick={() => setSelectedNodeId(depId)}
+                          className="flex items-center justify-between p-2 rounded-lg bg-black/25 border border-white/10 hover:border-white/30 text-xs cursor-pointer transition-colors"
+                        >
+                          <span className="text-white font-semibold">
+                            {depMeta ? depMeta.name : depId}
+                          </span>
+                          <span className="text-[9px] font-mono tracking-wider text-amber-300 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/30 uppercase">
+                            {isSelectedDown ? 'IMPAIRED' : 'AT RISK'}
+                          </span>
+                        </div>
+                      );
+                    })
                   )}
-                </Button>
+                </div>
               </div>
-            </motion.div>
+
+              {/* Autonomous Playbook Assignment */}
+              <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] text-xs text-[#5A4E44]">
+                <div className="flex items-center gap-1.5 font-bold text-[#1A1A1A] mb-1">
+                  <Activity className="w-3.5 h-3.5 text-[#0047AB]" />
+                  <span>Autonomous Playbook Assignment:</span>
+                </div>
+                <p className="leading-relaxed text-[11px]">
+                  {selectedNode.type === 'database'
+                    ? 'Playbook #PB-01: High-Risk Database Failover to read replica. EIP-712 Multi-Sig Commander approval required.'
+                    : selectedNode.type === 'cache'
+                    ? 'Playbook #PB-02: Automated Redis cache flush, container restart, and client pool reconnection.'
+                    : selectedNode.type === 'gateway'
+                    ? 'Playbook #PB-03: Zero-downtime Envoy ingress reload and dynamic DNS re-route to healthy pods.'
+                    : 'Playbook #PB-04: Graceful SIGTERM pod termination, Kubernetes rolling restart, and readiness probe poll.'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-16 text-xs text-[#8A7B6D] font-medium">
+              Select any service from the DAG topology to inspect its dependencies and blast radius.
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+
+        {/* Action Controls Footer (Always Pinned and 100% Visible, Never Cut Off!) */}
+        {selectedNode && (
+          <div className="pt-3 border-t border-[#EADCC9] shrink-0">
+            <Button
+              variant={selectedNode.status === 'down' ? 'primary' : 'danger'}
+              size="sm"
+              onClick={() => handleToggleState(selectedNode.id, selectedNode.status)}
+              className="w-full text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            >
+              {selectedNode.status === 'down' ? (
+                <>
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Restore & Heal Service</span>
+                </>
+              ) : (
+                <>
+                  <Flame className="w-4 h-4" />
+                  <span>Simulate Failure on Node</span>
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </Card>
     </div>
   );
