@@ -267,7 +267,6 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
   const [edges, setEdges] = useState<{ dependent_id: string; depends_on_id: string }[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>('db-primary');
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
-  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'traffic' | 'recovery'>('traffic');
   const [tierFilter, setTierFilter] = useState<'all' | 't0' | 't1' | 't2-3'>('all');
@@ -637,7 +636,8 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 {/* Render Directed Bézier Curves */}
                 {STATIC_EDGES.map((edge) => {
                   const state = getEdgeState(edge);
-                  const isHovered = hoveredEdgeId === edge.id;
+                  const source = STATIC_NODE_METAS[edge.sourceId];
+                  const target = STATIC_NODE_METAS[edge.targetId];
 
                   let strokeColor = '#CBD5E1';
                   let strokeWidth = 1.75;
@@ -669,22 +669,15 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                     animClass = '';
                   }
 
-                  if (isHovered) {
-                    strokeWidth = 3.5;
-                    opacity = 1;
-                  }
-
                   return (
-                    <g key={edge.id}>
+                    <g key={edge.id} className="cursor-pointer group">
                       {/* Invisible wider hit area for hover */}
                       <path
                         d={edge.path}
                         fill="none"
                         stroke="transparent"
-                        strokeWidth={18}
-                        className="pointer-events-auto cursor-pointer"
-                        onMouseEnter={() => setHoveredEdgeId(edge.id)}
-                        onMouseLeave={() => setHoveredEdgeId(null)}
+                        strokeWidth={14}
+                        className="pointer-events-auto"
                       />
                       {/* Visible directed curve */}
                       <path
@@ -695,31 +688,14 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                         strokeDasharray={strokeDash}
                         markerEnd={viewMode === 'recovery' ? marker : undefined}
                         markerStart={viewMode === 'traffic' ? marker : undefined}
-                        className={cn('transition-all duration-200', animClass)}
+                        className={cn('transition-all duration-150', animClass, 'group-hover:stroke-[#0047AB] group-hover:stroke-[3px]')}
                         style={{ opacity }}
                       />
+                      <title>{`${source?.name} → ${target?.name} (${edge.label})`}</title>
                     </g>
                   );
                 })}
               </svg>
-
-              {/* Edge Label Hover Tooltip Badge */}
-              {hoveredEdgeId && (
-                (() => {
-                  const hoveredEdge = STATIC_EDGES.find((e) => e.id === hoveredEdgeId);
-                  if (!hoveredEdge) return null;
-                  const source = STATIC_NODE_METAS[hoveredEdge.sourceId];
-                  const target = STATIC_NODE_METAS[hoveredEdge.targetId];
-                  return (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 px-3 py-1 rounded-full bg-[#1A1A1A] text-white text-[11px] font-mono font-bold shadow-lg flex items-center gap-2 border border-white/20 animate-in fade-in">
-                      <span className="text-blue-300">{source?.name}</span>
-                      <span>&rarr;</span>
-                      <span className="text-emerald-300">{target?.name}</span>
-                      <span className="text-white/60">({hoveredEdge.label})</span>
-                    </div>
-                  );
-                })()
-              )}
 
               {/* Interactive Node Cards */}
               {Object.values(STATIC_NODE_METAS).map((meta) => {
@@ -742,76 +718,84 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 return (
                   <div
                     key={meta.id}
-                    onClick={() => setSelectedNodeId(meta.id)}
-                    onMouseEnter={() => setHoveredNodeId(meta.id)}
-                    onMouseLeave={() => setHoveredNodeId(null)}
                     style={{
                       left: `${meta.x}px`,
                       top: `${meta.y}px`,
+                      transform: 'translate(-50%, -50%)',
                     }}
                     className={cn(
-                      'horizon-dag-node absolute -translate-x-1/2 -translate-y-1/2 w-[168px] rounded-2xl p-2.5 transition-all duration-200 cursor-pointer select-none',
-                      'shadow-[0_2px_8px_rgba(26,26,26,0.06),0_1px_2px_rgba(26,26,26,0.04)]',
-                      isFilteredOut && 'opacity-25 pointer-events-none',
-                      // Base Card Style
-                      !isSelected && !isDown && !isSimulatedBlast && 'bg-white border-2 border-[rgba(26,26,26,0.12)] hover:border-[#0047AB]/50 hover:shadow-[0_4px_16px_rgba(0,71,171,0.15)] hover:-translate-y-1',
-                      // Selected Style
-                      isSelected && !isDown && 'bg-white border-2 border-[#0047AB] ring-4 ring-[#0047AB]/15 shadow-[0_6px_20px_rgba(0,71,171,0.22)] -translate-y-1 z-20',
-                      // Upstream Prerequisite of Selected Node
-                      isUpstream && !isSelected && 'border-2 border-[#0047AB]/60 bg-blue-50/40',
-                      // Downstream Consumer of Selected Node (Normal Mode)
-                      isDownstream && !isDown && !isSimulatedBlast && !isSelected && 'border-2 border-amber-300 bg-amber-50/30',
-                      // Active Cascaded Risk (when selected target is down)
-                      isSimulatedBlast && 'border-2 border-dashed border-amber-500 bg-amber-50/90 shadow-[0_4px_14px_rgba(217,119,6,0.2)] animate-pulse z-15',
-                      // Target Node Is Down (Primary Failure)
-                      isDown && 'border-2 border-red-500 bg-red-50/90 ring-4 ring-red-500/20 shadow-[0_6px_20px_rgba(239,68,68,0.25)] -translate-y-1 z-20'
+                      'absolute pointer-events-auto select-none transition-opacity duration-150',
+                      isSelected ? 'z-20' : 'z-10',
+                      isFilteredOut && 'opacity-25 pointer-events-none'
                     )}
                   >
-                    {/* Top Anchor Dot */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#CBD5E1] border border-white shadow-xs" />
-                    {/* Bottom Anchor Dot */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full bg-[#CBD5E1] border border-white shadow-xs" />
-
-                    {/* Mode Tag / Sequence Pill */}
-                    <div className="flex items-center justify-between gap-1 mb-1.5">
-                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#F4EBE0] border border-[#E0D0BE] text-[#5A4E44]">
-                        {viewMode === 'recovery' ? `Step ${meta.recoveryStep}` : `T${meta.tier}`}
-                      </span>
-
-                      {/* Status Indicator Pill */}
-                      {isDown ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-100 text-red-800 border border-red-300">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
-                          <span>DOWN</span>
-                        </span>
-                      ) : isSimulatedBlast ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                          <AlertTriangle className="w-2.5 h-2.5 text-amber-700" />
-                          <span>Risk</span>
-                        </span>
-                      ) : isUpstream ? (
-                        <span className="text-[9px] font-mono font-bold text-[#0047AB] bg-blue-50 px-1 rounded border border-blue-200">
-                          Prereq
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EBF7EE] text-[#0A6C3D] border border-[#0F8E52]/25">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />
-                          <span>healthy</span>
-                        </span>
+                    <div
+                      onClick={() => setSelectedNodeId(meta.id)}
+                      onMouseEnter={() => setHoveredNodeId(meta.id)}
+                      onMouseLeave={() => setHoveredNodeId(null)}
+                      className={cn(
+                        'horizon-dag-node w-[168px] rounded-2xl p-2.5 transition-all duration-150 cursor-pointer select-none',
+                        'shadow-[0_2px_8px_rgba(26,26,26,0.06),0_1px_2px_rgba(26,26,26,0.04)]',
+                        // Base Card Style (Rock solid, zero translation movement!)
+                        !isSelected && !isDown && !isSimulatedBlast && 'bg-white border-2 border-[rgba(26,26,26,0.12)] hover:border-[#0047AB]/70 hover:shadow-[0_4px_16px_rgba(0,71,171,0.18)] hover:ring-2 hover:ring-[#0047AB]/20',
+                        // Selected Style
+                        isSelected && !isDown && 'bg-white border-2 border-[#0047AB] ring-4 ring-[#0047AB]/20 shadow-[0_6px_20px_rgba(0,71,171,0.22)]',
+                        // Upstream Prerequisite of Selected Node
+                        isUpstream && !isSelected && 'border-2 border-[#0047AB]/60 bg-blue-50/40',
+                        // Downstream Consumer of Selected Node (Normal Mode)
+                        isDownstream && !isDown && !isSimulatedBlast && !isSelected && 'border-2 border-amber-300 bg-amber-50/30',
+                        // Active Cascaded Risk (when selected target is down)
+                        isSimulatedBlast && 'border-2 border-dashed border-amber-500 bg-amber-50/90 shadow-[0_4px_14px_rgba(217,119,6,0.2)]',
+                        // Target Node Is Down (Primary Failure)
+                        isDown && 'border-2 border-red-500 bg-red-50/90 ring-4 ring-red-500/20 shadow-[0_6px_20px_rgba(239,68,68,0.25)]'
                       )}
-                    </div>
+                    >
+                      {/* Top Anchor Dot */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#CBD5E1] border border-white shadow-xs pointer-events-none" />
+                      {/* Bottom Anchor Dot */}
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full bg-[#CBD5E1] border border-white shadow-xs pointer-events-none" />
 
-                    {/* Node Core Info */}
-                    <div className="flex items-center gap-2">
-                      <div className={cn('w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 shadow-xs', meta.iconBg)}>
-                        <IconComponent className={cn('w-4 h-4', meta.iconColor)} />
+                      {/* Mode Tag / Sequence Pill */}
+                      <div className="flex items-center justify-between gap-1 mb-1.5">
+                        <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#F4EBE0] border border-[#E0D0BE] text-[#5A4E44]">
+                          {viewMode === 'recovery' ? `Step ${meta.recoveryStep}` : `T${meta.tier}`}
+                        </span>
+
+                        {/* Status Indicator Pill */}
+                        {isDown ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-100 text-red-800 border border-red-300">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
+                            <span>DOWN</span>
+                          </span>
+                        ) : isSimulatedBlast ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                            <AlertTriangle className="w-2.5 h-2.5 text-amber-700" />
+                            <span>Risk</span>
+                          </span>
+                        ) : isUpstream ? (
+                          <span className="text-[9px] font-mono font-bold text-[#0047AB] bg-blue-50 px-1 rounded border border-blue-200">
+                            Prereq
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#EBF7EE] text-[#0A6C3D] border border-[#0F8E52]/25">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-xs" />
+                            <span>healthy</span>
+                          </span>
+                        )}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-xs font-black text-[#1A1A1A] truncate leading-tight">
-                          {meta.name}
+
+                      {/* Node Core Info */}
+                      <div className="flex items-center gap-2">
+                        <div className={cn('w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 shadow-xs', meta.iconBg)}>
+                          <IconComponent className={cn('w-4 h-4', meta.iconColor)} />
                         </div>
-                        <div className="text-[10px] text-[#6E6258] font-mono truncate">
-                          {meta.port} &bull; {meta.latency}
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-black text-[#1A1A1A] truncate leading-tight">
+                            {meta.name}
+                          </div>
+                          <div className="text-[10px] text-[#6E6258] font-mono truncate">
+                            {meta.port} &bull; {meta.latency}
+                          </div>
                         </div>
                       </div>
                     </div>
