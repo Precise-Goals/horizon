@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
@@ -24,6 +25,8 @@ import {
   Flame,
   Radio,
   RotateCcw,
+  X,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export interface TopologyGraphProps {
@@ -55,8 +58,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'web-frontend',
     name: 'Horizon Web UI',
     tier: 3,
-    tierLabel: 'TIER 3',
-    tierName: 'Client Ingress',
+    tierLabel: 'L3',
+    tierName: 'CLIENT INGRESS',
     recoveryStep: 5,
     type: 'application',
     port: ':3000',
@@ -74,8 +77,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'api-gateway',
     name: 'API Gateway',
     tier: 2,
-    tierLabel: 'TIER 2',
-    tierName: 'Routing & Proxy',
+    tierLabel: 'L2',
+    tierName: 'ROUTING & PROXY',
     recoveryStep: 4,
     type: 'gateway',
     port: ':8080',
@@ -93,8 +96,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'auth-service',
     name: 'Auth Service',
     tier: 1,
-    tierLabel: 'TIER 1',
-    tierName: 'Microservice',
+    tierLabel: 'L1',
+    tierName: 'APPLICATION CORE',
     recoveryStep: 3,
     type: 'application',
     port: ':5001',
@@ -112,8 +115,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'payment-service',
     name: 'Payment Service',
     tier: 1,
-    tierLabel: 'TIER 1',
-    tierName: 'Microservice',
+    tierLabel: 'L1',
+    tierName: 'PAYMENT GATEWAY',
     recoveryStep: 3,
     type: 'application',
     port: ':5002',
@@ -131,8 +134,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'redis-cache',
     name: 'Redis Cache',
     tier: 0,
-    tierLabel: 'TIER 0',
-    tierName: 'In-Memory Store',
+    tierLabel: 'L0',
+    tierName: 'CACHE STORE',
     recoveryStep: 2,
     type: 'cache',
     port: ':6379',
@@ -150,8 +153,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'db-primary',
     name: 'PostgreSQL Primary',
     tier: 0,
-    tierLabel: 'TIER 0',
-    tierName: 'Primary Database',
+    tierLabel: 'L0',
+    tierName: 'ROOT ACID',
     recoveryStep: 1,
     type: 'database',
     port: ':5432',
@@ -169,8 +172,8 @@ const STATIC_NODE_METAS: Record<string, NodeLayoutMeta> = {
     id: 'db-replica',
     name: 'PostgreSQL Replica',
     tier: 0,
-    tierLabel: 'TIER 0',
-    tierName: 'Standby Database',
+    tierLabel: 'L0',
+    tierName: 'READ REPLICA',
     recoveryStep: 2,
     type: 'database',
     port: ':5433',
@@ -268,6 +271,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
   const [loading, setLoading] = useState<boolean>(true);
   const [viewMode, setViewMode] = useState<'traffic' | 'recovery'>('traffic');
   const [filter, setFilter] = useState<'all' | 'data' | 'services' | 'edge'>('all');
+  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
 
   const loadTopology = useCallback(async () => {
     try {
@@ -382,9 +386,9 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
   };
 
   return (
-    <div className={cn('horizon-topology-graph grid grid-cols-1 xl:grid-cols-12 gap-6 items-start font-sans', className)}>
-      {/* Main Interactive Visualizer (Left Column, 8-span) */}
-      <Card className="horizon-topology-card p-5 sm:p-6 xl:col-span-8 flex flex-col justify-between min-h-[630px] relative overflow-hidden skeuo-card border-[#E5D7C5]">
+    <div className={cn('horizon-topology-graph flex flex-col gap-6 font-sans w-full', className)}>
+      {/* Main Interactive Visualizer (Full Width) */}
+      <Card className="horizon-topology-card p-5 sm:p-6 flex flex-col justify-between min-h-[620px] relative overflow-hidden skeuo-card border-[#E5D7C5] w-full">
         {/* Subtle Network Dot Grid */}
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none bg-[radial-gradient(#0047AB_1.5px,transparent_1.5px)] [background-size:24px_24px]" />
 
@@ -396,14 +400,9 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 <Network className="w-5 h-5" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-black text-[#1A1A1A] tracking-tight">
-                    Autonomous Dependency DAG
-                  </h2>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono tracking-wider font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20">
-                    O(V + E)
-                  </span>
-                </div>
+                <h2 className="text-base font-black text-[#1A1A1A] tracking-tight">
+                  Autonomous Dependency DAG
+                </h2>
                 <p className="text-xs text-[#6E6258] font-medium mt-0.5">
                   Multi-tier service dependency topology with reverse blast radius resolution.
                 </p>
@@ -456,21 +455,27 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
 
           {/* Sub-toolbar: Non-Repetitive Filter & Outage Alert Banner */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-2 text-xs relative z-10">
-            {/* Filter pills without repeating "Tier" */}
+            {/* Filter pills with primary node auto-selection */}
             <div className="flex items-center gap-1.5 text-xs">
               <span className="text-[10px] font-mono tracking-wider text-[#8A7B6D] font-bold uppercase mr-1">
                 Filter:
               </span>
               {[
-                { id: 'all', label: 'All (7)' },
-                { id: 'data', label: 'Tier 0' },
-                { id: 'services', label: 'Tier 1' },
-                { id: 'edge', label: 'Tier 2-3' },
+                { id: 'all', label: 'All Tiers (7)', targetNode: null },
+                { id: 'data', label: 'Tier 0 Data', targetNode: 'db-primary' },
+                { id: 'services', label: 'Tier 1 Services', targetNode: 'auth-service' },
+                { id: 'edge', label: 'Tier 2-3 Edge', targetNode: 'web-frontend' },
               ].map((f) => (
                 <button
                   key={f.id}
                   type="button"
-                  onClick={() => setFilter(f.id as any)}
+                  onClick={() => {
+                    setFilter(f.id as any);
+                    if (f.targetNode) {
+                      setSelectedNodeId(f.targetNode);
+                      setIsInspectorOpen(true);
+                    }
+                  }}
                   className={cn(
                     'px-2.5 py-1 rounded-lg font-mono text-[10px] tracking-wider font-bold uppercase transition-colors cursor-pointer',
                     filter === f.id
@@ -507,69 +512,121 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
           </div>
 
           {/* Interactive Topological DAG Canvas with Dedicated Left Rail */}
-          <div className="relative w-full overflow-x-auto overflow-y-hidden rounded-2xl bg-[#FFFDF9] border border-[#E8DCCE] p-2 shadow-inner">
+          <div className="relative w-full overflow-x-auto overflow-y-hidden rounded-2xl bg-[#FFFDF9] border border-[#E8DCCE] p-3 shadow-inner">
             <div className="relative w-[710px] h-[500px] mx-auto select-none flex">
-              {/* Dedicated Left-Side Rail Gutter (No text behind cards!) */}
+              {/* Dedicated Left-Side Rail Gutter (Interactive Clickable Tier Parameters) */}
               <div className="w-[110px] h-full flex flex-col justify-between py-2 border-r border-[#EADCC9]/60 shrink-0 select-none z-10 pr-2">
-                {/* TIER 3: Ingress */}
-                <div className="h-[80px] flex flex-col justify-center">
+                {/* L3: Ingress */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedNodeId('web-frontend');
+                    setIsInspectorOpen(true);
+                  }}
+                  className={cn(
+                    'h-[80px] flex flex-col justify-center text-left p-1.5 rounded-xl transition-all cursor-pointer group',
+                    selectedNodeMeta?.tier === 3
+                      ? 'bg-[#0047AB]/10 border border-[#0047AB]/30 shadow-xs ring-1 ring-[#0047AB]/20'
+                      : 'hover:bg-[#FAF3EA] border border-transparent'
+                  )}
+                  title="Click Tier 3 Ingress to inspect on right"
+                >
                   <div className="flex items-center gap-1.5">
                     <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-wider text-[9px] font-black border border-[#0047AB]/20">
-                      TIER 3
+                      L3
                     </span>
-                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase">
+                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase group-hover:text-[#0047AB]">
                       INGRESS
                     </span>
                   </div>
                   <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Client Edge
                   </span>
-                </div>
+                </button>
 
-                {/* TIER 2: Gateway */}
-                <div className="h-[85px] flex flex-col justify-center">
+                {/* L2: Gateway */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedNodeId('api-gateway');
+                    setIsInspectorOpen(true);
+                  }}
+                  className={cn(
+                    'h-[85px] flex flex-col justify-center text-left p-1.5 rounded-xl transition-all cursor-pointer group',
+                    selectedNodeMeta?.tier === 2
+                      ? 'bg-indigo-50 border border-indigo-300 shadow-xs ring-1 ring-indigo-200'
+                      : 'hover:bg-[#FAF3EA] border border-transparent'
+                  )}
+                  title="Click Tier 2 Gateway to inspect on right"
+                >
                   <div className="flex items-center gap-1.5">
                     <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono tracking-wider text-[9px] font-black border border-indigo-200">
-                      TIER 2
+                      L2
                     </span>
-                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase">
+                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase group-hover:text-indigo-700">
                       GATEWAY
                     </span>
                   </div>
                   <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Route & TLS
                   </span>
-                </div>
+                </button>
 
-                {/* TIER 1: Core */}
-                <div className="h-[95px] flex flex-col justify-center">
+                {/* L1: Core */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedNodeId('auth-service');
+                    setIsInspectorOpen(true);
+                  }}
+                  className={cn(
+                    'h-[95px] flex flex-col justify-center text-left p-1.5 rounded-xl transition-all cursor-pointer group',
+                    selectedNodeMeta?.tier === 1
+                      ? 'bg-emerald-50 border border-emerald-300 shadow-xs ring-1 ring-emerald-200'
+                      : 'hover:bg-[#FAF3EA] border border-transparent'
+                  )}
+                  title="Click Tier 1 Core to inspect on right"
+                >
                   <div className="flex items-center gap-1.5">
                     <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono tracking-wider text-[9px] font-black border border-emerald-200">
-                      TIER 1
+                      L1
                     </span>
-                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase">
+                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase group-hover:text-emerald-800">
                       CORE
                     </span>
                   </div>
                   <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Application
                   </span>
-                </div>
+                </button>
 
-                {/* TIER 0: Data */}
-                <div className="h-[95px] flex flex-col justify-center">
+                {/* L0: Data */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedNodeId('db-primary');
+                    setIsInspectorOpen(true);
+                  }}
+                  className={cn(
+                    'h-[95px] flex flex-col justify-center text-left p-1.5 rounded-xl transition-all cursor-pointer group',
+                    selectedNodeMeta?.tier === 0
+                      ? 'bg-[#0047AB]/10 border border-[#0047AB]/30 shadow-xs ring-1 ring-[#0047AB]/25'
+                      : 'hover:bg-[#FAF3EA] border border-transparent'
+                  )}
+                  title="Click Tier 0 Data to inspect on right"
+                >
                   <div className="flex items-center gap-1.5">
                     <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-wider text-[9px] font-black border border-[#0047AB]/25">
-                      TIER 0
+                      L0
                     </span>
-                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#0047AB] uppercase">
+                    <span className="font-mono tracking-wider text-[10px] font-bold text-[#0047AB] uppercase group-hover:underline">
                       DATA
                     </span>
                   </div>
                   <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
                     Root ACID
                   </span>
-                </div>
+                </button>
               </div>
 
               {/* Main Node Canvas Area (600px width) */}
@@ -732,7 +789,10 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       )}
                     >
                       <div
-                        onClick={() => setSelectedNodeId(meta.id)}
+                        onClick={() => {
+                          setSelectedNodeId(meta.id);
+                          setIsInspectorOpen(true);
+                        }}
                         onMouseEnter={() => setHoveredNodeId(meta.id)}
                         onMouseLeave={() => setHoveredNodeId(null)}
                         className={cn(
@@ -807,7 +867,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
           </div>
         </div>
 
-        {/* Legend Footer */}
+        {/* Legend Footer & Right Inspector Drawer Trigger */}
         <div className="mt-4 pt-3 border-t border-[#EADCC9] flex flex-wrap items-center justify-between text-xs text-[#6E6258] relative z-10 gap-3">
           <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tracking-wider uppercase">
             <span className="flex items-center gap-1.5 font-bold">
@@ -823,52 +883,80 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
               <span className="w-2.5 h-2.5 rounded-full bg-[#0047AB] shadow-xs" /> Prerequisite
             </span>
           </div>
-          <span className="font-mono text-[10px] tracking-wider text-[#8A7B6D] font-bold uppercase">
-            Click any service to inspect topology & blast radius
-          </span>
+
+          <div className="flex items-center gap-2.5">
+            <span className="font-mono text-[10px] tracking-wider text-[#8A7B6D] font-bold uppercase hidden sm:inline">
+              Click any tier parameter or node to inspect on right &rarr;
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsInspectorOpen((prev) => !prev)}
+              className="px-2.5 py-1 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5] hover:border-[#0047AB]/40 text-[#1A1A1A] font-mono text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <SlidersHorizontal className="w-3 h-3 text-[#0047AB]" />
+              <span>{isInspectorOpen ? 'Hide Inspector' : 'Show Inspector'}</span>
+            </button>
+          </div>
         </div>
       </Card>
 
-      {/* Persistent Side-by-Side Service Inspector Column (Right Column, 4-span) */}
-      <Card className="horizon-impact-panel p-5 xl:col-span-4 h-[630px] flex flex-col justify-between skeuo-card border-[#E5D7C5] sticky top-6">
-        <div>
-          {/* Panel Header */}
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#EADCC9] shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 flex items-center justify-center">
-                <AlertOctagon className="w-4 h-4" />
+      {/* Right-Side Slide-Over Inspector Drawer */}
+      <AnimatePresence>
+        {isInspectorOpen && selectedNode && selectedNodeMeta && (
+          <motion.aside
+            key="service-inspector-drawer"
+            initial={{ x: '100%', opacity: 0.9 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            className="fixed top-0 right-0 h-full w-[440px] max-w-[94vw] z-50 bg-[#FFFDF9] border-l-2 border-[#E5D7C5] shadow-[-10px_0_35px_rgba(26,26,26,0.18)] flex flex-col justify-between"
+            aria-label="Service Inspector"
+          >
+            {/* Drawer Header */}
+            <div className="p-4 sm:p-5 border-b border-[#EADCC9] bg-[#FFF8F0]/80 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 flex items-center justify-center shrink-0 shadow-inner">
+                  <AlertOctagon className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-[#1A1A1A] tracking-tight">
+                    Service Inspector
+                  </h3>
+                  <p className="text-[9px] font-mono tracking-wider uppercase text-[#6E6258] font-bold">
+                    Blast Radius & Autonomous Playbook
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-black text-[#1A1A1A] tracking-tight">
-                  Service Inspector
-                </h3>
-                <p className="text-[10px] font-mono tracking-wider uppercase text-[#6E6258] font-bold">
-                  Topological Impact Analysis
-                </p>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono tracking-widest px-2.5 py-1 rounded-md bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 uppercase">
+                  {selectedNodeMeta.tierLabel} &bull; {selectedNodeMeta.tierName}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsInspectorOpen(false)}
+                  className="p-1.5 rounded-lg text-[#6E6258] hover:text-[#1A1A1A] hover:bg-[#F5EDE2] border border-[#E5D7C5] transition-colors cursor-pointer"
+                  title="Close Inspector"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
-            {selectedNode && (
-              <Badge status={selectedNode.status as any}>
-                {selectedNode.status}
-              </Badge>
-            )}
-          </div>
 
-          {/* Scrollable Inspector Body with Constant Stable Container Height */}
-          {selectedNode && selectedNodeMeta ? (
-            <div className="overflow-y-auto max-h-[460px] space-y-3.5 pr-1">
-              {/* Target Service Overview Card */}
-              <div className="p-3.5 rounded-xl skeuo-well border-[#E5D7C5]">
-                <div className="flex items-center justify-between">
+            {/* Drawer Scrollable Content: 4 Cards Stacked Vertically */}
+            <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3.5">
+              {/* Card 1: Target Service */}
+              <div className="p-4 rounded-xl skeuo-well border-[#E5D7C5]">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-[9px] text-[#8A7B6D] uppercase font-mono tracking-wider font-bold">
-                    Target Service
+                    TARGET SERVICE
                   </span>
-                  <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 rounded-md bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 uppercase">
+                  <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 uppercase">
                     {selectedNodeMeta.tierLabel} &bull; {selectedNodeMeta.tierName}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2.5 mt-2">
+                <div className="flex items-center gap-2.5">
                   <div className={cn('w-9 h-9 rounded-xl border flex items-center justify-center shadow-xs shrink-0', selectedNodeMeta.iconBg)}>
                     {React.createElement(selectedNodeMeta.icon, {
                       className: cn('w-5 h-5', selectedNodeMeta.iconColor),
@@ -883,6 +971,10 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                     </div>
                   </div>
                 </div>
+
+                <p className="text-xs text-[#5A4E44] mt-2.5 leading-relaxed">
+                  {selectedNodeMeta.description}
+                </p>
 
                 <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-[#E5D7C5]/60 text-xs font-mono">
                   <div className="p-2 rounded-lg bg-white/80 border border-[#D9C8B5]">
@@ -900,8 +992,8 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 </div>
               </div>
 
-              {/* Upstream Prerequisites */}
-              <div className="p-3 rounded-xl bg-white border border-[#E5D7C5] shadow-xs">
+              {/* Card 2: Upstream Prerequisites */}
+              <div className="p-4 rounded-xl bg-white border border-[#E5D7C5] shadow-xs">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-[#1A1A1A] flex items-center gap-1.5">
                     <Radio className="w-3.5 h-3.5 text-[#0047AB]" />
@@ -911,12 +1003,13 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                     {upstreamDependencies.length} REQUIRED
                   </span>
                 </div>
+
                 {upstreamDependencies.length === 0 ? (
-                  <p className="text-xs text-[#6E6258] italic font-medium">
+                  <div className="p-3 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5] text-xs text-[#6E6258] italic font-medium mt-2">
                     Root foundation service. Has zero upstream dependencies.
-                  </p>
+                  </div>
                 ) : (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 mt-2">
                     {upstreamDependencies.map((depId) => {
                       const depMeta = STATIC_NODE_METAS[depId];
                       const depNode = nodes.find((n) => n.id === depId);
@@ -940,11 +1033,15 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                     })}
                   </div>
                 )}
+
+                <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-3 block">
+                  Click any prerequisite to inspect its dependencies
+                </span>
               </div>
 
-              {/* Blast Radius Box (Cobalt Patch) */}
-              <div className="p-3.5 rounded-xl cobalt-patch shadow-lg shadow-[#0047AB]/20">
-                <div className="flex items-center justify-between">
+              {/* Card 3: Cascaded Blast Radius (Cobalt Patch) */}
+              <div className="p-4 rounded-xl cobalt-patch shadow-lg shadow-[#0047AB]/20 text-white">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-white flex items-center gap-1.5">
                     <Flame className="w-3.5 h-3.5 text-amber-300" />
                     <span>Cascaded Blast Radius</span>
@@ -954,15 +1051,15 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                   </span>
                 </div>
 
-                <p className="text-xs text-white/80 mt-2 font-medium">
-                  If <strong className="text-white underline">{selectedNodeMeta.name}</strong> fails, the following downstream systems are impaired:
+                <p className="text-xs text-white/80 mt-1 font-medium">
+                  If <strong className="text-white underline">{selectedNodeMeta.name}</strong> fails:
                 </p>
 
-                <div className="mt-2.5 space-y-1.5">
+                <div className="mt-2 space-y-1.5">
                   {blastRadius.length === 0 ? (
-                    <div className="text-xs text-emerald-200 flex items-center gap-1.5 py-1 font-semibold">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
-                      <span>Edge leaf node: 0 downstream dependencies cascaded.</span>
+                    <div className="text-xs text-emerald-200 flex items-center gap-1.5 py-2 font-semibold">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300 shrink-0" />
+                      <span>Edge leaf node: 0 downstream cascaded.</span>
                     </div>
                   ) : (
                     blastRadius.map((depId) => {
@@ -973,10 +1070,10 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                           onClick={() => setSelectedNodeId(depId)}
                           className="flex items-center justify-between p-2 rounded-lg bg-black/25 border border-white/10 hover:border-white/30 text-xs cursor-pointer transition-colors"
                         >
-                          <span className="text-white font-semibold">
+                          <span className="text-white font-semibold truncate mr-2">
                             {depMeta ? depMeta.name : depId}
                           </span>
-                          <span className="text-[9px] font-mono tracking-wider text-amber-300 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/30 uppercase">
+                          <span className="text-[9px] font-mono tracking-wider text-amber-300 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-400/30 uppercase shrink-0">
                             {isSelectedDown ? 'IMPAIRED' : 'AT RISK'}
                           </span>
                         </div>
@@ -984,15 +1081,19 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                     })
                   )}
                 </div>
+
+                <span className="font-mono text-[9px] text-white/70 tracking-wide mt-3 block">
+                  Reverse topological traversal O(V+E)
+                </span>
               </div>
 
-              {/* Autonomous Playbook Assignment */}
-              <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] text-xs text-[#5A4E44]">
-                <div className="flex items-center gap-1.5 font-bold text-[#1A1A1A] mb-1">
+              {/* Card 4: Autonomous Playbook Assignment */}
+              <div className="p-4 rounded-xl skeuo-well border-[#E5D7C5]">
+                <div className="flex items-center gap-1.5 font-bold text-[#1A1A1A] mb-2 text-xs">
                   <Activity className="w-3.5 h-3.5 text-[#0047AB]" />
                   <span>Autonomous Playbook Assignment:</span>
                 </div>
-                <p className="leading-relaxed text-[11px]">
+                <p className="leading-relaxed text-[11px] text-[#5A4E44]">
                   {selectedNode.type === 'database'
                     ? 'Playbook #PB-01: High-Risk Database Failover to read replica. EIP-712 Multi-Sig Commander approval required.'
                     : selectedNode.type === 'cache'
@@ -1003,37 +1104,31 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="text-center py-16 text-xs text-[#8A7B6D] font-medium">
-              Select any service from the DAG topology to inspect its dependencies and blast radius.
-            </div>
-          )}
-        </div>
 
-        {/* Action Controls Footer (Always Pinned and 100% Visible, Never Cut Off!) */}
-        {selectedNode && (
-          <div className="pt-3 border-t border-[#EADCC9] shrink-0">
-            <Button
-              variant={selectedNode.status === 'down' ? 'primary' : 'danger'}
-              size="sm"
-              onClick={() => handleToggleState(selectedNode.id, selectedNode.status)}
-              className="w-full text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-            >
-              {selectedNode.status === 'down' ? (
-                <>
-                  <RotateCcw className="w-4 h-4" />
-                  <span>Restore & Heal Service</span>
-                </>
-              ) : (
-                <>
-                  <Flame className="w-4 h-4" />
-                  <span>Simulate Failure on Node</span>
-                </>
-              )}
-            </Button>
-          </div>
+            {/* Drawer Footer: Pinned Action Button (100% visible, zero cutoff!) */}
+            <div className="p-4 sm:p-5 border-t border-[#E5D7C5] bg-[#FFFDF9] shrink-0">
+              <Button
+                variant={selectedNode.status === 'down' ? 'primary' : 'danger'}
+                size="sm"
+                onClick={() => handleToggleState(selectedNode.id, selectedNode.status)}
+                className="w-full text-xs font-bold py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-md"
+              >
+                {selectedNode.status === 'down' ? (
+                  <>
+                    <RotateCcw className="w-4 h-4" />
+                    <span>Restore & Heal Service</span>
+                  </>
+                ) : (
+                  <>
+                    <Flame className="w-4 h-4" />
+                    <span>Simulate Failure on Node</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.aside>
         )}
-      </Card>
+      </AnimatePresence>
     </div>
   );
 };

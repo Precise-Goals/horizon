@@ -10,6 +10,55 @@
 @import "@fontsource/poppins/800.css";
 @import "@fontsource/poppins/900.css";
 
+
+/* =====================================================================
+   SILVANA TYPEFACE FAMILY (Blaze Type / Awwwards Typography)
+   ===================================================================== */
+@font-face {
+  font-family: 'Silvana';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/silvana/Silvana-Light.woff') format('woff'),
+       url('https://fonts.cdnfonts.com/s/88418/Silvana-Light-Trial.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Silvana';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/silvana/Silvana-Regular.woff') format('woff'),
+       url('https://fonts.cdnfonts.com/s/88418/Silvana-Regular-Trial.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Silvana';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/silvana/Silvana-Italic.woff') format('woff'),
+       url('https://fonts.cdnfonts.com/s/88418/Silvana-RegularItalic-Trial.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Silvana';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/silvana/Silvana-Medium.woff') format('woff'),
+       url('https://fonts.cdnfonts.com/s/88418/Silvana-Medium-Trial.woff') format('woff');
+}
+
+@font-face {
+  font-family: 'Silvana';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/silvana/Silvana-Bold.woff') format('woff'),
+       url('https://fonts.cdnfonts.com/s/88418/Silvana-Bold-Trial.woff') format('woff');
+}
+
 @plugin "daisyui";
 
 /* =====================================================================
@@ -47,6 +96,7 @@
     "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading:
     "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-silvana: "Silvana", "Newsreader", "Cormorant Garamond", "Playfair Display", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
   --color-background: var(--background);
@@ -490,4 +540,56 @@ h1.bblacnkherotit.text-3xl.sm\:text-4xl.font-black.text-\[\#1A1A1A\].tracking-ti
 
 .animate-dag-flow-reverse {
   animation: dagFlowReverse 1.4s linear infinite;
+}
+
+/* =====================================================================
+   SILVANA EDITORIAL TYPOGRAPHY RULES
+   ===================================================================== */
+.font-silvana {
+  font-family: 'Silvana', 'Newsreader', 'Cormorant Garamond', 'Playfair Display', Georgia, serif !important;
+}
+
+/* Scoped Silvana Typography for Docs and Sub-pages */
+.docs-page-container,
+.silvana-scope {
+  font-family: 'Silvana', 'Newsreader', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+}
+
+.docs-page-container h1,
+.docs-page-container h2,
+.docs-page-container h3,
+.docs-page-container h4,
+.docs-page-container h5,
+.docs-page-container h6,
+.silvana-scope h1,
+.silvana-scope h2,
+.silvana-scope h3,
+.silvana-scope h4,
+.silvana-scope h5,
+.silvana-scope h6 {
+  font-family: 'Silvana', 'Newsreader', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  letter-spacing: -0.012em;
+}
+
+.docs-page-container p,
+.docs-page-container li,
+.docs-page-container td,
+.docs-page-container th,
+.silvana-scope p,
+.silvana-scope li,
+.silvana-scope td,
+.silvana-scope th {
+  font-family: 'Silvana', 'Newsreader', 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+}
+
+/* Ensure code, terminals, badges and monospace elements strictly retain JetBrains Mono */
+.docs-page-container code,
+.docs-page-container pre,
+.docs-page-container kbd,
+.docs-page-container .font-mono,
+.silvana-scope code,
+.silvana-scope pre,
+.silvana-scope kbd,
+.silvana-scope .font-mono {
+  font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Consolas, monospace !important;
 }
