@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Link, useLocation } from 'react-router';
+import { cn } from '../../lib/utils';
 
 // Public routes accessible without onboarding
 const PUBLIC_PATHS = [
@@ -117,103 +118,118 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#07090E] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-blue-600/10 blur-[130px] pointer-events-none rounded-full" />
-      <div className="absolute bottom-10 right-1/4 w-[300px] h-[200px] bg-indigo-600/10 blur-[100px] pointer-events-none rounded-full" />
+    <div className="horizon-onboarding-container min-h-screen w-full bg-[#FFF8F0] text-[#1A1A1A] flex flex-col items-center justify-center p-4 relative overflow-hidden selection:bg-[#0047AB]/20 selection:text-[#0047AB]">
+      {/* Subtle Ambient Cobalt Blue Radial Lighting */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(0,71,171,0.08),rgba(255,248,240,0))]"
+      />
+
+      {/* Tactile Blueprint Micro-Grid on Cream */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-20 bg-[linear-gradient(to_right,rgba(26,26,26,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(26,26,26,0.04)_1px,transparent_1px)] bg-[size:4rem_4rem]"
+      />
 
       {/* Return to Homepage & Public Policy Links */}
-      <div className="relative z-10 w-full max-w-xl mb-4 flex items-center justify-between">
+      <div className="horizon-onboarding-nav relative z-10 w-full max-w-xl mb-4 flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors bg-white/[0.04] hover:bg-white/[0.08] px-3.5 py-1.5 rounded-full border border-white/10"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#555555] hover:text-[#0047AB] transition-colors bg-[#FAF3EA] hover:bg-[#F2E7D8] px-3.5 py-1.5 rounded-full border border-black/10 shadow-xs"
         >
           <span>&larr; Return to Homepage</span>
         </Link>
         <div className="flex items-center gap-3">
           <Link
             to="/patents"
-            className="text-xs text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors underline-offset-4 hover:underline"
+            className="text-xs font-medium text-[#555555] hover:text-[#0047AB] transition-colors underline-offset-4 hover:underline"
           >
             Patents &amp; Research
           </Link>
-          <span className="text-[#6E7A94] text-xs">&bull;</span>
+          <span className="text-[#888888] text-xs">&bull;</span>
           <Link
             to="/policies"
-            className="text-xs text-[#A3ADC2] hover:text-[#FFF8F0] transition-colors underline-offset-4 hover:underline"
+            className="text-xs font-medium text-[#555555] hover:text-[#0047AB] transition-colors underline-offset-4 hover:underline"
           >
             Privacies &amp; Policies
           </Link>
         </div>
       </div>
 
-      {/* Main Glassmorphic Onboarding Card */}
-      <div className="relative z-10 w-full max-w-xl glass-card rounded-2xl p-6 sm:p-8 border border-white/[0.08] shadow-2xl backdrop-blur-2xl">
+      {/* Main Neo-Brutalist Tactile Porcelain Card */}
+      <div className="horizon-onboarding-card relative z-10 w-full max-w-xl rounded-2xl p-6 sm:p-8 bg-[#FAF3EA] border-2 border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.08)]">
         
         {/* Brand Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-white/[0.08]">
+        <div className="horizon-onboarding-header flex items-center justify-between pb-6 border-b border-black/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-[#1E6BFF] shadow-lg shadow-blue-500/20">
-              <ShieldCheck className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-xl bg-[#0047AB]/10 border border-[#0047AB]/20 flex items-center justify-center text-[#0047AB] shadow-xs">
+              <ShieldCheck className="w-5 h-5 text-[#0047AB]" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#FFF8F0] tracking-tight">
+              <h2 className="text-base font-bold text-[#1A1A1A] tracking-tight">
                 Horizon Operator Protocol
               </h2>
-              <p className="text-xs text-[#A3ADC2]">
+              <p className="text-xs text-[#666666]">
                 Compulsory Zero-Trust Security Clearance
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase tracking-wider">
+          <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 uppercase tracking-wider font-bold">
             MST Testnet
           </span>
         </div>
 
         {/* Step Progression Tabs */}
-        <div className="grid grid-cols-2 gap-3 my-6">
+        <div className="horizon-onboarding-tabs grid grid-cols-2 gap-3 my-6">
           <div
-            className={`p-3 rounded-xl border transition-all ${
+            className={cn(
+              'p-3 rounded-xl border-2 transition-all',
               user
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-            }`}
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-800'
+                : 'bg-blue-500/10 border-[#0047AB] text-[#0047AB] shadow-xs'
+            )}
           >
             <div className="flex items-center gap-2">
               {user ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               ) : (
-                <span className="w-4 h-4 rounded-full bg-blue-500/20 border border-blue-500/50 flex items-center justify-center text-[10px] font-bold">
+                <span className="w-4 h-4 rounded-full bg-[#0047AB] text-white flex items-center justify-center text-[10px] font-bold">
                   1
                 </span>
               )}
-              <span className="text-xs font-semibold">Firebase Identity</span>
+              <span className="text-xs font-bold text-[#1A1A1A]">Firebase Identity</span>
             </div>
-            <p className="text-[10px] text-[#A3ADC2] mt-1 truncate">
+            <p className="text-[10px] text-[#666666] mt-1 truncate">
               {user ? user.email : 'Authentication required'}
             </p>
           </div>
 
           <div
-            className={`p-3 rounded-xl border transition-all ${
+            className={cn(
+              'p-3 rounded-xl border transition-all',
               wallet?.isAuthorized
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                ? 'bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-800'
                 : user
-                ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-                : 'bg-white/[0.02] border-white/[0.05] text-[#6E7A94]'
-            }`}
+                ? 'bg-blue-500/10 border-2 border-[#0047AB] text-[#0047AB] shadow-xs'
+                : 'bg-[#F2E7D8]/60 border-black/10 text-[#777777]'
+            )}
           >
             <div className="flex items-center gap-2">
               {wallet?.isAuthorized ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               ) : (
-                <span className="w-4 h-4 rounded-full bg-white/[0.08] flex items-center justify-center text-[10px] font-bold">
+                <span
+                  className={cn(
+                    'w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold',
+                    user ? 'bg-[#0047AB] text-white' : 'bg-black/10 text-[#555555]'
+                  )}
+                >
                   2
                 </span>
               )}
-              <span className="text-xs font-semibold">BridgeKey Web3 Wallet</span>
+              <span className="text-xs font-bold text-[#1A1A1A]">BridgeKey Web3 Wallet</span>
             </div>
-            <p className="text-[10px] text-[#A3ADC2] mt-1 truncate">
+            <p className="text-[10px] text-[#666666] mt-1 truncate">
               {wallet?.isAuthorized ? `${wallet.balanceMst} MST` : 'MST Testnet Binding'}
             </p>
           </div>
@@ -221,48 +237,48 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
         {/* Error Alert Banner */}
         {(localError || errorMessage) && (
-          <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-300 text-xs flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+          <div className="mb-5 p-3 rounded-xl bg-red-50 border-2 border-red-200 text-red-900 text-xs flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
             <div className="flex-1">
               <span className="font-semibold block">Authentication Error</span>
-              <p className="text-[11px] text-red-300/90 mt-0.5">{localError || errorMessage}</p>
+              <p className="text-[11px] text-red-700 mt-0.5">{localError || errorMessage}</p>
             </div>
           </div>
         )}
 
         {/* STEP 1: Firebase Auth Form */}
         {!user && (
-          <form onSubmit={handleAuthSubmit} className="space-y-4">
+          <form onSubmit={handleAuthSubmit} className="horizon-onboarding-form space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#A3ADC2] mb-1.5">
+              <label className="block text-xs font-semibold text-[#333333] mb-1.5">
                 Operator Enterprise Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E7A94]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#777777]" />
                 <input
                   type="email"
                   required
                   placeholder="commander@enterprise.io"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-[#FFF8F0] placeholder-[#6E7A94] focus:outline-none focus:border-blue-400 focus:bg-white/[0.06] transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white border border-black/15 text-sm text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:border-[#0047AB] focus:ring-2 focus:ring-[#0047AB]/20 transition-all shadow-xs"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#A3ADC2] mb-1.5">
+              <label className="block text-xs font-semibold text-[#333333] mb-1.5">
                 Security Password / Secret Key
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6E7A94]" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#777777]" />
                 <input
                   type="password"
                   required
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.1] text-sm text-[#FFF8F0] placeholder-[#6E7A94] focus:outline-none focus:border-blue-400 focus:bg-white/[0.06] transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white border border-black/15 text-sm text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:border-[#0047AB] focus:ring-2 focus:ring-[#0047AB]/20 transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -287,18 +303,18 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             </Button>
 
             <div className="relative flex items-center my-3">
-              <div className="flex-grow border-t border-white/[0.08]" />
-              <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#6E7A94] uppercase tracking-wider">
+              <div className="flex-grow border-t border-black/10" />
+              <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#777777] uppercase tracking-wider">
                 Or Continue With
               </span>
-              <div className="flex-grow border-t border-white/[0.08]" />
+              <div className="flex-grow border-t border-black/10" />
             </div>
 
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={submitting || isLoading}
-              className="w-full py-2.5 px-4 rounded-xl bg-white/[0.05] hover:bg-white/[0.08] active:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-[#FFF8F0] flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#F2E7D8]/50 active:bg-[#F2E7D8] border border-black/15 text-xs font-semibold text-[#1A1A1A] flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -317,7 +333,7 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   setLocalError(null);
                   clearError();
                 }}
-                className="text-xs text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
+                className="text-xs text-[#0047AB] hover:text-[#003380] font-semibold transition-colors cursor-pointer"
               >
                 {isRegisterMode
                   ? 'Already have an operator account? Sign In'
@@ -330,27 +346,29 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         {/* STEP 2: BridgeKey Web3 Wallet Binding */}
         {user && (!wallet || !wallet.isAuthorized) && (
           <div className="space-y-4">
-            <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.08] flex items-center justify-between">
+            <div className="p-3.5 rounded-xl bg-white border border-black/10 flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-700 flex items-center justify-center border border-emerald-500/30">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-[#FFF8F0]">
+                  <h4 className="text-xs font-bold text-[#1A1A1A]">
                     Firebase Operator Authenticated
                   </h4>
-                  <p className="text-[10px] font-mono text-[#A3ADC2]">{user.email}</p>
+                  <p className="text-[10px] font-mono text-[#666666]">{user.email}</p>
                 </div>
               </div>
-              <span className="text-[10px] font-mono text-emerald-400">UID: {user.uid.slice(0, 6)}...</span>
+              <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                UID: {user.uid.slice(0, 6)}...
+              </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-blue-500/[0.06] border border-blue-500/20 space-y-2">
-              <div className="flex items-center gap-2 text-blue-400">
+            <div className="p-4 rounded-xl bg-[#0047AB]/05 border border-[#0047AB]/20 space-y-2">
+              <div className="flex items-center gap-2 text-[#0047AB]">
                 <Wallet className="w-4 h-4" />
-                <span className="text-xs font-semibold">MST Blockchain Testnet Verification</span>
+                <span className="text-xs font-bold">MST Blockchain Testnet Verification</span>
               </div>
-              <p className="text-xs text-[#A3ADC2] leading-relaxed">
+              <p className="text-xs text-[#444444] leading-relaxed">
                 Connect your <strong>BridgeKey Wallet</strong> to verify on-chain authorization on MST Testnet (Chain ID {MST_CONFIG.chainId}). Operator status requires &gt;= {MST_CONFIG.minBalance} MST.
               </p>
             </div>
@@ -374,22 +392,22 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                 variant="secondary"
                 onClick={handleConnectOperatorKeypair}
                 disabled={submitting}
-                className="w-full py-2.5 text-xs font-medium gap-2 border-white/10 hover:border-blue-500/30"
+                className="w-full py-2.5 text-xs font-medium gap-2 border-black/15 hover:border-[#0047AB]/30"
               >
-                <KeyRound className="w-4 h-4 text-blue-400" />
+                <KeyRound className="w-4 h-4 text-[#0047AB]" />
                 <span>Authenticate with Authorized Operator Keypair (.env)</span>
               </Button>
             </div>
 
-            <div className="pt-2 text-center text-[11px] text-[#6E7A94]">
-              MST Testnet RPC: <code className="font-mono text-[#A3ADC2]">testnetrpc.mstblockchain.com</code>
+            <div className="pt-2 text-center text-[11px] text-[#666666]">
+              MST Testnet RPC: <code className="font-mono text-[#0047AB] font-semibold">testnetrpc.mstblockchain.com</code>
             </div>
           </div>
         )}
       </div>
 
       {/* Footer Branding */}
-      <div className="relative z-10 mt-6 text-center text-[11px] text-[#6E7A94]">
+      <div className="horizon-onboarding-footer relative z-10 mt-6 text-center text-[11px] text-[#777777] font-medium">
         Horizon Autonomous Enterprise Infrastructure Recovery &bull; Protected by BridgeKey &amp; MST Testnet
       </div>
     </div>

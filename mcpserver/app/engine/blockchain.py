@@ -115,8 +115,9 @@ class BlockchainEngine:
         return "0x" + hashlib.sha256(raw_payload).hexdigest()
 
 
-blockchain_engine = BlockchainEngine()
 
 
     def get_explorer_tx_url(self, tx_hash: str) -> str:
         return f'{self.explorer_url}/tx/{tx_hash}'
+
+blockchain_engine = BlockchainEngine()

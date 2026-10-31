@@ -217,9 +217,10 @@ class SarvamAiEngine:
         return cleaned
 
 
-sarvam_engine = SarvamAiEngine()
 
 
     @staticmethod
     def format_indic_response(text: str, language: str = 'en') -> str:
         return f'[{language.upper()}] ' + text.strip()
+
+sarvam_engine = SarvamAiEngine()
