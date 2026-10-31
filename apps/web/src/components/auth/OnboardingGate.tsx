@@ -11,12 +11,10 @@ import {
   ArrowRight,
   KeyRound,
   Loader2,
-  ExternalLink,
-  Zap,
 } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Link, useLocation } from 'react-router';
-import { Globe } from '../common/Globe';
+import { cn } from '../../lib/utils';
 
 // Public routes accessible without onboarding
 const PUBLIC_PATHS = [
@@ -40,7 +38,6 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     login,
     register,
     loginWithGoogle,
-    loginAsDemo,
     connectBridgeKey,
     connectOperatorKeypair,
     clearError,
@@ -52,10 +49,12 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
+  // Keep Patents, Policies, and Documentation pages accessible throughout the website
   const isPublic = PUBLIC_PATHS.some(
     (path) => location.pathname === path || location.pathname.startsWith(`${path}/`)
   );
 
+  // If on a public route or onboarding is completely finished, render children directly
   if (isPublic || onboardingStep === 'COMPLETED') {
     return <>{children}</>;
   }
@@ -119,100 +118,118 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FAFAF9] text-[#0A0A0A] flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
-      
-      {/* Faint Dotted Halftone Globe Background */}
-      <div className="absolute inset-0 pointer-events-none opacity-20 flex items-center justify-center">
-        <Globe size="700px" crop="full-small" className="w-full h-full" />
-      </div>
+    <div className="horizon-onboarding-container min-h-screen w-full bg-[#FFF8F0] text-[#1A1A1A] flex flex-col items-center justify-center p-4 relative overflow-hidden selection:bg-[#0047AB]/20 selection:text-[#0047AB]">
+      {/* Subtle Ambient Cobalt Blue Radial Lighting */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-40 bg-[radial-gradient(ellipse_80%_60%_at_50%_-15%,rgba(0,71,171,0.08),rgba(255,248,240,0))]"
+      />
+
+      {/* Tactile Blueprint Micro-Grid on Cream */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-20 bg-[linear-gradient(to_right,rgba(26,26,26,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(26,26,26,0.04)_1px,transparent_1px)] bg-[size:4rem_4rem]"
+      />
 
       {/* Return to Homepage & Public Policy Links */}
-      <div className="relative z-10 w-full max-w-xl mb-4 flex items-center justify-between text-xs">
+      <div className="horizon-onboarding-nav relative z-10 w-full max-w-xl mb-4 flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 font-medium text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors bg-white px-3.5 py-1.5 rounded-full border border-[#E5E5E5] shadow-sm"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#555555] hover:text-[#0047AB] transition-colors bg-[#FAF3EA] hover:bg-[#F2E7D8] px-3.5 py-1.5 rounded-full border border-black/10 shadow-xs"
         >
           <span>&larr; Return to Homepage</span>
         </Link>
-        <div className="flex items-center gap-3 text-[#6B6B6B]">
-          <Link to="/patents" className="hover:text-[#0A0A0A] transition-colors">
-            Patents
+        <div className="flex items-center gap-3">
+          <Link
+            to="/patents"
+            className="text-xs font-medium text-[#555555] hover:text-[#0047AB] transition-colors underline-offset-4 hover:underline"
+          >
+            Patents &amp; Research
           </Link>
-          <span>&bull;</span>
-          <Link to="/policies" className="hover:text-[#0A0A0A] transition-colors">
-            Policies
+          <span className="text-[#888888] text-xs">&bull;</span>
+          <Link
+            to="/policies"
+            className="text-xs font-medium text-[#555555] hover:text-[#0047AB] transition-colors underline-offset-4 hover:underline"
+          >
+            Privacies &amp; Policies
           </Link>
         </div>
       </div>
 
-      {/* Main Horizon Editorial Onboarding Card */}
-      <div className="relative z-10 w-full max-w-xl rounded-[20px] bg-white p-6 sm:p-8 border border-[#E5E5E5] shadow-[0_1px_2px_rgba(0,0,0,.04),0_8px_24px_rgba(0,0,0,.04)]">
+      {/* Main Neo-Brutalist Tactile Porcelain Card */}
+      <div className="horizon-onboarding-card relative z-10 w-full max-w-xl rounded-2xl p-6 sm:p-8 bg-[#FAF3EA] border-2 border-black/10 shadow-[0_8px_30px_rgba(0,0,0,0.06),0_1px_3px_rgba(0,0,0,0.08)]">
         
         {/* Brand Header */}
-        <div className="flex items-center justify-between pb-6 border-b border-[#E5E5E5]">
+        <div className="horizon-onboarding-header flex items-center justify-between pb-6 border-b border-black/10">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0A0A0A] flex items-center justify-center text-white font-bold text-sm shadow-sm">
-              <ShieldCheck className="w-5 h-5 text-[#2DD4BF]" />
+            <div className="w-10 h-10 rounded-xl bg-[#0047AB]/10 border border-[#0047AB]/20 flex items-center justify-center text-[#0047AB] shadow-xs">
+              <ShieldCheck className="w-5 h-5 text-[#0047AB]" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[#0A0A0A] tracking-tight">
+              <h2 className="text-base font-bold text-[#1A1A1A] tracking-tight">
                 Horizon Operator Protocol
               </h2>
-              <p className="text-xs text-[#6B6B6B]">
-                Zero-Trust SRE Security Clearance
+              <p className="text-xs text-[#666666]">
+                Compulsory Zero-Trust Security Clearance
               </p>
             </div>
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 text-[10px] font-mono font-medium text-[#0A0A0A] border border-[#E5E5E5]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]" />
-            <span>MST Testnet</span>
-          </div>
+          <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 uppercase tracking-wider font-bold">
+            MST Testnet
+          </span>
         </div>
 
         {/* Step Progression Tabs */}
-        <div className="grid grid-cols-2 gap-3 my-6">
+        <div className="horizon-onboarding-tabs grid grid-cols-2 gap-3 my-6">
           <div
-            className={`p-3.5 rounded-xl border transition-all ${
+            className={cn(
+              'p-3 rounded-xl border-2 transition-all',
               user
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                : 'bg-neutral-50 border-[#E5E5E5] text-[#0A0A0A]'
-            }`}
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-800'
+                : 'bg-blue-500/10 border-[#0047AB] text-[#0047AB] shadow-xs'
+            )}
           >
             <div className="flex items-center gap-2">
               {user ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               ) : (
-                <span className="w-4 h-4 rounded-full bg-[#0A0A0A] text-white flex items-center justify-center text-[10px] font-bold">
+                <span className="w-4 h-4 rounded-full bg-[#0047AB] text-white flex items-center justify-center text-[10px] font-bold">
                   1
                 </span>
               )}
-              <span className="text-xs font-semibold">Firebase Identity</span>
+              <span className="text-xs font-bold text-[#1A1A1A]">Firebase Identity</span>
             </div>
-            <p className="text-[11px] text-[#6B6B6B] mt-1 truncate">
+            <p className="text-[10px] text-[#666666] mt-1 truncate">
               {user ? user.email : 'Authentication required'}
             </p>
           </div>
 
           <div
-            className={`p-3.5 rounded-xl border transition-all ${
+            className={cn(
+              'p-3 rounded-xl border transition-all',
               wallet?.isAuthorized
-                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                ? 'bg-emerald-500/10 border-2 border-emerald-500/40 text-emerald-800'
                 : user
-                ? 'bg-neutral-50 border-[#E5E5E5] text-[#0A0A0A]'
-                : 'bg-neutral-50/50 border-[#E5E5E5]/60 text-[#A3A3A3]'
-            }`}
+                ? 'bg-blue-500/10 border-2 border-[#0047AB] text-[#0047AB] shadow-xs'
+                : 'bg-[#F2E7D8]/60 border-black/10 text-[#777777]'
+            )}
           >
             <div className="flex items-center gap-2">
               {wallet?.isAuthorized ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               ) : (
-                <span className="w-4 h-4 rounded-full bg-neutral-200 text-[#6B6B6B] flex items-center justify-center text-[10px] font-bold">
+                <span
+                  className={cn(
+                    'w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold',
+                    user ? 'bg-[#0047AB] text-white' : 'bg-black/10 text-[#555555]'
+                  )}
+                >
                   2
                 </span>
               )}
-              <span className="text-xs font-semibold">BridgeKey Web3 Wallet</span>
+              <span className="text-xs font-bold text-[#1A1A1A]">BridgeKey Web3 Wallet</span>
             </div>
-            <p className="text-[11px] text-[#6B6B6B] mt-1 truncate">
+            <p className="text-[10px] text-[#666666] mt-1 truncate">
               {wallet?.isAuthorized ? `${wallet.balanceMst} MST` : 'MST Testnet Binding'}
             </p>
           </div>
@@ -220,110 +237,48 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
         {/* Error Alert Banner */}
         {(localError || errorMessage) && (
-          <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs space-y-2">
-            <div className="flex items-start gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-              <div className="flex-1 space-y-1.5">
-                {(localError || errorMessage)?.includes('operation-not-allowed') ? (
-                  <>
-                    <div className="font-semibold text-red-900">
-                      Email/Password Provider Disabled in Firebase Console
-                    </div>
-                    <p className="text-[11px] text-red-700/90 leading-relaxed">
-                      Your Firebase project (<code className="font-mono bg-red-100 px-1 py-0.5 rounded text-red-900">horizon-e0a3e</code>) has not enabled Email/Password sign-in yet.
-                    </p>
-                    <div className="pt-1.5 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          setLocalError(null);
-                          clearError();
-                          await loginAsDemo();
-                        }}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0A0A0A] text-white font-semibold text-[11px] hover:bg-neutral-800 transition-colors cursor-pointer shadow-sm"
-                      >
-                        <Zap className="w-3 h-3 text-[#2DD4BF]" />
-                        <span>Instant Demo Commander Clearance</span>
-                      </button>
-                      <a
-                        href="https://console.firebase.google.com/project/horizon-e0a3e/authentication/providers"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-300 bg-white/70 text-red-900 font-medium text-[11px] hover:bg-red-100 transition-colors"
-                      >
-                        <span>Enable in Firebase Console</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span className="font-semibold block">Authentication Error</span>
-                    <p className="text-[11px] text-red-700">{localError || errorMessage}</p>
-                  </>
-                )}
-              </div>
+          <div className="mb-5 p-3 rounded-xl bg-red-50 border-2 border-red-200 text-red-900 text-xs flex items-start gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-semibold block">Authentication Error</span>
+              <p className="text-[11px] text-red-700 mt-0.5">{localError || errorMessage}</p>
             </div>
           </div>
         )}
 
-        {/* Instant Demo/Bypass Option */}
-        <div className="mb-5 p-3.5 rounded-xl bg-neutral-50 border border-[#E5E5E5] flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-black text-white flex items-center justify-center shrink-0">
-              <Zap className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            </div>
-            <div>
-              <div className="text-xs font-semibold text-[#0A0A0A]">Instant Demo Commander Clearance</div>
-              <div className="text-[11px] text-[#6B6B6B]">Bypass Firebase authentication for local evaluation</div>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={async () => {
-              setLocalError(null);
-              clearError();
-              await loginAsDemo();
-            }}
-            className="px-4 py-1.5 rounded-full bg-[#0A0A0A] text-white hover:bg-neutral-800 font-mono text-xs font-semibold shrink-0 transition-colors cursor-pointer"
-          >
-            Launch Demo
-          </button>
-        </div>
-
         {/* STEP 1: Firebase Auth Form */}
         {!user && (
-          <form onSubmit={handleAuthSubmit} className="space-y-4">
+          <form onSubmit={handleAuthSubmit} className="horizon-onboarding-form space-y-4">
             <div>
-              <label className="block text-xs font-medium text-[#6B6B6B] mb-1.5 font-mono uppercase tracking-wider text-[11px]">
+              <label className="block text-xs font-semibold text-[#333333] mb-1.5">
                 Operator Enterprise Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A3A3A3]" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#777777]" />
                 <input
                   type="email"
                   required
                   placeholder="commander@enterprise.io"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 h-12 rounded-[12px] bg-white border border-[#E5E5E5] text-sm text-[#0A0A0A] placeholder-[#A3A3A3] focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[#2DD4BF]/20 transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white border border-black/15 text-sm text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:border-[#0047AB] focus:ring-2 focus:ring-[#0047AB]/20 transition-all shadow-xs"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-[#6B6B6B] mb-1.5 font-mono uppercase tracking-wider text-[11px]">
+              <label className="block text-xs font-semibold text-[#333333] mb-1.5">
                 Security Password / Secret Key
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A3A3A3]" />
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#777777]" />
                 <input
                   type="password"
                   required
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 h-12 rounded-[12px] bg-white border border-[#E5E5E5] text-sm text-[#0A0A0A] placeholder-[#A3A3A3] focus:outline-none focus:border-[#2DD4BF] focus:ring-2 focus:ring-[#2DD4BF]/20 transition-all"
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-white border border-black/15 text-sm text-[#1A1A1A] placeholder-[#999999] focus:outline-none focus:border-[#0047AB] focus:ring-2 focus:ring-[#0047AB]/20 transition-all shadow-xs"
                 />
               </div>
             </div>
@@ -332,7 +287,7 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               type="submit"
               variant="primary"
               disabled={submitting || isLoading}
-              className="w-full h-11 font-semibold text-xs gap-2"
+              className="w-full py-2.5 mt-2 font-semibold text-xs gap-2"
             >
               {submitting ? (
                 <>
@@ -348,18 +303,18 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
             </Button>
 
             <div className="relative flex items-center my-3">
-              <div className="flex-grow border-t border-[#E5E5E5]" />
-              <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#A3A3A3] uppercase tracking-wider">
+              <div className="flex-grow border-t border-black/10" />
+              <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#777777] uppercase tracking-wider">
                 Or Continue With
               </span>
-              <div className="flex-grow border-t border-[#E5E5E5]" />
+              <div className="flex-grow border-t border-black/10" />
             </div>
 
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={submitting || isLoading}
-              className="w-full h-11 px-4 rounded-full bg-white hover:bg-[#FAFAF9] border border-[#E5E5E5] text-xs font-semibold text-[#0A0A0A] flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-sm disabled:opacity-50"
+              className="w-full py-2.5 px-4 rounded-xl bg-white hover:bg-[#F2E7D8]/50 active:bg-[#F2E7D8] border border-black/15 text-xs font-semibold text-[#1A1A1A] flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -378,7 +333,7 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                   setLocalError(null);
                   clearError();
                 }}
-                className="text-xs text-[#0A0A0A] hover:underline font-medium transition-colors cursor-pointer"
+                className="text-xs text-[#0047AB] hover:text-[#003380] font-semibold transition-colors cursor-pointer"
               >
                 {isRegisterMode
                   ? 'Already have an operator account? Sign In'
@@ -391,28 +346,30 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
         {/* STEP 2: BridgeKey Web3 Wallet Binding */}
         {user && (!wallet || !wallet.isAuthorized) && (
           <div className="space-y-4">
-            <div className="p-3.5 rounded-xl bg-neutral-50 border border-[#E5E5E5] flex items-center justify-between">
+            <div className="p-3.5 rounded-xl bg-white border border-black/10 flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-700 flex items-center justify-center border border-emerald-500/30">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-[#0A0A0A]">
+                  <h4 className="text-xs font-bold text-[#1A1A1A]">
                     Firebase Operator Authenticated
                   </h4>
-                  <p className="text-[11px] font-mono text-[#6B6B6B]">{user.email}</p>
+                  <p className="text-[10px] font-mono text-[#666666]">{user.email}</p>
                 </div>
               </div>
-              <span className="text-[11px] font-mono text-emerald-700">UID: {user.uid.slice(0, 6)}...</span>
+              <span className="text-[10px] font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                UID: {user.uid.slice(0, 6)}...
+              </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-neutral-50 border border-[#E5E5E5] space-y-2">
-              <div className="flex items-center gap-2 text-[#0A0A0A]">
-                <Wallet className="w-4 h-4 text-[#2DD4BF]" />
-                <span className="text-xs font-semibold">MST Blockchain Testnet Verification</span>
+            <div className="p-4 rounded-xl bg-[#0047AB]/05 border border-[#0047AB]/20 space-y-2">
+              <div className="flex items-center gap-2 text-[#0047AB]">
+                <Wallet className="w-4 h-4" />
+                <span className="text-xs font-bold">MST Blockchain Testnet Verification</span>
               </div>
-              <p className="text-xs text-[#6B6B6B] leading-relaxed">
-                Connect your <strong>BridgeKey Wallet</strong> to verify on-chain authorization on MST Testnet (Chain ID {MST_CONFIG.chainId}).
+              <p className="text-xs text-[#444444] leading-relaxed">
+                Connect your <strong>BridgeKey Wallet</strong> to verify on-chain authorization on MST Testnet (Chain ID {MST_CONFIG.chainId}). Operator status requires &gt;= {MST_CONFIG.minBalance} MST.
               </p>
             </div>
 
@@ -435,26 +392,24 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
                 variant="secondary"
                 onClick={handleConnectOperatorKeypair}
                 disabled={submitting}
-                className="w-full py-2.5 text-xs font-medium gap-2"
+                className="w-full py-2.5 text-xs font-medium gap-2 border-black/15 hover:border-[#0047AB]/30"
               >
-                <KeyRound className="w-4 h-4 text-[#2DD4BF]" />
+                <KeyRound className="w-4 h-4 text-[#0047AB]" />
                 <span>Authenticate with Authorized Operator Keypair (.env)</span>
               </Button>
             </div>
 
-            <div className="pt-2 text-center text-[11px] text-[#A3A3A3]">
-              MST Testnet RPC: <code className="font-mono text-[#0A0A0A]">testnetrpc.mstblockchain.com</code>
+            <div className="pt-2 text-center text-[11px] text-[#666666]">
+              MST Testnet RPC: <code className="font-mono text-[#0047AB] font-semibold">testnetrpc.mstblockchain.com</code>
             </div>
           </div>
         )}
       </div>
 
       {/* Footer Branding */}
-      <div className="relative z-10 mt-6 text-center text-[11px] text-[#A3A3A3]">
+      <div className="horizon-onboarding-footer relative z-10 mt-6 text-center text-[11px] text-[#777777] font-medium">
         Horizon Autonomous Enterprise Infrastructure Recovery &bull; Protected by BridgeKey &amp; MST Testnet
       </div>
     </div>
   );
 };
-
-export default OnboardingGate;

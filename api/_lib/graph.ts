@@ -169,9 +169,9 @@ export class DependencyGraphEngine {
     const downstream = this.getBlastRadius(nodeId).filter((id) => id !== nodeId);
     return { upstream, downstream };
   }
+
   hasDirectDependency(fromId: string, toId: string): boolean {
     const deps = this.adjacency.get(fromId);
     return deps ? deps.has(toId) : false;
   }
-
 }

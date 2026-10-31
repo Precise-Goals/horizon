@@ -1037,63 +1037,61 @@ spec:
       className={cn('horizon-observability-page space-y-6 font-sans w-full max-w-7xl mx-auto pb-16', className)}
     >
       {/* Breadcrumb & Sound Controls */}
-      <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3 text-xs pb-1">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors bg-white px-3.5 py-1.5 rounded-full border border-[#E5E5E5] shadow-xs"
-        >
-          <span>&larr; Return to Overview</span>
-        </Link>
+      <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-[#EADCC9] pb-3">
+        <nav aria-label="Breadcrumb" className="flex items-center gap-2 font-mono text-[#6E6258]">
+          <Link to="/" className="hover:text-[#0047AB] transition-colors">
+            Horizon
+          </Link>
+          <span>/</span>
+          <span className="text-[#8A7B6D]">Platform</span>
+          <span>/</span>
+          <span className="text-[#1A1A1A] font-bold">Observability & Verification Hub</span>
+        </nav>
 
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSoundEnabled((prev) => !prev)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-white border border-[#E5E5E5] hover:bg-neutral-50 transition-colors text-[#0A0A0A] cursor-pointer shadow-xs"
-            title="Toggle alert sound chime"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#FAF3EA] border border-[#E5D7C5] hover:bg-[#F4EBE0] transition-colors text-[#5A4E44] cursor-pointer"
+            title="Toggle PagerDuty alert sound chime"
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-[#2DD4BF]" /> : <VolumeX className="w-3.5 h-3.5 text-[#A3A3A3]" />}
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-[#0047AB]" /> : <VolumeX className="w-3.5 h-3.5 text-stone-400" />}
             <span>Alert Audio: {soundEnabled ? 'ON' : 'MUTED'}</span>
           </button>
 
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] text-[11px] font-mono text-[#0A0A0A] shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF] animate-pulse" />
-            <span className="font-semibold">Datadog & Dynatrace Stream Active</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-mono text-emerald-800 font-bold">Datadog & Dynatrace Stream Active</span>
           </div>
         </div>
       </motion.div>
 
-      {/* Signature Two-Line Header & 1-Click Action Bar */}
-      <motion.div variants={itemVariants} className="p-6 sm:p-8 rounded-[20px] bg-white border border-[#E5E5E5] shadow-[0_1px_2px_rgba(0,0,0,0.02)] space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 text-[10px] font-mono font-medium text-[#0A0A0A] border border-[#E5E5E5]">
-              <Activity className="w-3.5 h-3.5 text-[#2DD4BF]" />
-              <span>APM & PAGERDUTY TELEMETRY</span>
+      {/* Hero Header & 1-Click Action Bar */}
+      <motion.div variants={itemVariants} className="p-6 rounded-3xl bg-white border border-[#EADCC9] shadow-md space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[#1A1A1A]">
+                Telemetry & Failure Detection Hub
+              </h1>
+              <Badge status="info" className="bg-[#0047AB]/10 text-[#0047AB] border-[#0047AB]/20 text-[11px] font-mono font-bold">
+                <Activity className="w-3.5 h-3.5 mr-1" />
+                APM & PAGERDUTY
+              </Badge>
             </div>
-
-            <h1 className="tracking-tight leading-[1.02]">
-              <span className="block font-['Instrument_Serif',serif] font-normal text-[#A3A3A3] text-4xl sm:text-5xl lg:text-6xl">
-                Live Observability,
-              </span>
-              <span className="block font-['Instrument_Serif',serif] italic font-normal text-[#0A0A0A] text-4xl sm:text-5xl lg:text-6xl">
-                telemetry & detection.
-              </span>
-            </h1>
-
-            <p className="text-xs sm:text-sm text-[#6B6B6B] max-w-2xl leading-relaxed">
-              Real-time infrastructure monitoring inspired by Datadog APM and Dynatrace. Evaluates 3-miss sliding window probes, triggers P1 alerts, verifies AI diagnosis, and logs cryptographic SHA-256 checksums across all pipelines.
+            <p className="text-xs sm:text-sm text-[#5A4E44] mt-1 max-w-2xl leading-relaxed">
+              Real-time infrastructure monitoring inspired by Datadog APM and Dynatrace. Evaluates 3-miss sliding window probes, triggers PagerDuty P1 alerts, verifies original AI diagnosis, and logs cryptographic SHA-256 checksums across all 7 pipelines.
             </p>
           </div>
 
           {/* Action Controls with Auto-Remediation Toggle */}
           <div className="flex flex-wrap items-center gap-2.5">
             {/* Target Node Dropdown */}
-            <div className="flex items-center gap-2 bg-[#FAFAF9] px-3.5 py-2 rounded-full border border-[#E5E5E5]">
-              <span className="text-[11px] font-mono font-semibold text-[#6B6B6B] uppercase">Target:</span>
+            <div className="flex items-center gap-2 bg-[#FAF3EA] px-3 py-1.5 rounded-xl border border-[#E5D7C5]">
+              <span className="text-[11px] font-bold text-[#6E6258] uppercase">Target Node:</span>
               <select
                 value={activeDrill}
                 onChange={(e) => setActiveDrill(e.target.value)}
-                className="bg-transparent text-xs font-mono font-semibold text-[#0A0A0A] focus:outline-none cursor-pointer max-w-[200px] truncate"
+                className="bg-white text-xs font-mono font-bold text-[#1A1A1A] px-2 py-1 rounded-lg border border-[#D5C4B1] focus:outline-none focus:ring-1 focus:ring-[#0047AB] cursor-pointer max-w-[220px] truncate"
               >
                 {services.map((svc) => (
                   <option key={svc.id} value={svc.id}>
@@ -1104,14 +1102,14 @@ spec:
             </div>
 
             {/* Auto-Remediate Toggle Switch */}
-            <div className="flex items-center gap-2 bg-[#FAFAF9] px-3.5 py-2 rounded-full border border-[#E5E5E5]">
-              <span className="text-[11px] font-mono font-semibold text-[#6B6B6B] uppercase">Auto Remedy:</span>
+            <div className="flex items-center gap-2 bg-[#FAF3EA] px-3 py-1.5 rounded-xl border border-[#E5D7C5]">
+              <span className="text-[11px] font-bold text-[#6E6258] uppercase">Auto Remedy:</span>
               <button
                 type="button"
                 onClick={() => setAutoRemediate((prev) => !prev)}
                 className={cn(
                   'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none',
-                  autoRemediate ? 'bg-[#0A0A0A]' : 'bg-neutral-300'
+                  autoRemediate ? 'bg-emerald-600' : 'bg-stone-300'
                 )}
                 title="When ON, AI automatically remediates without pressing buttons after 1.2s observability window"
               >
@@ -1144,7 +1142,7 @@ spec:
                 className={cn(
                   'px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-white shadow-md flex items-center gap-2 transition-all cursor-pointer',
                   isFiring
-                    ? 'bg-[#6366F1] hover:bg-blue-800 ring-2 ring-blue-400/50'
+                    ? 'bg-[#0047AB] hover:bg-blue-800 ring-2 ring-blue-400/50'
                     : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
                 )}
               >
@@ -1166,7 +1164,7 @@ spec:
             {/* Reset Button */}
             <button
               onClick={resetToNominal}
-              className="px-3 py-2 rounded-xl text-xs font-bold text-[#A0A0AB] bg-[#101012] hover:bg-white/[0.06] border border-white/[0.08] transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-3 py-2 rounded-xl text-xs font-bold text-[#5A4E44] bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5"
               title="Reset all probes to nominal baseline"
             >
               <RotateCcw className="w-3.5 h-3.5" />
@@ -1218,19 +1216,19 @@ spec:
                   <button
                     onClick={() => executeAiAgentRemediation()}
                     disabled={isAiAgentWorking}
-                    className="px-5 py-3 rounded-xl bg-white text-[#6366F1] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-80"
+                    className="px-5 py-3 rounded-xl bg-white text-[#0047AB] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-80"
                     title="Auto-remediation active. Click to trigger immediately."
                   >
-                    <Sparkles className={cn('w-4 h-4 text-[#6366F1]', isAiAgentWorking ? 'animate-spin' : 'group-hover:scale-110 transition-transform')} />
+                    <Sparkles className={cn('w-4 h-4 text-[#0047AB]', isAiAgentWorking ? 'animate-spin' : 'group-hover:scale-110 transition-transform')} />
                     <span>{isAiAgentWorking ? '🤖 AI Auto-Healing Active...' : '⚡ Auto-Healing (Fix Now)'}</span>
                   </button>
                 ) : (
                   <button
                     onClick={() => executeAiAgentRemediation()}
                     disabled={isAiAgentWorking}
-                    className="px-5 py-3 rounded-xl bg-white text-[#6366F1] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-50"
+                    className="px-5 py-3 rounded-xl bg-white text-[#0047AB] font-black text-xs sm:text-sm hover:bg-stone-100 transition-all shadow-lg cursor-pointer flex items-center gap-2 group disabled:opacity-50"
                   >
-                    <Sparkles className="w-4 h-4 text-[#6366F1] group-hover:scale-110 transition-transform" />
+                    <Sparkles className="w-4 h-4 text-[#0047AB] group-hover:scale-110 transition-transform" />
                     <span>{isAiAgentWorking ? 'AI Agent Healing...' : '🤖 Execute AI Remediation'}</span>
                   </button>
                 )}
@@ -1243,40 +1241,40 @@ spec:
       {/* 4 Metric Status Cards */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* SLA Status */}
-        <Card className={cn('p-4 border transition-colors', isFiring ? 'border-red-400 bg-red-50/50' : 'border-white/[0.08] bg-white')}>
-          <div className="flex items-center justify-between text-xs text-[#A0A0AB] mb-1">
+        <Card className={cn('p-4 border transition-colors', isFiring ? 'border-red-400 bg-red-50/50' : 'border-[#EADCC9] bg-white')}>
+          <div className="flex items-center justify-between text-xs text-[#6E6258] mb-1">
             <span className="font-bold uppercase tracking-wider">Cluster SLA Status</span>
             <Radio className={cn('w-4 h-4', isFiring ? 'text-red-600 animate-pulse' : 'text-emerald-600')} />
           </div>
-          <div className="text-xl font-black text-[#ECECF0]">
+          <div className="text-xl font-black text-[#1A1A1A]">
             {isFiring ? 'P1 OUTAGE ACTIVE' : '99.99% NOMINAL'}
           </div>
-          <div className="text-[11px] font-mono text-[#63636E] mt-1">
+          <div className="text-[11px] font-mono text-[#8A7B6D] mt-1">
             {isFiring ? 'PagerDuty Escalation Level 1' : 'All 7 nodes responding'}
           </div>
         </Card>
 
         {/* Latency & Wave */}
-        <Card className={cn('p-4 border transition-colors', isFiring ? 'border-amber-400 bg-amber-50/50' : 'border-white/[0.08] bg-white')}>
-          <div className="flex items-center justify-between text-xs text-[#A0A0AB] mb-1">
+        <Card className={cn('p-4 border transition-colors', isFiring ? 'border-amber-400 bg-amber-50/50' : 'border-[#EADCC9] bg-white')}>
+          <div className="flex items-center justify-between text-xs text-[#6E6258] mb-1">
             <span className="font-bold uppercase tracking-wider">Datadog APM Latency</span>
-            <Activity className="w-4 h-4 text-[#6366F1]" />
+            <Activity className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-xl font-black text-[#ECECF0]">
-            {latestTelemetry.latencyMs} <span className="text-xs font-normal text-[#A0A0AB]">ms</span>
+          <div className="text-xl font-black text-[#1A1A1A]">
+            {latestTelemetry.latencyMs} <span className="text-xs font-normal text-[#6E6258]">ms</span>
           </div>
-          <div className="text-[11px] font-mono text-[#63636E] mt-1">
+          <div className="text-[11px] font-mono text-[#8A7B6D] mt-1">
             Baseline: 12ms | SLA: &lt;50ms
           </div>
         </Card>
 
         {/* 3-Miss Sliding Window Flapping Guard */}
-        <Card className="p-4 border border-white/[0.08] bg-white">
-          <div className="flex items-center justify-between text-xs text-[#A0A0AB] mb-1">
+        <Card className="p-4 border border-[#EADCC9] bg-white">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] mb-1">
             <span className="font-bold uppercase tracking-wider">Flapping Guard</span>
-            <ShieldCheck className="w-4 h-4 text-[#6366F1]" />
+            <ShieldCheck className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-xl font-black text-[#ECECF0] flex items-center gap-2">
+          <div className="text-xl font-black text-[#1A1A1A] flex items-center gap-2">
             <span>3-Miss Window</span>
             <div className="flex items-center gap-1">
               {[1, 2, 3].map((slot) => {
@@ -1293,22 +1291,22 @@ spec:
               })}
             </div>
           </div>
-          <div className="text-[11px] font-mono text-[#63636E] mt-1">
+          <div className="text-[11px] font-mono text-[#8A7B6D] mt-1">
             Trips P1 alert only upon 3 misses
           </div>
         </Card>
 
         {/* AI SRE Engine Status */}
-        <Card className="p-4 border border-white/[0.08] bg-white">
-          <div className="flex items-center justify-between text-xs text-[#A0A0AB] mb-1">
+        <Card className="p-4 border border-[#EADCC9] bg-white">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] mb-1">
             <span className="font-bold uppercase tracking-wider">Autonomous SRE</span>
-            <Brain className="w-4 h-4 text-[#6366F1]" />
+            <Brain className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-xl font-black text-[#ECECF0] flex items-center gap-1.5">
+          <div className="text-xl font-black text-[#1A1A1A] flex items-center gap-1.5">
             <span className={cn('w-2 h-2 rounded-full', autoRemediate ? 'bg-emerald-500' : 'bg-amber-500')} />
             <span>{autoRemediate ? 'Auto Active' : 'Manual Mode'}</span>
           </div>
-          <div className="text-[11px] font-mono text-[#63636E] mt-1">
+          <div className="text-[11px] font-mono text-[#8A7B6D] mt-1">
             {aiDiagnosis ? (aiDiagnosis.source === 'sarvam-ai-cloud' ? 'Original AI Verified' : 'Local Guardrail') : 'Standby / Armed'}
           </div>
         </Card>
@@ -1319,15 +1317,15 @@ spec:
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 rounded-3xl bg-gradient-to-br from-white to-[#FDF8F2] border-2 border-[#6366F1]/30 shadow-lg space-y-4"
+          className="p-5 rounded-3xl bg-gradient-to-br from-white to-[#FDF8F2] border-2 border-[#0047AB]/30 shadow-lg space-y-4"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADCC9] pb-3">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-[#6366F1]/10 text-[#6366F1]">
-                <Brain className="w-5 h-5 text-[#6366F1]" />
+              <div className="p-2 rounded-xl bg-[#0047AB]/10 text-[#0047AB]">
+                <Brain className="w-5 h-5 text-[#0047AB]" />
               </div>
               <div>
-                <h3 className="text-base font-black text-[#ECECF0] flex items-center gap-2">
+                <h3 className="text-base font-black text-[#1A1A1A] flex items-center gap-2">
                   <span>AI SRE Root Cause Diagnosis & Verifiable Output</span>
                   {aiDiagnosis.source === 'sarvam-ai-cloud' ? (
                     <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-black border border-emerald-300">
@@ -1339,7 +1337,7 @@ spec:
                     </span>
                   )}
                 </h3>
-                <p className="text-xs text-[#A0A0AB]">
+                <p className="text-xs text-[#6E6258]">
                   Verified response delivered in <strong>{aiDiagnosis.latencyMs}ms</strong> using model <strong>{aiDiagnosis.model}</strong>.
                 </p>
               </div>
@@ -1347,15 +1345,15 @@ spec:
           </div>
 
           {/* Actual Real AI Output Text */}
-          <div className="p-4 rounded-[12px] bg-[#141416] border border-white/[0.08] shadow-xs space-y-2">
-            <div className="flex items-center justify-between text-xs text-[#A0A0AB] font-bold">
+          <div className="p-4 rounded-2xl bg-white border border-[#E5D7C5] shadow-xs space-y-2">
+            <div className="flex items-center justify-between text-xs text-[#6E6258] font-bold">
               <span>REAL AI REASONING & REMEDIATION DIRECTIVE:</span>
-              <span className="font-mono text-[11px] text-[#6366F1]">Playbook: {aiDiagnosis.playbook}</span>
+              <span className="font-mono text-[11px] text-[#0047AB]">Playbook: {aiDiagnosis.playbook}</span>
             </div>
-            <p className="text-xs sm:text-sm text-[#ECECF0] font-medium leading-relaxed bg-[#101012] p-3 rounded-xl border border-[#E8DAC8]">
+            <p className="text-xs sm:text-sm text-[#1A1A1A] font-medium leading-relaxed bg-[#FAF3EA] p-3 rounded-xl border border-[#E8DAC8]">
               "{aiDiagnosis.rawOutput}"
             </p>
-            <div className="text-xs text-[#A0A0AB] pt-1">
+            <div className="text-xs text-[#6E6258] pt-1">
               <strong>Isolated Root Cause:</strong> <span className="text-rose-700 font-bold">{aiDiagnosis.rootCause}</span>
             </div>
           </div>
@@ -1367,21 +1365,21 @@ spec:
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-[14px] bg-[#141416] border-2 border-emerald-600/40 shadow-lg space-y-4"
+          className="p-6 rounded-3xl bg-white border-2 border-emerald-600/40 shadow-lg space-y-4"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADCC9] pb-3">
             <div className="flex items-center gap-2.5">
               <div className="p-2 rounded-xl bg-emerald-100 text-emerald-800">
                 <FileText className="w-5 h-5 text-emerald-700" />
               </div>
               <div>
-                <h3 className="text-base font-black text-[#ECECF0] flex items-center gap-2">
+                <h3 className="text-base font-black text-[#1A1A1A] flex items-center gap-2">
                   <span>Autonomous Incident Recovery Report (Post-Mortem)</span>
                   <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
                     RESOLVED
                   </span>
                 </h3>
-                <p className="text-xs text-[#A0A0AB]">
+                <p className="text-xs text-[#6E6258]">
                   Incident <strong>#{postMortemReport.incidentId}</strong> resolved at {postMortemReport.resolvedAt} with 0 unhandled alerts.
                 </p>
               </div>
@@ -1389,43 +1387,43 @@ spec:
 
             <button
               onClick={copyPostMortemMarkdown}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#101012] hover:bg-white/[0.06] border border-white/[0.08] transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
             >
-              {copiedReport ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#6366F1]" />}
+              {copiedReport ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#0047AB]" />}
               <span>{copiedReport ? 'Report Copied!' : 'Copy Markdown Report'}</span>
             </button>
           </div>
 
           {/* Key Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div className="p-3 rounded-xl bg-[#101012] border border-[#E8DAC8]">
-              <div className="text-[10px] font-mono text-[#63636E] uppercase">Time to Detect (MTTD)</div>
-              <div className="text-base font-black text-[#ECECF0] mt-0.5">{postMortemReport.mttdSeconds}s</div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">Time to Detect (MTTD)</div>
+              <div className="text-base font-black text-[#1A1A1A] mt-0.5">{postMortemReport.mttdSeconds}s</div>
               <div className="text-[10px] text-emerald-700 font-bold">3/3 probe window</div>
             </div>
-            <div className="p-3 rounded-xl bg-[#101012] border border-[#E8DAC8]">
-              <div className="text-[10px] font-mono text-[#63636E] uppercase">Time to Recover (MTTR)</div>
-              <div className="text-base font-black text-[#6366F1] mt-0.5">{postMortemReport.mttrSeconds}s</div>
-              <div className="text-[10px] text-[#6366F1] font-bold">SLA: &lt;60s met</div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">Time to Recover (MTTR)</div>
+              <div className="text-base font-black text-[#0047AB] mt-0.5">{postMortemReport.mttrSeconds}s</div>
+              <div className="text-[10px] text-[#0047AB] font-bold">SLA: &lt;60s met</div>
             </div>
-            <div className="p-3 rounded-xl bg-[#101012] border border-[#E8DAC8]">
-              <div className="text-[10px] font-mono text-[#63636E] uppercase">Restored Nodes</div>
-              <div className="text-base font-black text-[#ECECF0] mt-0.5">{postMortemReport.restoredCount} Services</div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">Restored Nodes</div>
+              <div className="text-base font-black text-[#1A1A1A] mt-0.5">{postMortemReport.restoredCount} Services</div>
               <div className="text-[10px] text-stone-600">Bottom-up DAG tiers</div>
             </div>
-            <div className="p-3 rounded-xl bg-[#101012] border border-[#E8DAC8]">
-              <div className="text-[10px] font-mono text-[#63636E] uppercase">AI SRE Engine</div>
-              <div className="text-sm font-bold text-[#ECECF0] mt-0.5 truncate">{postMortemReport.provenance}</div>
+            <div className="p-3 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
+              <div className="text-[10px] font-mono text-[#8A7B6D] uppercase">AI SRE Engine</div>
+              <div className="text-sm font-bold text-[#1A1A1A] mt-0.5 truncate">{postMortemReport.provenance}</div>
               <div className="text-[10px] text-emerald-700 font-bold">Kahn sequenced</div>
             </div>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#101012] border border-[#E8DAC8] text-xs space-y-1.5 font-mono">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[#A0A0AB] gap-1">
+          <div className="p-3.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8] text-xs space-y-1.5 font-mono">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[#6E6258] gap-1">
               <span><strong>Root Cause:</strong> {postMortemReport.rootCause}</span>
               <span><strong>Playbook:</strong> {postMortemReport.playbook}</span>
             </div>
-            <div className="text-[11px] text-[#63636E] break-all">
+            <div className="text-[11px] text-[#8A7B6D] break-all">
               <strong>Merkle Audit Root Hash:</strong> <span className="text-emerald-800 font-bold">{postMortemReport.merkleRoot}</span>
             </div>
           </div>
@@ -1437,18 +1435,18 @@ spec:
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-5 rounded-[14px] bg-[#141416] border border-white/[0.08] shadow-md space-y-3"
+          className="p-5 rounded-3xl bg-white border border-[#EADCC9] shadow-md space-y-3"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#EADCC9] pb-3">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-emerald-100 text-emerald-800">
                 <Lock className="w-4 h-4 text-emerald-700" />
               </div>
               <div>
-                <h3 className="text-sm font-black text-[#ECECF0]">
+                <h3 className="text-sm font-black text-[#1A1A1A]">
                   7-Pipeline Cryptographic Checksums Matrix (SHA-256)
                 </h3>
-                <p className="text-[11px] text-[#A0A0AB]">
+                <p className="text-[11px] text-[#6E6258]">
                   Deterministic audit hashes guaranteeing tamper-evidence across each stage of the remediation lifecycle.
                 </p>
               </div>
@@ -1456,9 +1454,9 @@ spec:
 
             <button
               onClick={copyChecksumsManifest}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#101012] hover:bg-white/[0.06] border border-white/[0.08] transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5 self-start sm:self-center"
             >
-              {copiedChecksums ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#6366F1]" />}
+              {copiedChecksums ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#0047AB]" />}
               <span>{copiedChecksums ? 'Manifest Copied!' : 'Copy Checksum Manifest'}</span>
             </button>
           </div>
@@ -1466,7 +1464,7 @@ spec:
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-sans">
               <thead>
-                <tr className="border-b border-white/[0.08] text-[#A0A0AB] text-[10px] uppercase font-mono">
+                <tr className="border-b border-[#EADCC9] text-[#6E6258] text-[10px] uppercase font-mono">
                   <th className="py-2 px-3">Stage</th>
                   <th className="py-2 px-3">Pipeline Name</th>
                   <th className="py-2 px-3">Origin Source</th>
@@ -1477,9 +1475,9 @@ spec:
               <tbody className="divide-y divide-[#F2E7DC] font-mono text-[11px]">
                 {pipelineChecksums.map((pipe) => (
                   <tr key={pipe.pipelineId} className="hover:bg-[#FDF9F4] transition-colors">
-                    <td className="py-2 px-3 font-bold text-[#6366F1]">{pipe.stage}/7</td>
-                    <td className="py-2 px-3 font-sans font-bold text-[#ECECF0]">{pipe.pipelineName}</td>
-                    <td className="py-2 px-3 text-[#A0A0AB]">{pipe.source}</td>
+                    <td className="py-2 px-3 font-bold text-[#0047AB]">{pipe.stage}/7</td>
+                    <td className="py-2 px-3 font-sans font-bold text-[#1A1A1A]">{pipe.pipelineName}</td>
+                    <td className="py-2 px-3 text-[#6E6258]">{pipe.source}</td>
                     <td className="py-2 px-3 text-emerald-700 font-bold truncate max-w-[280px]" title={pipe.checksum}>
                       {pipe.checksum}
                     </td>
@@ -1503,18 +1501,18 @@ spec:
       <motion.div
         variants={itemVariants}
         className={cn(
-          'p-6 rounded-[14px] bg-[#141416] border-2 shadow-lg space-y-5 transition-all',
-          isCustomPipelineActive ? 'border-[#6366F1] ring-2 ring-[#6366F1]/20' : 'border-white/[0.08]'
+          'p-6 rounded-3xl bg-white border-2 shadow-lg space-y-5 transition-all',
+          isCustomPipelineActive ? 'border-[#0047AB] ring-2 ring-[#0047AB]/20' : 'border-[#EADCC9]'
         )}
       >
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#EADCC9] pb-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2.5 flex-wrap">
-              <div className="p-2 rounded-xl bg-[#6366F1]/10 text-[#6366F1]">
-                <Layers className="w-5 h-5 text-[#6366F1]" />
+              <div className="p-2 rounded-xl bg-[#0047AB]/10 text-[#0047AB]">
+                <Layers className="w-5 h-5 text-[#0047AB]" />
               </div>
-              <h2 className="text-lg sm:text-xl font-black text-[#ECECF0] tracking-tight">
+              <h2 className="text-lg sm:text-xl font-black text-[#1A1A1A] tracking-tight">
                 Custom DAG YAML Pipeline & Failure Simulator
               </h2>
               {isCustomPipelineActive ? (
@@ -1527,7 +1525,7 @@ spec:
                 </span>
               )}
             </div>
-            <p className="text-xs sm:text-sm text-[#A0A0AB]">
+            <p className="text-xs sm:text-sm text-[#5A4E44]">
               Define your own multi-tier infrastructure graph in declarative YAML or choose a pre-built template. Horizon parses the DAG, verifies acyclic structure via Kahn O(V+E), computes blast radius, and dynamically mounts the nodes into real-time failure simulation.
             </p>
           </div>
@@ -1535,9 +1533,9 @@ spec:
           <div className="flex items-center gap-2 self-start md:self-center shrink-0">
             <button
               onClick={() => setIsYamlEditorExpanded((prev) => !prev)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#101012] hover:bg-white/[0.06] border border-white/[0.08] transition-all cursor-pointer flex items-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5"
             >
-              <Code2 className="w-3.5 h-3.5 text-[#6366F1]" />
+              <Code2 className="w-3.5 h-3.5 text-[#0047AB]" />
               <span>{isYamlEditorExpanded ? 'Collapse Editor' : 'Expand Editor'}</span>
               {isYamlEditorExpanded ? <ChevronUp className="w-3 h-3 text-stone-500" /> : <ChevronDown className="w-3 h-3 text-stone-500" />}
             </button>
@@ -1547,19 +1545,19 @@ spec:
         {/* Template Quick-Select Bar */}
         <div className="space-y-2.5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="text-[11px] font-mono font-black text-[#A0A0AB] uppercase flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#6366F1]" />
+            <div className="text-[11px] font-mono font-black text-[#6E6258] uppercase flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />
               <span>Select Architecture Scenario / Prompt Template:</span>
-              <span className="text-xs text-[#63636E] font-normal">(Streaming, Ticketing, Blogging, E-Commerce & more)</span>
+              <span className="text-xs text-[#8A7B6D] font-normal">(Streaming, Ticketing, Blogging, E-Commerce & more)</span>
             </div>
-            <span className="text-[10px] font-mono text-[#63636E]">
+            <span className="text-[10px] font-mono text-[#8A7B6D]">
               Click chip to auto-load YAML & live topology
             </span>
           </div>
 
           {/* Quick Scenario Prompt Chips */}
           <div className="flex flex-wrap items-center gap-1.5 pb-1">
-            <span className="text-[10px] font-mono text-[#63636E] font-bold">Quick Prompts:</span>
+            <span className="text-[10px] font-mono text-[#8A7B6D] font-bold">Quick Prompts:</span>
             {[
               { id: 'streaming', label: '🎬 Live Video Streaming (ScyllaDB + FFmpeg)', tmplId: 'streaming' },
               { id: 'ticket-booking', label: '🎟️ Live Ticket Booking (CockroachDB + Locks)', tmplId: 'ticket-booking' },
@@ -1574,8 +1572,8 @@ spec:
                 className={cn(
                   'px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold border transition-all cursor-pointer flex items-center gap-1',
                   selectedTemplateId === chip.tmplId
-                    ? 'bg-[#6366F1] text-white border-[#6366F1] shadow-xs ring-1 ring-blue-300'
-                    : 'bg-[#101012] hover:bg-white text-[#A0A0AB] border-white/[0.08] hover:border-[#6366F1]/50'
+                    ? 'bg-[#0047AB] text-white border-[#0047AB] shadow-xs ring-1 ring-blue-300'
+                    : 'bg-[#FAF3EA] hover:bg-white text-[#5A4E44] border-[#E5D7C5] hover:border-[#0047AB]/50'
                 )}
               >
                 <span>{chip.label}</span>
@@ -1593,8 +1591,8 @@ spec:
                   className={cn(
                     'p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-1',
                     isSelected
-                      ? 'bg-[#6366F1] text-white border-[#6366F1] shadow-md ring-2 ring-blue-300/40'
-                      : 'bg-[#101012] hover:bg-white/[0.06] text-[#ECECF0] border-white/[0.08]'
+                      ? 'bg-[#0047AB] text-white border-[#0047AB] shadow-md ring-2 ring-blue-300/40'
+                      : 'bg-[#FAF3EA] hover:bg-[#F4EBE0] text-[#1A1A1A] border-[#E5D7C5]'
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -1660,7 +1658,7 @@ spec:
                   rows={14}
                   spellCheck={false}
                   placeholder="# Enter your custom DAG YAML pipeline here..."
-                  className="w-full p-4 bg-[#1A1A1A] text-emerald-300 font-mono text-xs leading-relaxed focus:outline-none resize-y selection:bg-[#6366F1] selection:text-white"
+                  className="w-full p-4 bg-[#1A1A1A] text-emerald-300 font-mono text-xs leading-relaxed focus:outline-none resize-y selection:bg-[#0047AB] selection:text-white"
                 />
 
                 {/* Editor Footer / Validation Status Banner */}
@@ -1692,48 +1690,48 @@ spec:
 
         {/* Background File & Kubernetes Integrity Checksums Bar */}
         {manifestChecksums && (
-          <div className="p-3.5 rounded-2xl bg-[#FFFFFF] border border-white/[0.08] shadow-xs space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08]/60 pb-2">
+          <div className="p-3.5 rounded-2xl bg-[#FFF8F0] border border-[#E5D7C5] shadow-xs space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5D7C5]/60 pb-2">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#6366F1]" />
-                <span className="text-xs font-black text-[#ECECF0] font-mono tracking-tight">
+                <ShieldCheck className="w-4 h-4 text-[#0047AB]" />
+                <span className="text-xs font-black text-[#1A1A1A] font-mono tracking-tight">
                   BACKGROUND INTEGRITY & CRYPTOGRAPHIC CHECKSUMS (SHA-256)
                 </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
                   TAMPER-EVIDENT
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-[#63636E]">
+              <span className="text-[10px] font-mono text-[#8A7B6D]">
                 Auto-calculated background hash • {manifestChecksums.totalK8sResources} K8s Objects
               </span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs font-mono">
               {/* DAG Pipeline YAML Checksum */}
-              <div className="p-2.5 rounded-xl bg-white border border-white/[0.08] space-y-1">
-                <div className="text-[10px] text-[#63636E] font-bold uppercase flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-white border border-[#E5D7C5] space-y-1">
+                <div className="text-[10px] text-[#8A7B6D] font-bold uppercase flex items-center justify-between">
                   <span>DAG YAML Hash</span>
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                 </div>
-                <div className="text-[11px] font-bold text-[#ECECF0] truncate" title={manifestChecksums.dagYamlChecksum}>
+                <div className="text-[11px] font-bold text-[#1A1A1A] truncate" title={manifestChecksums.dagYamlChecksum}>
                   0x{manifestChecksums.dagYamlChecksum.slice(2, 14)}...
                 </div>
               </div>
 
               {/* Kubernetes Resilience Checksum */}
-              <div className="p-2.5 rounded-xl bg-white border border-white/[0.08] space-y-1">
-                <div className="text-[10px] text-[#63636E] font-bold uppercase flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-white border border-[#E5D7C5] space-y-1">
+                <div className="text-[10px] text-[#8A7B6D] font-bold uppercase flex items-center justify-between">
                   <span>K8s Manifest Hash</span>
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                 </div>
-                <div className="text-[11px] font-bold text-[#6366F1] truncate" title={manifestChecksums.k8sYamlChecksum}>
+                <div className="text-[11px] font-bold text-[#0047AB] truncate" title={manifestChecksums.k8sYamlChecksum}>
                   0x{manifestChecksums.k8sYamlChecksum.slice(2, 14)}...
                 </div>
               </div>
 
               {/* DAG Topology Checksum */}
-              <div className="p-2.5 rounded-xl bg-white border border-white/[0.08] space-y-1">
-                <div className="text-[10px] text-[#63636E] font-bold uppercase flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-white border border-[#E5D7C5] space-y-1">
+                <div className="text-[10px] text-[#8A7B6D] font-bold uppercase flex items-center justify-between">
                   <span>Topology Integrity</span>
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                 </div>
@@ -1743,8 +1741,8 @@ spec:
               </div>
 
               {/* Composite Cluster Checksum */}
-              <div className="p-2.5 rounded-xl bg-white border border-white/[0.08] space-y-1">
-                <div className="text-[10px] text-[#63636E] font-bold uppercase flex items-center justify-between">
+              <div className="p-2.5 rounded-xl bg-white border border-[#E5D7C5] space-y-1">
+                <div className="text-[10px] text-[#8A7B6D] font-bold uppercase flex items-center justify-between">
                   <span>Composite Cluster</span>
                   <Lock className="w-3 h-3 text-emerald-600" />
                 </div>
@@ -1766,7 +1764,7 @@ spec:
               className={cn(
                 'px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black text-white shadow-md transition-all cursor-pointer flex items-center gap-2',
                 pipelineValidation.isValid && !isDeploying
-                  ? 'bg-[#6366F1] hover:bg-blue-800 ring-2 ring-blue-400/40 active:scale-95'
+                  ? 'bg-[#0047AB] hover:bg-blue-800 ring-2 ring-blue-400/40 active:scale-95'
                   : 'bg-stone-300 text-stone-500 cursor-not-allowed opacity-60'
               )}
             >
@@ -1786,8 +1784,8 @@ spec:
             </button>
 
             {/* Quick Auto-Remedy Toggle on Deployment */}
-            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#101012] border border-white/[0.08] shadow-xs">
-              <span className="text-xs font-bold text-[#A0A0AB]">Auto-Remedy:</span>
+            <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5] shadow-xs">
+              <span className="text-xs font-bold text-[#5A4E44]">Auto-Remedy:</span>
               <button
                 onClick={() => {
                   const nextVal = !autoRemediate;
@@ -1825,10 +1823,10 @@ spec:
             {/* Upload File Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#ECECF0] bg-[#101012] hover:bg-white/[0.06] border border-white/[0.08] transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#1A1A1A] bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
               title="Upload custom .yaml or .json pipeline file from your computer"
             >
-              <Upload className="w-4 h-4 text-[#6366F1]" />
+              <Upload className="w-4 h-4 text-[#0047AB]" />
               <span>Upload .yaml File</span>
             </button>
 
@@ -1836,10 +1834,10 @@ spec:
             <a
               href="/template.yaml"
               download="template.yaml"
-              className="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#6366F1] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+              className="px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#0047AB] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
               title="Download canonical template.yaml file with comprehensive comments explaining all fields"
             >
-              <Download className="w-4 h-4 text-[#6366F1]" />
+              <Download className="w-4 h-4 text-[#0047AB]" />
               <span>Download template.yaml</span>
             </a>
 
@@ -1847,7 +1845,7 @@ spec:
             {isCustomPipelineActive && (
               <button
                 onClick={handleResetToDefaultCluster}
-                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#A0A0AB] bg-[#101012] hover:bg-white/[0.06] border border-white/[0.08] transition-all cursor-pointer flex items-center gap-1.5"
+                className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#5A4E44] bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1.5"
                 title="Restore default 7-node PostgreSQL / Redis cluster"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1856,9 +1854,9 @@ spec:
             )}
           </div>
 
-          <div className="text-xs font-mono text-[#A0A0AB] flex items-center gap-2">
+          <div className="text-xs font-mono text-[#6E6258] flex items-center gap-2">
             <span>Active Pipeline:</span>
-            <strong className="text-[#6366F1]">{activePipelineName}</strong>
+            <strong className="text-[#0047AB]">{activePipelineName}</strong>
           </div>
         </div>
 
@@ -1896,7 +1894,7 @@ spec:
                 {deployProgress.phase === 'completed' && (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                 )}
-                <span className="text-xs sm:text-sm font-black font-mono tracking-tight text-[#ECECF0]">
+                <span className="text-xs sm:text-sm font-black font-mono tracking-tight text-[#1A1A1A]">
                   {deployProgress.phase === 'running' && `SYNCHRONOUS PROBE IN PROGRESS: Step ${deployProgress.currentIndex + 1} of ${deployProgress.totalNodes}`}
                   {deployProgress.phase === 'auto_remedying' && `🤖 AUTO-REMEDY ACTIVE: Diagnosing & Healing Failed Node...`}
                   {deployProgress.phase === 'restarting' && `🔄 RESTARTING & RESUMING NODE: Rebooting Pod to Apply Remedy...`}
@@ -1906,7 +1904,7 @@ spec:
               </div>
 
               <div className="flex items-center gap-2 text-xs font-mono">
-                <span className="font-bold text-[#A0A0AB]">Verified Green:</span>
+                <span className="font-bold text-[#5A4E44]">Verified Green:</span>
                 <span className="px-2.5 py-0.5 rounded-full bg-white border border-[#D8C7B4] font-bold text-emerald-700 shadow-xs">
                   {deployProgress.nodes.filter((n) => n.status === 'verified_green').length} / {deployProgress.totalNodes}
                 </span>
@@ -1921,14 +1919,14 @@ spec:
                     <AlertTriangle className="w-3.5 h-3.5 text-red-600" />
                     <span>Integrity Breach on Node: "{deployProgress.nodes.find((n) => n.nodeId === deployProgress.failedNodeId)?.nodeName}"</span>
                   </div>
-                  <p className="text-[11px] text-[#A0A0AB]">
+                  <p className="text-[11px] text-[#6E6258]">
                     Auto-Remedy toggle is currently <strong>OFF</strong>. Deployment stopped synchronously to prevent cascading faults.
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => pipelineDeployer.triggerManualRemedy()}
-                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#6366F1] hover:bg-blue-800 text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
+                    className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#0047AB] hover:bg-blue-800 text-white transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
                   >
                     <Wrench className="w-3.5 h-3.5 text-white" />
                     <span>Manually Fix & Resume</span>
@@ -1974,11 +1972,11 @@ spec:
                         ? 'bg-purple-50 border-2 border-purple-500 text-purple-950 animate-pulse'
                         : isRestarting
                         ? 'bg-cyan-50 border-2 border-cyan-500 text-cyan-950 animate-pulse ring-1 ring-cyan-300'
-                        : 'bg-[#141416]/90 border-white/[0.08] text-stone-500'
+                        : 'bg-white/90 border-[#E5D7C5] text-stone-500'
                     )}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-[10px] text-[#A0A0AB]">#{idx + 1}</span>
+                      <span className="font-bold text-[10px] text-[#6E6258]">#{idx + 1}</span>
                       {isGreen && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
                       {isVerifying && <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />}
                       {isFailed && <AlertTriangle className="w-3.5 h-3.5 text-red-600" />}
@@ -2019,12 +2017,12 @@ spec:
 
         {/* Dynamic Topology Preview & 1-Click Failure Injection Cards */}
         {pipelineValidation.isValid && pipelineValidation.nodes.length > 0 && (
-          <div className="space-y-3 pt-2 border-t border-white/[0.08]">
+          <div className="space-y-3 pt-2 border-t border-[#EADCC9]">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono font-black text-[#A0A0AB] uppercase">
+              <span className="text-[11px] font-mono font-black text-[#6E6258] uppercase">
                 Dynamic Nodes Matrix & Immediate Failure Injection:
               </span>
-              <span className="text-[10px] font-mono text-[#63636E]">
+              <span className="text-[10px] font-mono text-[#8A7B6D]">
                 Click any node to inject failure & compute cascading blast radius
               </span>
             </div>
@@ -2061,14 +2059,14 @@ spec:
                         : isDegraded
                         ? 'bg-amber-50 border-amber-400'
                         : isSelectedDrill
-                        ? 'bg-blue-50/60 border-[#6366F1] ring-1 ring-[#6366F1]/30'
-                        : 'bg-[#101012] border-[#E8DAC8] hover:border-[#6366F1]/50'
+                        ? 'bg-blue-50/60 border-[#0047AB] ring-1 ring-[#0047AB]/30'
+                        : 'bg-[#FAF3EA] border-[#E8DAC8] hover:border-[#0047AB]/50'
                     )}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-[#D8C7B4] text-[#6366F1]">
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white border border-[#D8C7B4] text-[#0047AB]">
                             Tier {tierIdx >= 0 ? tierIdx : 0}
                           </span>
                           {isVerifiedGreen && (
@@ -2094,13 +2092,13 @@ spec:
                         </span>
                       </div>
 
-                      <div className="font-bold text-xs text-[#ECECF0] mt-1.5 truncate" title={node.name}>
+                      <div className="font-bold text-xs text-[#1A1A1A] mt-1.5 truncate" title={node.name}>
                         {node.name}
                       </div>
-                      <div className="font-mono text-[10px] text-[#63636E] truncate">id: {node.id}</div>
+                      <div className="font-mono text-[10px] text-[#8A7B6D] truncate">id: {node.id}</div>
                     </div>
 
-                    <div className="space-y-1 text-[10px] font-mono text-[#A0A0AB] pt-1 border-t border-[#E8DAC8]/60">
+                    <div className="space-y-1 text-[10px] font-mono text-[#6E6258] pt-1 border-t border-[#E8DAC8]/60">
                       <div>
                         <strong>Dependencies:</strong>{' '}
                         {node.dependencies.length > 0 ? node.dependencies.join(', ') : 'None (Foundation)'}
@@ -2154,14 +2152,14 @@ spec:
         {/* Left Column (7 cols): APM Waveform + Dynatrace Probe Matrix */}
         <div className="lg:col-span-7 space-y-6">
           {/* Datadog APM Latency Waveform */}
-          <Card className="p-5 border border-white/[0.08] bg-white space-y-4">
+          <Card className="p-5 border border-[#EADCC9] bg-white space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-black text-[#ECECF0] flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#6366F1]" />
+                <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#0047AB]" />
                   Datadog APM Latency Waveform Stream
                 </h3>
-                <p className="text-[11px] text-[#A0A0AB]">Real-time latency jitter sampled every 2000ms</p>
+                <p className="text-[11px] text-[#6E6258]">Real-time latency jitter sampled every 2000ms</p>
               </div>
               <Badge status="info" className="font-mono text-xs font-bold">
                 {latestTelemetry.latencyMs} ms
@@ -2169,19 +2167,19 @@ spec:
             </div>
 
             {/* SVG Wave Graph */}
-            <div className="h-40 w-full bg-[#101012] rounded-2xl p-3 border border-[#E8DAC8] relative overflow-hidden flex flex-col justify-end">
+            <div className="h-40 w-full bg-[#FAF3EA] rounded-2xl p-3 border border-[#E8DAC8] relative overflow-hidden flex flex-col justify-end">
               <svg className="w-full h-full overflow-visible" viewBox="0 0 600 120" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="waveGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={isFiring ? '#DC2626' : '#6366F1'} stopOpacity="0.4" />
-                    <stop offset="100%" stopColor={isFiring ? '#DC2626' : '#6366F1'} stopOpacity="0.0" />
+                    <stop offset="0%" stopColor={isFiring ? '#DC2626' : '#0047AB'} stopOpacity="0.4" />
+                    <stop offset="100%" stopColor={isFiring ? '#DC2626' : '#0047AB'} stopOpacity="0.0" />
                   </linearGradient>
                 </defs>
 
                 {/* Grid guidelines */}
-                <line x1="0" y1="30" x2="600" y2="30" stroke="#1A1A1A" strokeDasharray="3 3" />
-                <line x1="0" y1="60" x2="600" y2="60" stroke="#1A1A1A" strokeDasharray="3 3" />
-                <line x1="0" y1="90" x2="600" y2="90" stroke="#1A1A1A" strokeDasharray="3 3" />
+                <line x1="0" y1="30" x2="600" y2="30" stroke="#E5D7C5" strokeDasharray="3 3" />
+                <line x1="0" y1="60" x2="600" y2="60" stroke="#E5D7C5" strokeDasharray="3 3" />
+                <line x1="0" y1="90" x2="600" y2="90" stroke="#E5D7C5" strokeDasharray="3 3" />
 
                 {/* Path line */}
                 {(() => {
@@ -2200,7 +2198,7 @@ spec:
                       <path
                         d={pathD}
                         fill="none"
-                        stroke={isFiring ? '#DC2626' : '#6366F1'}
+                        stroke={isFiring ? '#DC2626' : '#0047AB'}
                         strokeWidth="2.5"
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -2210,7 +2208,7 @@ spec:
                 })()}
               </svg>
 
-              <div className="absolute top-2 left-3 text-[10px] font-mono text-[#63636E] flex items-center gap-3">
+              <div className="absolute top-2 left-3 text-[10px] font-mono text-[#8A7B6D] flex items-center gap-3">
                 <span>Critical Threshold: 500ms</span>
                 <span>Error Rate: {(latestTelemetry.errorRate * 100).toFixed(1)}%</span>
                 <span>CPU: {latestTelemetry.cpuPercent}%</span>
@@ -2219,21 +2217,21 @@ spec:
           </Card>
 
           {/* Dynatrace OneAgent Microservice Probes */}
-          <Card className="p-5 border border-white/[0.08] bg-white space-y-3">
+          <Card className="p-5 border border-[#EADCC9] bg-white space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-black text-[#ECECF0] flex items-center gap-2">
-                  <Server className="w-4 h-4 text-[#6366F1]" />
+                <h3 className="text-sm font-black text-[#1A1A1A] flex items-center gap-2">
+                  <Server className="w-4 h-4 text-[#0047AB]" />
                   Dynatrace Microservice Probes Matrix
                 </h3>
-                <p className="text-[11px] text-[#A0A0AB]">7 monitored service containers with individual health probes</p>
+                <p className="text-[11px] text-[#6E6258]">7 monitored service containers with individual health probes</p>
               </div>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs font-sans">
                 <thead>
-                  <tr className="border-b border-white/[0.08] text-[#A0A0AB] text-[10px] uppercase font-mono">
+                  <tr className="border-b border-[#EADCC9] text-[#6E6258] text-[10px] uppercase font-mono">
                     <th className="py-2 px-3">Service</th>
                     <th className="py-2 px-3">Type</th>
                     <th className="py-2 px-3">Latency</th>
@@ -2244,9 +2242,9 @@ spec:
                 </thead>
                 <tbody className="divide-y divide-[#F2E7DC]">
                   {services.map((svc) => (
-                    <tr key={svc.id} className="hover:bg-[#101012]/60 transition-colors">
-                      <td className="py-2.5 px-3 font-bold text-[#ECECF0]">{svc.name}</td>
-                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#A0A0AB]">{svc.type}</td>
+                    <tr key={svc.id} className="hover:bg-[#FAF3EA]/60 transition-colors">
+                      <td className="py-2.5 px-3 font-bold text-[#1A1A1A]">{svc.name}</td>
+                      <td className="py-2.5 px-3 font-mono text-[11px] text-[#6E6258]">{svc.type}</td>
                       <td className="py-2.5 px-3 font-mono text-[11px] font-semibold">
                         {svc.latencyMs.toFixed(1)}ms
                       </td>
@@ -2287,16 +2285,16 @@ spec:
 
         {/* Right Column (5 cols): Interactive Sub-Tab View (Terminal / YAML / MCP) */}
         <div className="lg:col-span-5 flex flex-col">
-          <Card className="p-5 border border-white/[0.08] bg-white flex-1 flex flex-col justify-between space-y-4">
+          <Card className="p-5 border border-[#EADCC9] bg-white flex-1 flex flex-col justify-between space-y-4">
             <div>
               {/* Tab Switcher Header */}
-              <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
-                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#101012] border border-white/[0.08]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EADCC9]">
+                <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5]">
                   <button
                     onClick={() => setRightPaneTab('terminal')}
                     className={cn(
                       'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                      rightPaneTab === 'terminal' ? 'bg-white text-[#6366F1] shadow-xs' : 'text-[#A0A0AB] hover:text-[#ECECF0]'
+                      rightPaneTab === 'terminal' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
                     )}
                   >
                     <Terminal className="w-3.5 h-3.5" />
@@ -2306,7 +2304,7 @@ spec:
                     onClick={() => setRightPaneTab('yaml')}
                     className={cn(
                       'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                      rightPaneTab === 'yaml' ? 'bg-white text-[#6366F1] shadow-xs' : 'text-[#A0A0AB] hover:text-[#ECECF0]'
+                      rightPaneTab === 'yaml' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
                     )}
                   >
                     <FileCode className="w-3.5 h-3.5" />
@@ -2316,7 +2314,7 @@ spec:
                     onClick={() => setRightPaneTab('k8s')}
                     className={cn(
                       'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                      rightPaneTab === 'k8s' ? 'bg-white text-[#6366F1] shadow-xs' : 'text-[#A0A0AB] hover:text-[#ECECF0]'
+                      rightPaneTab === 'k8s' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
                     )}
                   >
                     <Server className="w-3.5 h-3.5" />
@@ -2326,7 +2324,7 @@ spec:
                     onClick={() => setRightPaneTab('mcp')}
                     className={cn(
                       'px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5',
-                      rightPaneTab === 'mcp' ? 'bg-white text-[#6366F1] shadow-xs' : 'text-[#A0A0AB] hover:text-[#ECECF0]'
+                      rightPaneTab === 'mcp' ? 'bg-white text-[#0047AB] shadow-xs' : 'text-[#6E6258] hover:text-[#1A1A1A]'
                     )}
                   >
                     <Globe className="w-3.5 h-3.5" />
@@ -2397,7 +2395,7 @@ spec:
                 </div>
                 <div className="pt-2 border-t border-stone-800 text-[10px] text-stone-400 flex items-center justify-between">
                   <span>Algorithm: Kahn O(V+E)</span>
-                  <span className="text-[#6366F1]">EIP-712 Gated</span>
+                  <span className="text-[#0047AB]">EIP-712 Gated</span>
                 </div>
               </div>
             )}
@@ -2436,12 +2434,12 @@ spec:
 
             {/* TAB 3: Live MCP Server Access & Ping Verification */}
             {rightPaneTab === 'mcp' && (
-              <div className="p-4 rounded-2xl bg-[#101012] border border-white/[0.08] shadow-inner flex-1 min-h-[440px] flex flex-col justify-between text-xs space-y-4">
+              <div className="p-4 rounded-2xl bg-[#FAF3EA] border border-[#E5D7C5] shadow-inner flex-1 min-h-[440px] flex flex-col justify-between text-xs space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+                  <div className="flex items-center justify-between border-b border-[#E5D7C5] pb-2">
                     <div className="flex items-center gap-2">
-                      <Wifi className="w-4 h-4 text-[#6366F1]" />
-                      <span className="font-black text-[#ECECF0]">Render MCP Server Gateway</span>
+                      <Wifi className="w-4 h-4 text-[#0047AB]" />
+                      <span className="font-black text-[#1A1A1A]">Render MCP Server Gateway</span>
                     </div>
                     <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-stone-200 text-stone-700 font-bold">
                       FASTAPI + FASTMCP
@@ -2449,11 +2447,11 @@ spec:
                   </div>
 
                   <div className="p-3 rounded-xl bg-white border border-[#E8DAC8] space-y-1.5 font-mono text-[11px]">
-                    <div className="text-[#63636E] text-[10px] uppercase font-bold">Target MCP Endpoint:</div>
-                    <div className="text-[#ECECF0] font-bold truncate">
+                    <div className="text-[#8A7B6D] text-[10px] uppercase font-bold">Target MCP Endpoint:</div>
+                    <div className="text-[#1A1A1A] font-bold truncate">
                       https://horizon-mcp-server-phf8.onrender.com
                     </div>
-                    <div className="flex items-center gap-2 pt-1 text-[10px] text-[#A0A0AB]">
+                    <div className="flex items-center gap-2 pt-1 text-[10px] text-[#6E6258]">
                       <span>Protocol: 2024-11-05</span>
                       <span>•</span>
                       <span>12 Registered Tools</span>
@@ -2464,7 +2462,7 @@ spec:
                   <button
                     onClick={testMcpServerConnection}
                     disabled={mcpStatus.state === 'pinging'}
-                    className="w-full py-2.5 rounded-xl bg-[#6366F1] hover:bg-blue-800 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
+                    className="w-full py-2.5 rounded-xl bg-[#0047AB] hover:bg-blue-800 text-white font-bold text-xs shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <Activity className={cn('w-4 h-4 text-white', mcpStatus.state === 'pinging' && 'animate-spin')} />
                     <span>{mcpStatus.state === 'pinging' ? 'Testing Connection...' : 'Ping MCP Server from Website'}</span>
@@ -2501,7 +2499,7 @@ spec:
 
                   {/* MCP Tool Registry Highlights */}
                   <div className="space-y-1.5 pt-1">
-                    <div className="text-[10px] font-mono text-[#63636E] uppercase font-bold">12 Registered MCP Tools:</div>
+                    <div className="text-[10px] font-mono text-[#8A7B6D] uppercase font-bold">12 Registered MCP Tools:</div>
                     <div className="flex flex-wrap gap-1">
                       {[
                         'horizon_get_topology',
@@ -2511,7 +2509,7 @@ spec:
                         'horizon_get_incident_timeline',
                         'horizon_broadcast_incident',
                       ].map((t) => (
-                        <span key={t} className="px-2 py-0.5 rounded-md bg-white border border-white/[0.08] text-[10px] font-mono text-stone-700">
+                        <span key={t} className="px-2 py-0.5 rounded-md bg-white border border-[#E5D7C5] text-[10px] font-mono text-stone-700">
                           {t}
                         </span>
                       ))}
@@ -2522,9 +2520,9 @@ spec:
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-white/[0.08] text-[10px] text-[#63636E] flex items-center justify-between">
+                <div className="pt-2 border-t border-[#E5D7C5] text-[10px] text-[#8A7B6D] flex items-center justify-between">
                   <span>Inbound Webhook: /api/v1/incidents/webhook</span>
-                  <Link to="/docs" className="text-[#6366F1] font-bold hover:underline flex items-center gap-0.5">
+                  <Link to="/docs" className="text-[#0047AB] font-bold hover:underline flex items-center gap-0.5">
                     Docs <ExternalLink className="w-2.5 h-2.5" />
                   </Link>
                 </div>

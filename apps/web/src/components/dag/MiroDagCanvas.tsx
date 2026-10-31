@@ -12,7 +12,10 @@ import {
   Maximize2,
   Minimize2,
   Scan,
+  Hand,
   X,
+  ShieldAlert,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -83,6 +86,10 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     };
   }, [selectedNodeId, architecture]);
 
+  /**
+   * Fit to View: Automatically calculates bounding box of all nodes
+   * and centers & scales them with generous padding so 100% of the DAG is visible.
+   */
   const fitToView = useCallback((customPositions?: Record<string, Point>) => {
     const activePositions = customPositions || positions;
     const nodeIds = architecture.nodes.map((n) => n.id);
@@ -92,65 +99,141 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
 
     if (validPositions.length === 0 || !containerRef.current) return;
 
-    const minX = Math.min(...validPositions.map((p) => p.x));
-    const maxX = Math.max(...validPositions.map((p) => p.x));
-    const minY = Math.min(...validPositions.map((p) => p.y));
-    const maxY = Math.max(...validPositions.map((p) => p.y));
+    // Node card bounds: width is 185px, height is ~72px, centered at (x, y)
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
 
-    const nodeWidth = 190;
-    const nodeHeight = 85;
+    validPositions.forEach((p) => {
+      minX = Math.min(minX, p.x - 100);
+      maxX = Math.max(maxX, p.x + 100);
+      minY = Math.min(minY, p.y - 45);
+      maxY = Math.max(maxY, p.y + 45);
+    });
 
-    const boundingW = (maxX - minX) + nodeWidth + 120;
-    const boundingH = (maxY - minY) + nodeHeight + 140;
+    const contentWidth = Math.max(200, maxX - minX);
+    const contentHeight = Math.max(160, maxY - minY);
 
-    const containerW = containerRef.current.clientWidth || 900;
-    const containerH = containerRef.current.clientHeight || 650;
+    const containerWidth = containerRef.current.clientWidth || 940;
+    const containerHeight = containerRef.current.clientHeight || (isFullscreen ? window.innerHeight - 120 : 680);
 
-    const scaleX = containerW / boundingW;
-    const scaleY = containerH / boundingH;
-    const calculatedZoom = Math.min(1.2, Math.max(0.45, Math.min(scaleX, scaleY)));
+    const paddingX = 64;
+    const paddingY = 64;
 
-    const boundingCenterX = (minX + maxX) / 2;
-    const boundingCenterY = (minY + maxY) / 2;
+    const availableW = Math.max(100, containerWidth - paddingX * 2);
+    const availableH = Math.max(100, containerHeight - paddingY * 2);
 
-    const panX = containerW / 2 - boundingCenterX * calculatedZoom;
-    const panY = containerH / 2 - boundingCenterY * calculatedZoom;
+    const scaleX = availableW / contentWidth;
+    const scaleY = availableH / contentHeight;
 
-    setZoom(calculatedZoom);
-    setPan({ x: panX, y: panY });
-  }, [architecture.nodes, positions]);
+    // Scale clamped between 0.35 and 1.15 to ensure readability while guaranteeing fit
+    const optimalZoom = Math.min(1.15, Math.max(0.35, Math.min(scaleX, scaleY)));
 
+    // Center content within container
+    const contentCenterX = (minX + maxX) / 2;
+    const contentCenterY = (minY + maxY) / 2;
+
+    const targetPanX = containerWidth / 2 - contentCenterX * optimalZoom;
+    const targetPanY = containerHeight / 2 - contentCenterY * optimalZoom;
+
+    setZoom(optimalZoom);
+    setPan({ x: targetPanX, y: targetPanY });
+  }, [architecture.nodes, positions, isFullscreen]);
+
+  /**
+   * Initial spacious hierarchical tree layout calculation.
+   * Uses normalized coordinate system then auto-fits cleanly into viewport.
+   */
   const computeInitialTreeLayout = useCallback(() => {
     const newPositions: Record<string, Point> = {};
-    const levels = architecture.topologicalLevels;
+    const levels = architecture.topologicalLevels.slice().reverse(); // Reverse so Ingress is at top
+    const totalLevels = levels.length;
 
-    const levelGapY = 160;
-    const nodeGapX = 220;
+    // Spacing constants
+    const levelHeight = 160;
+    const nodeSpacing = 240;
+    const centerX = 600; // Reference origin center
+    const topMargin = 100;
 
-    levels.forEach((levelNodeIds, levelIndex) => {
-      const y = 80 + levelIndex * levelGapY;
-      const count = levelNodeIds.length;
-      const totalWidth = (count - 1) * nodeGapX;
-      const startX = -totalWidth / 2;
+    levels.forEach((tierNodeIds, tierIdx) => {
+      const y = topMargin + tierIdx * levelHeight;
+      const count = tierNodeIds.length;
+      const startX = count === 1 ? centerX : centerX - ((count - 1) * nodeSpacing) / 2;
 
-      levelNodeIds.forEach((id, nodeIdx) => {
-        newPositions[id] = {
-          x: startX + nodeIdx * nodeGapX + 450,
-          y,
-        };
+      tierNodeIds.forEach((nodeId, nodeIdx) => {
+        const x = count === 1 ? centerX : startX + nodeIdx * nodeSpacing;
+        newPositions[nodeId] = { x, y };
       });
     });
 
     setPositions(newPositions);
-    setTimeout(() => fitToView(newPositions), 40);
-  }, [architecture.topologicalLevels, fitToView]);
 
+    // Automatically fit graph to view once positions are populated
+    requestAnimationFrame(() => {
+      fitToView(newPositions);
+    });
+  }, [architecture, fitToView]);
+
+  // Reset or initialize positions when architecture changes
   useEffect(() => {
     computeInitialTreeLayout();
-  }, [architecture.architectureName, computeInitialTreeLayout]);
+  }, [computeInitialTreeLayout]);
 
+  // Refit when fullscreen state changes or window resizes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fitToView();
+    }, 80);
+    return () => clearTimeout(timer);
+  }, [isFullscreen, fitToView]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      fitToView();
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [fitToView]);
+
+  // Handle ESC key to exit fullscreen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
+  // Lock body scroll in fullscreen mode
+  useEffect(() => {
+    if (isFullscreen) {
+      const origOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = origOverflow;
+      };
+    }
+  }, [isFullscreen]);
+
+  // Node Dragging Handlers
+  const handleMouseDownNode = (e: React.MouseEvent, nodeId: string) => {
+    e.stopPropagation();
+    const currentPos = positions[nodeId] || { x: 0, y: 0 };
+    setDraggingNodeId(nodeId);
+    dragStartRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      initialNodePos: { ...currentPos },
+    };
+  };
+
+  // Canvas Panning Handlers (Drag Background)
   const handleMouseDownCanvas = (e: React.MouseEvent) => {
-    if ((e.target as HTMLElement).closest('.miro-dag-canvas button')) return;
+    // Only primary mouse button initiates pan
+    if (e.button !== 0) return;
     setIsPanning(true);
     panStartRef.current = {
       mouseX: e.clientX,
@@ -159,55 +242,58 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     };
   };
 
-  const handleMouseDownNode = (e: React.MouseEvent, nodeId: string) => {
-    e.stopPropagation();
-    setDraggingNodeId(nodeId);
-    dragStartRef.current = {
-      mouseX: e.clientX,
-      mouseY: e.clientY,
-      initialNodePos: { ...positions[nodeId] },
-    };
-  };
-
+  // Global Mouse Move and Mouse Up Listeners
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
+      // 1. Handling Node Drag
+      if (draggingNodeId && dragStartRef.current) {
+        const dx = (e.clientX - dragStartRef.current.mouseX) / zoom;
+        const dy = (e.clientY - dragStartRef.current.mouseY) / zoom;
+        const nextX = dragStartRef.current.initialNodePos.x + dx;
+        const nextY = dragStartRef.current.initialNodePos.y + dy;
+
+        setPositions((prev) => ({
+          ...prev,
+          [draggingNodeId]: { x: nextX, y: nextY },
+        }));
+        return;
+      }
+
+      // 2. Handling Canvas Pan
       if (isPanning && panStartRef.current) {
         const dx = e.clientX - panStartRef.current.mouseX;
         const dy = e.clientY - panStartRef.current.mouseY;
+
         setPan({
           x: panStartRef.current.initialPan.x + dx,
           y: panStartRef.current.initialPan.y + dy,
         });
-      } else if (draggingNodeId && dragStartRef.current) {
-        const dx = (e.clientX - dragStartRef.current.mouseX) / zoom;
-        const dy = (e.clientY - dragStartRef.current.mouseY) / zoom;
-        setPositions((prev) => ({
-          ...prev,
-          [draggingNodeId]: {
-            x: dragStartRef.current!.initialNodePos.x + dx,
-            y: dragStartRef.current!.initialNodePos.y + dy,
-          },
-        }));
       }
     };
 
     const handleMouseUp = () => {
-      setIsPanning(false);
       setDraggingNodeId(null);
-      panStartRef.current = null;
       dragStartRef.current = null;
+      setIsPanning(false);
+      panStartRef.current = null;
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    if (draggingNodeId || isPanning) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isPanning, draggingNodeId, zoom]);
+  }, [draggingNodeId, isPanning, zoom]);
 
+  // Smooth Interactive Mousewheel Zoom anchored to cursor position
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
     if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const cursorX = e.clientX - rect.left;
@@ -216,6 +302,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
     const nextZoom = Math.min(2.2, Math.max(0.3, zoom * zoomFactor));
 
+    // Anchor canvas coordinates under cursor
     const canvasX = (cursorX - pan.x) / zoom;
     const canvasY = (cursorY - pan.y) / zoom;
 
@@ -248,11 +335,11 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     <div
       ref={containerRef}
       className={cn(
-        'miro-dag-canvas relative select-none border border-white/[0.08]',
-        'bg-[#0A0A0B] bg-[radial-gradient(rgba(255,255,255,0.06)_1.5px,transparent_1.5px)] [background-size:24px_24px]',
+        'miro-dag-canvas relative select-none border border-[#E5D7C5]',
+        'bg-[#FAF6F0] bg-[radial-gradient(#C2B29F_1.5px,transparent_1.5px)] [background-size:24px_24px]',
         isFullscreen
           ? 'fixed inset-0 z-50 w-screen h-screen rounded-none border-none shadow-2xl overflow-hidden'
-          : 'w-full h-[640px] sm:h-[680px] rounded-[14px] overflow-hidden',
+          : 'w-full h-[640px] sm:h-[680px] rounded-2xl overflow-hidden',
         isPanning ? 'cursor-grabbing' : 'cursor-grab',
         className
       )}
@@ -264,84 +351,89 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
       <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between z-30 pointer-events-none">
         {/* Left Badge Header */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          <div className="px-3.5 py-1.5 rounded-[10px] bg-[#141416]/95 backdrop-blur-md border border-white/[0.1] shadow-[0_8px_24px_rgba(0,0,0,0.6)] flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-[#6366F1] animate-pulse" />
-            <span className="text-xs font-semibold text-[#ECECF0] max-w-[220px] sm:max-w-xs truncate">
+          <div className="px-3.5 py-1.5 rounded-xl bg-white/95 backdrop-blur-xs border border-[#E5D7C5] shadow-[0_2px_8px_rgba(0,0,0,0.06)] flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#0047AB] animate-pulse" />
+            <span className="text-xs font-bold text-[#1A1A1A] max-w-[220px] sm:max-w-xs truncate">
               {architecture.architectureName}
             </span>
-            <span className="text-[10px] font-mono text-[#63636E] hidden sm:inline">
+            <span className="text-[10px] font-mono text-[#8A7B6D] hidden sm:inline">
               ({architecture.nodes.length} nodes &bull; {architecture.topologicalLevels.length} tiers)
             </span>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/[0.06] border border-white/[0.08] text-[#7C7FF7]">
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF3EA] border border-[#E5D7C5] text-[#0047AB] font-bold">
               {Math.round(zoom * 100)}%
             </span>
           </div>
         </div>
 
         {/* Right Canvas Controls Toolbar */}
-        <div className="flex items-center gap-1 bg-[#141416]/95 backdrop-blur-md p-1 rounded-[10px] border border-white/[0.1] shadow-[0_8px_24px_rgba(0,0,0,0.6)] pointer-events-auto">
+        <div className="flex items-center gap-1.5 bg-white/95 backdrop-blur-xs p-1 rounded-xl border border-[#E5D7C5] shadow-[0_2px_8px_rgba(0,0,0,0.06)] pointer-events-auto">
+          {/* Fit to View Button */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               fitToView();
             }}
-            className="px-2 py-1 rounded-[6px] hover:bg-white/[0.08] text-[#7C7FF7] transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-medium"
+            className="px-2 py-1.5 rounded-lg hover:bg-[#FAF3EA] text-[#0047AB] hover:text-[#00388A] transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold border border-transparent hover:border-[#E5D7C5]"
             title="Auto-Fit entire DAG into canvas view"
           >
-            <Scan className="w-3.5 h-3.5" />
+            <Scan className="w-3.5 h-3.5 text-[#0047AB]" />
             <span className="hidden sm:inline">Fit View</span>
           </button>
 
-          <div className="w-px h-3.5 bg-white/[0.08]" />
+          <div className="w-px h-3.5 bg-[#E5D7C5]" />
 
+          {/* Zoom In */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleStepZoom(0.15);
             }}
-            className="p-1.5 rounded-[6px] hover:bg-white/[0.08] text-[#A0A0AB] hover:text-[#ECECF0] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-[#FAF3EA] text-[#6E6258] hover:text-[#1A1A1A] transition-colors cursor-pointer"
             title="Zoom In (or scroll wheel)"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
 
+          {/* Zoom Out */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               handleStepZoom(-0.15);
             }}
-            className="p-1.5 rounded-[6px] hover:bg-white/[0.08] text-[#A0A0AB] hover:text-[#ECECF0] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-[#FAF3EA] text-[#6E6258] hover:text-[#1A1A1A] transition-colors cursor-pointer"
             title="Zoom Out (or scroll wheel)"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
 
-          <div className="w-px h-3.5 bg-white/[0.08]" />
+          <div className="w-px h-3.5 bg-[#E5D7C5]" />
 
+          {/* Reset Layout */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               computeInitialTreeLayout();
             }}
-            className="p-1.5 rounded-[6px] hover:bg-white/[0.08] text-[#A0A0AB] hover:text-[#ECECF0] transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
+            className="p-1.5 rounded-lg hover:bg-[#FAF3EA] text-[#6E6258] hover:text-[#1A1A1A] transition-colors cursor-pointer flex items-center gap-1 text-[11px] font-medium"
             title="Reset to default tree layout"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Reset</span>
           </button>
 
-          <div className="w-px h-3.5 bg-white/[0.08]" />
+          <div className="w-px h-3.5 bg-[#E5D7C5]" />
 
+          {/* Fullscreen Expand Toggle */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               setIsFullscreen((prev) => !prev);
             }}
             className={cn(
-              'p-1.5 rounded-[6px] transition-colors cursor-pointer flex items-center gap-1 text-xs font-medium',
+              'p-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold',
               isFullscreen
-                ? 'bg-[#6366F1] text-white'
-                : 'hover:bg-white/[0.08] text-[#A0A0AB] hover:text-[#ECECF0]'
+                ? 'bg-[#0047AB] text-white hover:bg-[#00388A]'
+                : 'hover:bg-[#FAF3EA] text-[#6E6258] hover:text-[#1A1A1A]'
             )}
             title={isFullscreen ? 'Exit Fullscreen (Esc)' : 'Expand to Fullscreen Modal'}
           >
@@ -364,21 +456,21 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
       {blastInfo && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute top-16 left-3.5 z-25 max-w-sm p-3.5 rounded-[12px] bg-[#141416]/95 backdrop-blur-md border border-white/[0.12] shadow-[0_16px_48px_rgba(0,0,0,0.7)] space-y-2 pointer-events-auto transition-all animate-in fade-in slide-in-from-top-2"
+          className="absolute top-16 left-3.5 z-25 max-w-sm p-3.5 rounded-2xl bg-white/95 backdrop-blur-md border border-[#E5D7C5] shadow-[0_8px_24px_rgba(0,0,0,0.08)] space-y-2 pointer-events-auto transition-all animate-in fade-in slide-in-from-top-2"
         >
-          <div className="flex items-center justify-between gap-2 border-b border-white/[0.07] pb-2">
+          <div className="flex items-center justify-between gap-2 border-b border-[#F0E6D8] pb-2">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#6366F1]" />
-              <span className="text-xs font-semibold text-[#ECECF0] truncate">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#0047AB]" />
+              <span className="text-xs font-bold text-[#1A1A1A] truncate">
                 {blastInfo.selectedNode.name}
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/[0.06] text-[#A0A0AB] uppercase">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF3EA] text-[#6E6258] uppercase font-bold">
                 {blastInfo.selectedNode.type}
               </span>
             </div>
             <button
               onClick={() => onSelectNode(null)}
-              className="p-1 rounded-[4px] hover:bg-white/[0.08] text-[#63636E] hover:text-[#ECECF0] cursor-pointer"
+              className="p-1 rounded-lg hover:bg-[#FAF3EA] text-[#8A7B6D] hover:text-[#1A1A1A] cursor-pointer"
               title="Close inspection"
             >
               <X className="w-3.5 h-3.5" />
@@ -386,20 +478,20 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
-            <div className="p-2 rounded-[8px] bg-[#34D399]/10 border border-[#34D399]/25">
-              <span className="text-[9px] uppercase font-medium text-[#34D399] block">
+            <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200">
+              <span className="text-[9px] uppercase font-bold text-emerald-800 block">
                 Upstream Deps
               </span>
-              <span className="text-[#ECECF0] font-semibold">
+              <span className="text-emerald-950 font-bold">
                 {blastInfo.upstreamDeps.length} Services
               </span>
             </div>
 
-            <div className="p-2 rounded-[8px] bg-[#F87171]/10 border border-[#F87171]/25">
-              <span className="text-[9px] uppercase font-medium text-[#F87171] block">
+            <div className="p-2 rounded-xl bg-rose-50 border border-rose-200">
+              <span className="text-[9px] uppercase font-bold text-rose-800 block">
                 Blast Radius
               </span>
-              <span className="text-[#ECECF0] font-semibold">
+              <span className="text-rose-950 font-bold">
                 {blastInfo.downstreamBlast.length} Impaired
               </span>
             </div>
@@ -407,7 +499,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
         </div>
       )}
 
-      {/* ── Interactive Canvas Scaled Area ── */}
+      {/* ── Interactive Canvas Scaled Area (Transformed Container) ── */}
       <div
         className="absolute inset-0 origin-top-left pointer-events-auto"
         style={{
@@ -415,8 +507,10 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
           transition: isPanning || draggingNodeId ? 'none' : 'transform 0.12s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
+        {/* SVG Directed Bezier Curves connecting nodes */}
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
           <defs>
+            {/* Standard directional arrow marker */}
             <marker
               id={`arrow-default-${instanceId}`}
               viewBox="0 0 10 10"
@@ -426,9 +520,10 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
               markerHeight="6"
               orient="auto-start-reverse"
             >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="rgba(255, 255, 255, 0.25)" />
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="#9C8D7D" />
             </marker>
 
+            {/* Upstream provider highlighted arrow */}
             <marker
               id={`arrow-upstream-${instanceId}`}
               viewBox="0 0 10 10"
@@ -438,9 +533,10 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
               markerHeight="6"
               orient="auto-start-reverse"
             >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#34D399" />
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="#059669" />
             </marker>
 
+            {/* Downstream blast highlighted arrow */}
             <marker
               id={`arrow-downstream-${instanceId}`}
               viewBox="0 0 10 10"
@@ -450,10 +546,11 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
               markerHeight="6"
               orient="auto-start-reverse"
             >
-              <path d="M 0 1 L 9 5 L 0 9 z" fill="#F87171" />
+              <path d="M 0 1 L 9 5 L 0 9 z" fill="#E11D48" />
             </marker>
           </defs>
 
+          {/* Render directed dependency edges */}
           {architecture.nodes.map((node) => {
             const sourcePos = positions[node.id];
             if (!sourcePos) return null;
@@ -462,27 +559,31 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
               const targetPos = positions[targetId];
               if (!targetPos) return null;
 
+              // Node dimensions
               const nodeHalfHeight = 34;
 
+              // Calculate start (source bottom) and end (target top)
               const startX = sourcePos.x;
               const startY = sourcePos.y + nodeHalfHeight;
               const endX = targetPos.x;
               const endY = targetPos.y - nodeHalfHeight;
 
+              // Smooth cubic bezier curve control points with generous spacing
               const deltaY = Math.abs(endY - startY);
               const controlY1 = startY + Math.max(40, deltaY * 0.45);
               const controlY2 = endY - Math.max(40, deltaY * 0.45);
 
+              // Determine highlights
               const isUpstreamEdge =
                 selectedNodeId === node.id && blastInfo?.upstreamDeps.includes(targetId);
               const isDownstreamEdge =
                 selectedNodeId === targetId && blastInfo?.downstreamBlast.includes(node.id);
 
               const strokeColor = isUpstreamEdge
-                ? '#34D399'
+                ? '#059669'
                 : isDownstreamEdge
-                ? '#F87171'
-                : 'rgba(255, 255, 255, 0.2)';
+                ? '#E11D48'
+                : '#B0A294';
 
               const strokeWidth = isUpstreamEdge || isDownstreamEdge ? 2.5 : 1.5;
               const markerId = isUpstreamEdge
@@ -507,7 +608,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
           })}
         </svg>
 
-        {/* ── Draggable Node Cards ── */}
+        {/* ── Draggable Node Cards (Miro Style) ── */}
         {architecture.nodes.map((node) => {
           const pos = positions[node.id];
           if (!pos) return null;
@@ -531,59 +632,61 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
                 transform: 'translate(-50%, -50%)',
               }}
               className={cn(
-                'absolute z-15 w-[185px] p-3 rounded-[12px] border transition-all duration-150 select-none cursor-grab active:cursor-grabbing',
-                'shadow-[0_4px_16px_rgba(0,0,0,0.5)]',
+                'absolute z-15 w-[185px] p-3 rounded-2xl border transition-all duration-150 select-none cursor-grab active:cursor-grabbing',
+                'shadow-[0_4px_16px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.8)]',
                 isSelected
-                  ? 'bg-[#18181B] border-[#6366F1] ring-2 ring-[#6366F1] shadow-[0_0_24px_rgba(99,102,241,0.3)] scale-105 z-20'
+                  ? 'bg-white border-[#0047AB] ring-2 ring-[#0047AB] shadow-xl scale-105 z-20'
                   : isDownstream
-                  ? 'bg-[#18181B] border-[#F87171] ring-1 ring-[#F87171] text-[#ECECF0]'
+                  ? 'bg-rose-50/95 border-rose-400 ring-2 ring-rose-400 text-rose-950 shadow-md'
                   : isUpstream
-                  ? 'bg-[#18181B] border-[#34D399] ring-1 ring-[#34D399] text-[#ECECF0]'
-                  : 'bg-[#141416] border-white/[0.08] hover:border-white/[0.18] hover:scale-[1.02]'
+                  ? 'bg-emerald-50/95 border-emerald-400 ring-2 ring-emerald-400 text-emerald-950 shadow-md'
+                  : 'bg-white/95 border-[#DACBB8] hover:border-[#0047AB]/50 hover:shadow-md hover:scale-[1.02]'
               )}
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 overflow-hidden">
                   <div
                     className={cn(
-                      'w-7 h-7 rounded-[7px] flex items-center justify-center shrink-0 border',
+                      'w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border',
                       isSelected
-                        ? 'bg-[#6366F1] text-white border-[#6366F1]'
+                        ? 'bg-[#0047AB] text-white border-[#00388A]'
                         : isDownstream
-                        ? 'bg-[#F87171]/20 text-[#F87171] border-[#F87171]/30'
+                        ? 'bg-rose-100 text-rose-700 border-rose-300'
                         : isUpstream
-                        ? 'bg-[#34D399]/20 text-[#34D399] border-[#34D399]/30'
-                        : 'bg-white/[0.04] text-[#A0A0AB] border-white/[0.08]'
+                        ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
+                        : 'bg-[#FAF3EA] text-[#0047AB] border-[#E5D7C5]'
                     )}
                   >
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div className="overflow-hidden">
-                    <span className="text-xs font-semibold text-[#ECECF0] block truncate leading-tight">
+                    <span className="text-xs font-bold text-[#1A1A1A] block truncate leading-tight">
                       {node.name}
                     </span>
-                    <span className="text-[9px] font-mono text-[#63636E] uppercase block truncate">
+                    <span className="text-[9px] font-mono text-[#8A7B6D] uppercase block truncate">
                       {node.type}
                     </span>
                   </div>
                 </div>
 
+                {/* Health status dot */}
                 <span
                   className={cn(
                     'w-2 h-2 rounded-full shrink-0',
-                    node.status === 'healthy' ? 'bg-[#34D399] animate-pulse' : 'bg-[#F87171]'
+                    node.status === 'healthy' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'
                   )}
                   title={`Status: ${node.status}`}
                 />
               </div>
 
-              <div className="mt-2 pt-1.5 border-t border-white/[0.06] flex items-center justify-between text-[10px] font-mono text-[#63636E]">
+              {/* Dependency indicator footer */}
+              <div className="mt-2 pt-1.5 border-t border-[#F0E6D8] flex items-center justify-between text-[10px] font-mono text-[#6E6258]">
                 <span>
                   {node.dependencies.length === 0
                     ? 'Root Service'
                     : `Deps: ${node.dependencies.length}`}
                 </span>
-                <span className="text-[9px] text-[#A0A0AB] flex items-center gap-0.5">
+                <span className="text-[9px] text-[#A39281] flex items-center gap-0.5">
                   <Move className="w-2.5 h-2.5" />
                   <span>drag</span>
                 </span>
@@ -594,11 +697,11 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
       </div>
 
       {/* ── Miro Canvas Footer Guidance Bar ── */}
-      <div className="absolute bottom-2.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between text-[10px] font-mono text-[#63636E] pointer-events-none z-20 gap-2">
-        <span className="bg-[#141416]/80 backdrop-blur-md px-2.5 py-1 rounded-[6px] border border-white/[0.08]">
-          💡 <strong>Pan:</strong> Click & drag &bull; <strong>Zoom:</strong> Scroll or &plusmn; &bull; <strong>Reposition:</strong> Drag cards
+      <div className="absolute bottom-2.5 left-3.5 right-3.5 flex flex-wrap items-center justify-between text-[10px] font-mono text-[#8A7B6D] pointer-events-none z-20 gap-2">
+        <span className="bg-white/80 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E5D7C5]">
+          💡 <strong>Pan:</strong> Click & drag background &bull; <strong>Zoom:</strong> Scroll or &plusmn; &bull; <strong>Reposition:</strong> Drag cards
         </span>
-        <span className="bg-[#141416]/80 backdrop-blur-md px-2.5 py-1 rounded-[6px] border border-white/[0.08]">
+        <span className="bg-white/80 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-[#E5D7C5]">
           {selectedNodeId ? 'Click background to deselect' : 'Click any node to isolate blast radius'}
         </span>
       </div>
@@ -607,3 +710,4 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
 
   return content;
 };
+

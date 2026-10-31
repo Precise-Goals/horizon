@@ -24,38 +24,23 @@ interface PatentsPageProps {
  */
 export const PatentsPage: React.FC<PatentsPageProps> = ({ className }) => {
   return (
-    <div className={cn('w-full flex flex-col items-center font-sans pb-16 space-y-6 text-[#0A0A0A]', className)}>
+    <div className={cn('w-full flex flex-col items-center font-sans pb-16 space-y-4', className)}>
       {/* Minimal Top Breadcrumb */}
-      <div className="w-full max-w-4xl flex items-center justify-between text-xs font-mono">
+      <div className="w-full max-w-4xl flex items-center justify-between px-2 text-xs font-mono">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 font-semibold text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors bg-white px-3.5 py-1.5 rounded-full border border-[#E5E5E5] shadow-xs"
+          className="inline-flex items-center gap-1.5 font-bold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Return to Home</span>
         </Link>
-        <span className="text-[#A3A3A3] hidden sm:inline text-[11px]">
+        <span className="text-[#8A7B6D] hidden sm:inline">
           Horizon: Dependency-Aware Autonomous Infrastructure Recovery &bull; Research Article
         </span>
       </div>
 
-      {/* Signature Two-Line Header */}
-      <div className="w-full max-w-4xl text-left space-y-2">
-        <h1 className="tracking-tight leading-[1.02]">
-          <span className="block font-['Instrument_Serif',serif] font-normal text-[#A3A3A3] text-4xl sm:text-5xl">
-            Research & Patents,
-          </span>
-          <span className="block font-['Instrument_Serif',serif] italic font-normal text-[#0A0A0A] text-4xl sm:text-5xl">
-            intellectual disclosures.
-          </span>
-        </h1>
-        <p className="text-xs sm:text-sm text-[#6B6B6B] leading-relaxed">
-          Full technical patent filings and algorithmic research papers covering topological recovery graphs, Kahn's algorithm orchestration, and cryptographic human commander gates.
-        </p>
-      </div>
-
-      {/* Unified Continuous Article Sheet */}
-      <article className="w-full max-w-4xl bg-white rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)] border border-[#E5E5E5] overflow-hidden">
+      {/* Unified Continuous Article Sheet — Rendered Pages One After Other Without Spacing */}
+      <article className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-[0_4px_36px_rgba(26,26,26,0.08),0_1px_3px_rgba(26,26,26,0.04)] border border-[#E5D7C5] overflow-hidden">
         {PAGES.map((page) => (
           <img
             key={page.pageNumber}

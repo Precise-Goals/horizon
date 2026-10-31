@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion, type BezierDefinition } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { MetricWidget } from '../components/dashboard/MetricWidget';
 import { CommandBar } from '../components/copilot/CommandBar';
 import { SystemHealthOverview } from '../components/dashboard/SystemHealthOverview';
 import { RecentActivityWidget } from '../components/dashboard/RecentActivityWidget';
 import { WarRoomWidget } from '../components/dashboard/WarRoomWidget';
+import { Button } from '../components/common/Button';
 import { fetchNodes, fetchHealth } from '../lib/api';
 import { mstBlockchain, MST_CONFIG } from '../engine/mstBlockchain';
 import { autonomousWatchdog, type WatchdogMetrics } from '../engine/watchdog';
@@ -25,37 +26,36 @@ import {
   Zap,
   Network,
   Terminal,
-  CheckCircle2,
-  TrendingDown,
 } from 'lucide-react';
 import { Link } from 'react-router';
 import { cn } from '../lib/utils';
-import { Globe } from '../components/common/Globe';
+import type { BezierDefinition } from 'framer-motion';
 
+/* ─── Animation variants ─── */
 const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
 const containerVariants = {
   hidden:  { opacity: 0 },
-  visible: { opacity: 1, transition: { staggerChildren: 0.05, duration: 0.25 } },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05, duration: 0.3 } },
 };
 const itemVariants = {
-  hidden:  { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.28, ease: EASE } },
+  hidden:  { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: EASE } },
 };
 
-/**
- * DashboardPage — Horizon Autonomous Resilience Operations
- * Signature two-line headline, pure white instrument cards, hairline borders.
- */
 export const DashboardPage: React.FC = () => {
-  const [nodes,          setNodes]          = useState<SystemNode[]>([]);
-  const [loading,        setLoading]        = useState(true);
-  const [blockHeight,    setBlockHeight]    = useState<number>(0);
-  const [lastCheckTime,  setLastCheckTime]  = useState('—');
-  const [sreView,        setSreView]        = useState(false);
-  const [watchdogMetrics, setWatchdogMetrics] = useState<WatchdogMetrics>(() => autonomousWatchdog.getMetrics());
-  const [dockerStatus,   setDockerStatus]   = useState<DockerBridgeStatus>(() => dockerBridge.getStatus());
+  const [nodes, setNodes] = useState<SystemNode[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [blockHeight, setBlockHeight] = useState<number>(0);
+  const [lastCheckTime, setLastCheckTime] = useState('—');
+  const [watchdogMetrics, setWatchdogMetrics] = useState<WatchdogMetrics>(
+    () => autonomousWatchdog.getMetrics()
+  );
+  const [dockerStatus, setDockerStatus] = useState<DockerBridgeStatus>(
+    () => dockerBridge.getStatus()
+  );
 
+  /* subscribe to live engine events */
   useEffect(() => {
     const unsub       = autonomousWatchdog.subscribe(() => setWatchdogMetrics(autonomousWatchdog.getMetrics()));
     const unsubDocker = dockerBridge.subscribe(() => setDockerStatus(dockerBridge.getStatus()));
@@ -67,10 +67,10 @@ export const DashboardPage: React.FC = () => {
       const [n] = await Promise.all([fetchNodes(), fetchHealth()]);
       setNodes(n);
       setLastCheckTime(new Date().toLocaleTimeString());
-      const h = await mstBlockchain.getBlockHeight();
-      if (h) setBlockHeight(h);
+      const hBlock = await mstBlockchain.getBlockHeight();
+      if (hBlock) setBlockHeight(hBlock);
     } catch {
-      /* in-memory fallback */
+      /* in-memory engine fallback */
     } finally {
       setLoading(false);
     }
@@ -78,206 +78,116 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     loadData();
-    const id = setInterval(loadData, 5_000);
-    return () => clearInterval(id);
+    const interval = setInterval(loadData, 5_000);
+    return () => clearInterval(interval);
   }, [loadData]);
 
-  const totalNodes   = nodes.length || 7;
-  const downCount    = nodes.filter((n) => n.status === 'down' || n.status === 'degraded').length;
-  const healthyCount = nodes.filter((n) => n.status === 'healthy').length;
-  const availPct     = totalNodes > 0 ? ((healthyCount / totalNodes) * 100).toFixed(1) : '99.9';
+  /* Derived metrics */
+  const totalNodes    = nodes.length || 7;
+  const downCount     = nodes.filter((n) => n.status === 'down' || n.status === 'degraded').length;
+  const healthyCount  = nodes.filter((n) => n.status === 'healthy').length;
+  const availPct      = totalNodes > 0 ? ((healthyCount / totalNodes) * 100).toFixed(1) : '99.9';
 
   return (
     <motion.div
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 text-[#0A0A0A] w-full relative"
+      className="horizon-dashboard space-y-7 text-[#1A1A1A] w-full"
     >
-      {/* ── Signature Two-Line Header & Controls ── */}
-      <motion.div variants={itemVariants} className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] text-[11px] font-mono text-[#0A0A0A] shadow-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF] animate-pulse" />
-            <span>MST TESTNET BLOCKCHAIN &bull; SARVAM-105B ACTIVE</span>
+      {/* ── Page Header ── */}
+      <motion.div variants={itemVariants} className="horizon-dashboard-header flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-3 mb-1.5">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-[#1A1A1A]">
+              Resilience Command Center
+            </h1>
+            <span className="horizon-badge text-[#0F8E52] bg-[#EBF7EE] border-[#0F8E52]/25 shadow-sm">
+              <span className="skeuo-led skeuo-led-healthy animate-pulse" />
+              Live SRE Engine
+            </span>
           </div>
-
-          <h1 className="tracking-tight leading-[1.02]">
-            <span className="block font-['Instrument_Serif',serif] font-normal text-[#A3A3A3] text-4xl sm:text-5xl lg:text-6xl">
-              Autonomous Resilience,
-            </span>
-            <span className="block font-['Instrument_Serif',serif] italic font-normal text-[#0A0A0A] text-4xl sm:text-5xl lg:text-6xl">
-              operations command.
-            </span>
-          </h1>
-
-          <p className="text-xs sm:text-sm text-[#6B6B6B] max-w-xl leading-relaxed">
-            Real-time DAG telemetry, cryptographic approval gates, and autonomous self-healing — polled{' '}
-            <span className="font-mono text-[#0A0A0A] font-semibold">{lastCheckTime}</span>.
+          <p className="text-sm text-[#555555] max-w-lg leading-relaxed">
+            Real-time DAG telemetry · AI triage · MST on-chain audit · Last polled{' '}
+            <span className="font-mono text-[#1A1A1A] font-bold">{lastCheckTime}</span>
           </p>
         </div>
 
-        {/* Action Strip */}
-        <div className="flex flex-wrap items-center gap-2 z-10">
-          {/* SRE Power View toggle */}
-          <button
-            onClick={() => setSreView((v) => !v)}
-            className={cn(
-              'h-10 px-4 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs border',
-              sreView
-                ? 'bg-[#0A0A0A] text-white border-black'
-                : 'bg-white text-[#0A0A0A] border-[#E5E5E5] hover:bg-neutral-50'
-            )}
-            aria-pressed={sreView}
-          >
-            <Terminal className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span>{sreView ? 'SRE View: On' : 'SRE Power View'}</span>
-          </button>
-
-          <button
+        {/* Action strip */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={() => autonomousWatchdog.toggleSentinel()}
             className={cn(
-              'h-10 px-4 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs border',
-              watchdogMetrics.isSentinelActive
-                ? 'bg-amber-500 text-white border-amber-600'
-                : 'bg-white text-[#0A0A0A] border-[#E5E5E5] hover:bg-neutral-50'
+              'gap-2 text-xs font-bold',
+              watchdogMetrics.isSentinelActive && 'bg-[#FEF6E7] text-[#B45309] border-[#D97706]/35'
             )}
             title="Toggle chaos injection for live evaluator demo"
           >
-            <Zap className={cn('w-3.5 h-3.5', watchdogMetrics.isSentinelActive ? 'text-white' : 'text-amber-500')} />
-            <span>{watchdogMetrics.isSentinelActive ? 'Sentinel Armed' : 'Chaos Sentinel'}</span>
-          </button>
+            <Zap className={cn('w-3.5 h-3.5', watchdogMetrics.isSentinelActive && 'text-[#D97706] animate-pulse')} />
+            {watchdogMetrics.isSentinelActive ? 'Sentinel Active' : 'Chaos Sentinel'}
+          </Button>
 
           <Link to="/observability">
-            <button className="h-10 px-4 rounded-full bg-white hover:bg-neutral-50 text-[#0A0A0A] border border-[#E5E5E5] text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs">
-              <Activity className="w-3.5 h-3.5 text-red-500" />
-              <span>Observability</span>
-            </button>
+            <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100 shadow-xs">
+              <Activity className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+              Observability & PagerDuty
+            </Button>
           </Link>
 
-          <button
+          <Link to="/architect">
+            <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-[#0047AB] border-[#0047AB]/20">
+              <Sparkles className="w-3.5 h-3.5 text-[#0047AB]" />
+              AI Architect
+            </Button>
+          </Link>
+
+          <Link to="/docs">
+            <Button variant="secondary" size="sm" className="gap-2 text-xs font-bold text-[#0047AB] border-[#0047AB]/20">
+              <Terminal className="w-3.5 h-3.5 text-[#0047AB]" />
+              MCP & Docs
+            </Button>
+          </Link>
+
+          <Button
+            variant="secondary"
+            size="sm"
             onClick={loadData}
-            className="h-10 px-4 rounded-full bg-white hover:bg-neutral-50 text-[#0A0A0A] border border-[#E5E5E5] text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
+            className="gap-2 text-xs font-bold"
             title="Poll endpoints immediately"
           >
             <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
-            <span>Refresh</span>
-          </button>
+            Refresh
+          </Button>
 
           <Link to="/recovery">
-            <button className="h-10 px-5 rounded-full bg-[#0A0A0A] hover:bg-neutral-800 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
+            <Button variant="primary" size="sm" className="gap-2 text-xs font-bold">
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Orchestrate</span>
-            </button>
+              Orchestrate
+            </Button>
           </Link>
         </div>
-
-        {/* Faint Stipple Globe Corner Motif */}
-        <div className="absolute right-0 top-0 pointer-events-none opacity-20 hidden lg:block -mr-12 -mt-10">
-          <Globe size="180px" crop="corner" />
-        </div>
       </motion.div>
 
-      {/* ── Status Bar / Precision Instrument Strip ── */}
-      <motion.div variants={itemVariants}>
-        <div className="bg-white rounded-[20px] p-4 sm:p-5 border border-[#E5E5E5] shadow-[0_1px_2px_rgba(0,0,0,0.02)] flex flex-wrap items-center justify-between gap-4">
-          {/* Nodes healthy */}
-          <div className="flex flex-col">
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold font-mono text-[#0A0A0A]">{healthyCount}</span>
-              <span className="text-xs font-mono text-[#A3A3A3]">/{totalNodes}</span>
-            </div>
-            <div className="text-[11px] font-mono text-[#6B6B6B] flex items-center gap-1 mt-0.5">
-              <CheckCircle2 className="w-3 h-3 text-[#2DD4BF]" />
-              <span>Nodes Healthy</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-8 bg-[#E5E5E5]" />
-
-          {/* MTTR */}
-          <div className="flex flex-col">
-            <div className="text-2xl font-bold font-mono text-[#0A0A0A]">
-              {watchdogMetrics.rollingMttrSeconds.toFixed(1)}s
-            </div>
-            <div className="text-[11px] font-mono text-[#6B6B6B] flex items-center gap-1 mt-0.5">
-              <TrendingDown className="w-3 h-3 text-[#2DD4BF]" />
-              <span>Rolling MTTR</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-8 bg-[#E5E5E5]" />
-
-          {/* Active Incidents */}
-          <div className="flex flex-col">
-            <div
-              className="text-2xl font-bold font-mono"
-              style={{ color: downCount > 0 ? '#EF4444' : '#0A0A0A' }}
-            >
-              {downCount}
-            </div>
-            <div className="text-[11px] font-mono text-[#6B6B6B] flex items-center gap-1 mt-0.5">
-              <AlertTriangle className={cn('w-3 h-3', downCount > 0 ? 'text-red-500' : 'text-[#A3A3A3]')} />
-              <span>Active Incidents</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-8 bg-[#E5E5E5]" />
-
-          {/* Gates Pending */}
-          <div className="flex flex-col">
-            <div className="text-2xl font-bold font-mono text-[#0A0A0A]">
-              {watchdogMetrics.isSentinelActive ? '1' : '0'}
-            </div>
-            <div className="text-[11px] font-mono text-[#6B6B6B] flex items-center gap-1 mt-0.5">
-              <ShieldCheck className="w-3 h-3 text-[#0A0A0A]" />
-              <span>Gates Pending</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-8 bg-[#E5E5E5]" />
-
-          {/* Block height */}
-          <div className="flex flex-col">
-            <div className="text-2xl font-bold font-mono text-[#0A0A0A]">
-              {blockHeight ? `#${blockHeight.toLocaleString()}` : '—'}
-            </div>
-            <div className="text-[11px] font-mono text-[#6B6B6B] mt-0.5">
-              <span>MST Block Height</span>
-            </div>
-          </div>
-
-          <div className="hidden sm:block w-px h-8 bg-[#E5E5E5]" />
-
-          {/* SLA Availability */}
-          <div className="flex flex-col items-end">
-            <div
-              className="text-2xl font-bold font-mono"
-              style={{ color: parseFloat(availPct) > 99 ? '#0A0A0A' : '#D97706' }}
-            >
-              {availPct}%
-            </div>
-            <div className="text-[11px] font-mono text-[#6B6B6B] mt-0.5">
-              <span>SLA Availability</span>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── Sarvam AI Copilot ── */}
+      {/* ── Sarvam AI Copilot Command Bar ── */}
       <motion.div variants={itemVariants}>
         <CommandBar />
       </motion.div>
 
-      {/* ── Precision Metric Instruments ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* ── KPI Metric Bento Row ── */}
+      <motion.div variants={itemVariants} className="horizon-kpi-grid grid grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricWidget
           title="Mean Time To Recovery"
           value={`${watchdogMetrics.rollingMttrSeconds.toFixed(1)}s`}
-          trend={watchdogMetrics.activeStopwatchSeconds > 0 ? `Active: ${watchdogMetrics.activeStopwatchSeconds}s` : 'Optimal SLA'}
+          trend={
+            watchdogMetrics.activeStopwatchSeconds > 0
+              ? `Active: ${watchdogMetrics.activeStopwatchSeconds}s`
+              : 'Optimal SLA'
+          }
           isPositive
-          icon={<Clock className="w-4 h-4 text-[#0A0A0A]" />}
-          subtitle={`${watchdogMetrics.totalIncidentsDiscovered} incidents resolved`}
+          icon={<Clock className="w-4 h-4 text-[#0047AB]" />}
+          subtitle={`${watchdogMetrics.totalIncidentsDiscovered} incidents auto-resolved`}
           sparkline={[22.4, 20.1, 19.5, 18.2, 16.8, watchdogMetrics.rollingMttrSeconds]}
         />
         <MetricWidget
@@ -285,7 +195,7 @@ export const DashboardPage: React.FC = () => {
           value={`${availPct}%`}
           trend={downCount === 0 ? 'All Operational' : `${downCount} Degraded`}
           isPositive={downCount === 0}
-          icon={<Activity className="w-4 h-4 text-[#0A0A0A]" />}
+          icon={<Activity className="w-4 h-4 text-[#0047AB]" />}
           subtitle="99.95% Monthly SLA"
           sparkline={[99.8, 99.9, 99.8, 99.9, parseFloat(availPct)]}
         />
@@ -293,7 +203,7 @@ export const DashboardPage: React.FC = () => {
           title="Monitored Services"
           value={totalNodes}
           badge="K8s & DB"
-          icon={<Server className="w-4 h-4 text-[#0A0A0A]" />}
+          icon={<Server className="w-4 h-4 text-[#0047AB]" />}
           subtitle="PostgreSQL · Redis · Gateways"
           sparkline={[7, 7, 7, 7, 7, 7]}
         />
@@ -302,72 +212,79 @@ export const DashboardPage: React.FC = () => {
           value={downCount}
           trend={downCount === 0 ? 'No Outages' : 'Recovery Ready'}
           isPositive={downCount === 0}
-          icon={<AlertTriangle className="w-4 h-4 text-red-500" />}
+          icon={<AlertTriangle className="w-4 h-4 text-[#DC2626]" />}
           subtitle="Continuous health probes"
           sparkline={[0, 0, 1, 0, downCount]}
         />
       </motion.div>
 
-      {/* ── Health Matrix + Activity Stream ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* ── Main Bento: Health Matrix + Activity Stream ── */}
+      <motion.div variants={itemVariants} className="horizon-health-grid grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* System health — occupies 2/3 */}
         <div className="xl:col-span-2">
           <SystemHealthOverview />
         </div>
+        {/* Activity feed — 1/3 */}
         <div className="xl:col-span-1">
           <RecentActivityWidget />
         </div>
       </motion.div>
 
-      {/* ── Incident War Room ── */}
+      {/* ── War Room Incident Feed ── */}
       <motion.div variants={itemVariants}>
         <WarRoomWidget />
       </motion.div>
 
-      {/* ── Infrastructure Integration Strip ── */}
-      <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Docker Agent */}
-        <div className="bg-white p-5 rounded-[20px] border border-[#E5E5E5] flex items-center gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
+      {/* ── Infrastructure Status Strip (Features Cobalt Blue Patch in between) ── */}
+      <motion.div variants={itemVariants} className="horizon-infra-strip grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* 1. Docker Agent / Hybrid Engine (Porcelain Card) */}
+        <div className="skeuo-card rounded-[2rem] p-5 flex items-center gap-3.5">
           <div
             className={cn(
               'p-2.5 rounded-xl border flex-shrink-0',
               dockerStatus.connected
-                ? 'bg-neutral-100 border-[#E5E5E5] text-[#0A0A0A]'
-                : 'bg-neutral-50 border-[#E5E5E5] text-[#A3A3A3]'
+                ? 'bg-[#EBF7EE] border-[#0F8E52]/25 text-[#0F8E52]'
+                : 'bg-[#EBF1FA] border-[#0047AB]/25 text-[#0047AB]'
             )}
           >
-            <Cpu className="w-5 h-5 text-[#2DD4BF]" />
+            <Cpu className="w-4 h-4" aria-label="Execution engine" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-xs font-semibold text-[#0A0A0A] truncate">
+              <span className="text-sm font-bold text-[#1A1A1A] truncate">
                 {dockerStatus.connected ? 'Docker Agent' : 'Simulation Engine'}
               </span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-100 border border-[#E5E5E5] text-[#0A0A0A]">
+              <span className={cn(
+                'flex-shrink-0 text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md',
+                dockerStatus.connected
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : 'bg-blue-100 text-blue-800'
+              )}>
                 {dockerStatus.connected ? 'LIVE' : 'SIM'}
               </span>
             </div>
-            <p className="text-[11px] text-[#6B6B6B] font-mono">
-              {dockerStatus.connected ? '5 containers on :5174' : 'Deterministic sandbox'}
+            <p className="text-[11px] text-[#666666] font-mono">
+              {dockerStatus.connected
+                ? '5 containers monitored on :5174'
+                : 'In-memory deterministic sandbox'}
             </p>
           </div>
         </div>
 
-        {/* MST Blockchain Panel */}
-        <div className="bg-white p-5 rounded-[20px] border border-[#E5E5E5] flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-neutral-100 border border-[#E5E5E5] text-[#0A0A0A] flex-shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#2DD4BF]" />
+        {/* 2. MST Blockchain (COBALT BLUE BACKGROUND PATCH IN BETWEEN) */}
+        <div className="cobalt-patch rounded-[2rem] p-5 flex items-center justify-between gap-3 text-white">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="p-2.5 rounded-xl bg-white/15 border border-white/20 text-white flex-shrink-0">
+              <ShieldCheck className="w-4 h-4" aria-label="MST Blockchain" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-semibold text-[#0A0A0A] truncate">MST Blockchain</span>
-                {sreView && (
-                  <span className="text-[10px] font-mono bg-neutral-100 text-[#0A0A0A] px-2 py-0.5 rounded-full border border-[#E5E5E5]">
-                    {blockHeight ? `#${blockHeight.toLocaleString()}` : 'Chain 91562037'}
-                  </span>
-                )}
+                <span className="text-sm font-bold text-white truncate">MST Blockchain</span>
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/20 text-white">
+                  {blockHeight ? `#${blockHeight.toLocaleString()}` : '91562037'}
+                </span>
               </div>
-              <p className="text-[11px] font-mono text-[#6B6B6B] truncate">
+              <p className="text-[11px] text-[#D0E2FF] font-mono truncate">
                 BridgeKey Active &bull; Testnet Verified
               </p>
             </div>
@@ -376,83 +293,34 @@ export const DashboardPage: React.FC = () => {
             href={MST_CONFIG.explorerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 rounded-full border border-[#E5E5E5] text-[#6B6B6B] hover:text-[#0A0A0A] hover:bg-neutral-50 transition-colors"
+            className="p-1.5 rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors flex-shrink-0"
             title="Open MST Explorer"
+            aria-label="Open MST blockchain explorer"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
+            <ExternalLink className="w-4 h-4" />
           </a>
         </div>
 
-        {/* Dependency DAG */}
-        <div className="bg-white p-5 rounded-[20px] border border-[#E5E5E5] flex items-center justify-between gap-3 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="p-2.5 rounded-xl bg-neutral-100 border border-[#E5E5E5] text-[#0A0A0A] flex-shrink-0">
-              <Network className="w-5 h-5 text-[#2DD4BF]" />
+        {/* 3. Dependency DAG (Porcelain Card) */}
+        <div className="skeuo-card rounded-[2rem] p-5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="p-2.5 rounded-xl bg-[#EBF7EE] border border-[#0F8E52]/25 text-[#0F8E52] flex-shrink-0">
+              <Network className="w-4 h-4" aria-label="Topology DAG" />
             </div>
             <div className="min-w-0">
-              <div className="text-xs font-semibold text-[#0A0A0A] mb-0.5 truncate">Dependency DAG</div>
-              <p className="text-[11px] text-[#6B6B6B] truncate">Blast radius & recovery order</p>
+              <div className="text-sm font-bold text-[#1A1A1A] mb-0.5 truncate">Dependency DAG</div>
+              <p className="text-[11px] text-[#666666] truncate">Blast radius & recovery order</p>
             </div>
           </div>
           <Link
             to="/topology"
-            className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0A0A0A] text-white text-xs font-semibold hover:bg-neutral-800 transition-colors"
+            className="flex-shrink-0 inline-flex items-center gap-1 text-xs font-bold text-[#0047AB] hover:underline"
+            aria-label="Open DAG topology view"
           >
-            <span>View</span>
-            <ArrowRight className="w-3 h-3" />
+            View <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </motion.div>
-
-      {/* ── SRE Power View: Hashes & Technical Parameters ── */}
-      {sreView && (
-        <motion.div
-          variants={itemVariants}
-          initial="hidden"
-          animate="visible"
-          className="bg-white p-6 rounded-[20px] border border-[#E5E5E5] space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
-        >
-          <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-[#2DD4BF]" />
-            <span className="text-xs font-mono font-semibold uppercase tracking-wider text-[#0A0A0A]">
-              SRE Power View — Technical Graph Detail
-            </span>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-xs">
-            {[
-              { lbl: 'DAG Algorithm',      val: "Kahn's BFS Topo Sort" },
-              { lbl: 'Complexity',         val: 'O(V + E)' },
-              { lbl: 'MST Chain ID',       val: '91562037' },
-              { lbl: 'Block Height',       val: blockHeight ? `#${blockHeight.toLocaleString()}` : '—' },
-              { lbl: 'Subscription NFT',   val: '0x3EDa…BB7' },
-              { lbl: 'Audit Vault',        val: '0x8192…4756' },
-              { lbl: 'Watchdog Cycles',    val: watchdogMetrics.totalIncidentsDiscovered.toString() },
-              { lbl: 'Sentinel Mode',      val: watchdogMetrics.isSentinelActive ? 'ARMED' : 'DISARMED' },
-            ].map(({ lbl, val }) => (
-              <div key={lbl} className="p-3 rounded-xl bg-[#FAFAF9] border border-[#E5E5E5] space-y-1">
-                <div className="text-[10px] text-[#6B6B6B] uppercase tracking-wider">{lbl}</div>
-                <div className="text-xs font-semibold text-[#0A0A0A] truncate">{val}</div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between pt-2 border-t border-[#E5E5E5]">
-            <Link
-              to="/architect"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0A0A0A] hover:underline"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#2DD4BF]" />
-              <span>Open AI Flow Architect</span>
-            </Link>
-            <Link
-              to="/docs"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#0A0A0A]"
-            >
-              <Terminal className="w-3.5 h-3.5" />
-              <span>MCP & API Docs</span>
-            </Link>
-          </div>
-        </motion.div>
-      )}
     </motion.div>
   );
 };

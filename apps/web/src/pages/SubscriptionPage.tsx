@@ -3,7 +3,6 @@ import { motion, type BezierDefinition } from 'framer-motion';
 import { Link } from 'react-router';
 import { SubscriptionPlans } from '../components/subscription/SubscriptionPlans';
 import { Card } from '../components/common/Card';
-import { Globe } from '../components/common/Globe';
 import { MST_CONFIG } from '../engine/mstBlockchain';
 import {
   Gem,
@@ -18,16 +17,16 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.06, duration: 0.25 },
+    transition: { staggerChildren: 0.08, duration: 0.3 },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.3, ease: EASE },
+    transition: { duration: 0.38, ease: EASE },
   },
 };
 
@@ -37,41 +36,36 @@ export const SubscriptionPage: React.FC = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 font-sans w-full text-[#0A0A0A] relative"
+      className="space-y-6 sm:space-y-8 font-sans w-full"
     >
       {/* Return Navigation & Badge */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6B6B6B] hover:text-[#0A0A0A] transition-colors bg-white px-3.5 py-1.5 rounded-full border border-[#E5E5E5] shadow-xs"
+          className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
         >
-          <span>&larr; Return to Overview</span>
+          <span>&larr; Return to Home</span>
         </Link>
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E5E5E5] text-[11px] font-mono text-[#0A0A0A] shadow-xs">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF] animate-pulse" />
-          <span className="font-semibold">ZXPASS Contract Verified</span>
+        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-[#0047AB] animate-pulse" />
+          <span className="text-xs font-mono text-[#0047AB] font-bold">ZXPASS Contract Verified</span>
         </div>
       </motion.div>
 
-      {/* Signature Two-Line Header */}
-      <motion.div variants={itemVariants} className="relative flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2">
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 text-[10px] font-mono font-medium text-[#0A0A0A] border border-[#E5E5E5]">
-            <Gem className="w-3.5 h-3.5 text-[#2DD4BF]" />
-            <span>ERC-721 TOKEN-GATED RESILIENCE TIERS</span>
+      {/* Header */}
+      <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+        <div>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
+              Web3 Platform Subscriptions
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
+              <Gem className="w-3.5 h-3.5 text-[#0047AB]" />
+              ERC-721 TOKEN-GATED
+            </span>
           </div>
-
-          <h1 className="tracking-tight leading-[1.02]">
-            <span className="block font-['Instrument_Serif',serif] font-normal text-[#A3A3A3] text-4xl sm:text-5xl lg:text-6xl">
-              Subscription Plans,
-            </span>
-            <span className="block font-['Instrument_Serif',serif] italic font-normal text-[#0A0A0A] text-4xl sm:text-5xl lg:text-6xl">
-              token-gated resilience tiers.
-            </span>
-          </h1>
-
-          <p className="text-xs sm:text-sm text-[#6B6B6B] max-w-xl leading-relaxed">
-            Decentralized subscription passes minted as ERC-721 smart contract tokens on MST Blockchain Testnet (Chain ID {MST_CONFIG.chainId}) with BridgeKey wallet verification.
+          <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
+            Decentralized subscription passes minted as ERC-721 smart contract tokens on MST Blockchain Testnet (Chain ID 91562037) with BridgeKey wallet verification.
           </p>
         </div>
 
@@ -79,64 +73,66 @@ export const SubscriptionPage: React.FC = () => {
           href={`${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="z-10 h-11 px-6 rounded-full bg-[#0A0A0A] text-white hover:bg-neutral-800 text-xs font-semibold inline-flex items-center gap-2 transition-all cursor-pointer shadow-sm w-fit"
+          className="skeuo-btn-primary inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold cursor-pointer w-fit"
         >
           <span>ZXPASS Contract</span>
-          <ExternalLink className="w-3.5 h-3.5" />
+          <ExternalLink className="w-4 h-4" />
         </a>
-
-        {/* Faint Stipple Globe Side-Peek Motif */}
-        <div className="absolute right-0 top-0 pointer-events-none opacity-20 hidden lg:block -mr-16 -mt-8">
-          <Globe size="200px" crop="side-peek" />
-        </div>
       </motion.div>
 
-      {/* Metric Summary Strip */}
+      {/* Bento Metric Summary Strip */}
       <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>Smart Contract</span>
-            <Gem className="w-4 h-4 text-[#0A0A0A]" />
+            <Gem className="w-4 h-4 text-[#0047AB]" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">ZXPASS</div>
-          <div className="text-[11px] text-[#6B6B6B] font-mono">ERC-721 &bull; MST Chain {MST_CONFIG.chainId}</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">ZXPASS</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">ERC-721 on MST Testnet ({MST_CONFIG.chainId})</div>
         </Card>
 
-        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>AutoLogging Rate Limits</span>
-            <ShieldCheck className="w-4 h-4 text-[#2DD4BF]" />
+            <ShieldCheck className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">5 &rarr; 20 /min</div>
-          <div className="text-[11px] text-[#2DD4BF] font-mono">Tiered: 5, 10, 15, 20 logs/min</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">5 → 20 /min</div>
+          <div className="text-[11px] text-emerald-800 font-mono font-bold">Tiered: 5, 10, 15, 20 events/min</div>
         </Card>
 
-        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
-            <span>Contract Trait Color</span>
-            <span className="w-3.5 h-3.5 rounded-full bg-[#0047AB] border border-black/10" />
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
+            <span>Design Theme Color</span>
+            <span className="w-3.5 h-3.5 rounded-full bg-[#0047AB] border border-white shadow-xs" />
           </div>
-          <div className="text-2xl font-bold font-mono text-[#0A0A0A]">#0047AB</div>
-          <div className="text-[11px] text-[#6B6B6B] font-mono">ERC-721 Metadata Trait</div>
+          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">#0047AB</div>
+          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Cobalt Blue &bull; Cream #FFF8F0</div>
         </Card>
 
-        <Card className="p-5 space-y-1 bg-white border border-[#E5E5E5] rounded-[20px] shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="flex items-center justify-between text-xs text-[#6B6B6B] font-mono uppercase tracking-wider">
+        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
+          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
             <span>NFT Canonical Image</span>
-            <Wallet className="w-4 h-4 text-[#0A0A0A]" />
+            <Wallet className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-base font-bold font-mono text-[#0A0A0A] truncate">
+          <div className="text-base sm:text-lg font-black font-mono text-[#1A1A1A] truncate">
             horizon.jpg
           </div>
-          <div className="text-[11px] text-[#6B6B6B] font-mono">IPFS / Cloudflare Pin</div>
+          <a
+            href="https://horizon-aiops.vercel.app/horizon.jpg"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[11px] text-[#0047AB] font-mono font-bold hover:underline flex items-center gap-1"
+          >
+            <span>View Image Asset</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </Card>
       </motion.div>
 
-      {/* Subscription Tier Cards */}
+      {/* Subscription Plans & Minting Engine */}
       <motion.div variants={itemVariants}>
         <SubscriptionPlans />
       </motion.div>
     </motion.div>
   );
 };
-export default SubscriptionPage;

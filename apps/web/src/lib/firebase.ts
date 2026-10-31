@@ -5,7 +5,6 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getDatabase, type Database } from 'firebase/database';
-import { getAnalytics, isSupported, type Analytics } from 'firebase/analytics';
 import { env } from '../env';
 
 const firebaseConfig = {
@@ -22,22 +21,11 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let rtdb: Database;
-let analytics: Analytics | null = null;
 
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
   auth = getAuth(app);
   rtdb = getDatabase(app);
-
-  if (typeof window !== 'undefined' && env.VITE_FIREBASE_MEASUREMENT_ID) {
-    isSupported().then((supported) => {
-      if (supported) {
-        analytics = getAnalytics(app);
-      }
-    }).catch(() => {
-      // Analytics unsupported in this environment (e.g. non-browser/test)
-    });
-  }
 } catch (error) {
   console.error('[Firebase Init Error]: Failed to initialize Firebase client with provided credentials.', error);
   throw error;
@@ -46,4 +34,3 @@ try {
 export const firebaseApp = app;
 export const firebaseAuth = auth;
 export const firebaseDatabase = rtdb;
-export const getFirebaseAnalytics = () => analytics;

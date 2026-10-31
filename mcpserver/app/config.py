@@ -89,9 +89,8 @@ class Settings(BaseModel):
         """Determines whether server environment is configured for production."""
         return self.ENVIRONMENT.lower() in ("production", "prod")
 
-
-settings = Settings()
-
-
     def get_server_port(self) -> int:
         return self.PORT
+
+
+settings = Settings()
