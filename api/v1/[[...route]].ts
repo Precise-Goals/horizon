@@ -4,6 +4,7 @@
  */
 import { Hono } from 'hono';
 import { handle } from 'hono/vercel';
+import { cors } from 'hono/cors';
 import { DependencyGraphEngine } from '../_lib/graph';
 import { getPlaybookForType } from '../_lib/playbooks';
 import type { SystemNode, Incident } from '../../packages/shared/src/index';
@@ -13,6 +14,15 @@ export const config = {
 };
 
 const app = new Hono().basePath('/api/v1');
+
+// Global CORS Middleware — Enables cross-origin requests and preflight handling
+app.use('*', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposeHeaders: ['Content-Length', 'X-Horizon-Version'],
+  maxAge: 86400,
+}));
 
 // In-memory runtime state for serverless execution / demo container
 let clusterNodes: SystemNode[] = [
@@ -159,6 +169,159 @@ app.get('/governance/status', (c) => {
     pending_approvals: pendingApprovals.length,
     dual_path_mode: 'EIP-712-enforced',
   });
+});
+
+// 8. OpenAPI Specification JSON (OpenAPI 3.0)
+app.get('/openapi.json', (c) => {
+  return c.json({
+    openapi: '3.0.0',
+    info: {
+      title: 'Horizon Serverless Edge API',
+      version: '1.0.0',
+      description: 'Autonomous Enterprise Infrastructure Recovery Platform Edge REST API with CORS support',
+      contact: {
+        name: 'Horizon SRE Operations',
+        url: 'https://horizon-aiops.vercel.app',
+      },
+    },
+    servers: [
+      { url: '/api/v1', description: 'Production Edge Gateway' },
+    ],
+    paths: {
+      '/health': {
+        get: {
+          summary: 'Health Probe',
+          description: 'Evaluates cluster health, total nodes, and active incident count.',
+          responses: { '200': { description: 'System health summary' } },
+        },
+      },
+      '/nodes': {
+        get: {
+          summary: 'List Topology Nodes',
+          description: 'Returns all microservices, databases, and dependencies in the active cluster.',
+          responses: { '200': { description: 'Array of SystemNodes' } },
+        },
+      },
+      '/graph/analysis': {
+        get: {
+          summary: 'Dependency Graph Cycle Analysis',
+          description: 'Runs Kahn and Tarjan algorithms to verify acyclic topology and cycle paths.',
+          responses: { '200': { description: 'Acyclic validation result' } },
+        },
+      },
+      '/chaos': {
+        post: {
+          summary: 'Inject Simulated Chaos / Heal Node',
+          description: 'Trips 3-miss watchdog failure or heals an infrastructure node.',
+          requestBody: {
+            required: true,
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['nodeId', 'action'],
+                  properties: {
+                    nodeId: { type: 'string', example: 'db-primary' },
+                    action: { type: 'string', enum: ['fail', 'heal'] },
+                  },
+                },
+              },
+            },
+          },
+          responses: { '200': { description: 'Incident response' }, '404': { description: 'Node not found' } },
+        },
+      },
+      '/tick': {
+        post: {
+          summary: 'Advance Autonomous Recovery Tick',
+          description: 'Executes next recovery step or pauses at EIP-712 cryptographic gate.',
+          responses: { '200': { description: 'Recovery progress' } },
+        },
+      },
+      '/incidents': {
+        get: {
+          summary: 'List Incidents',
+          description: 'Retrieves all active and historical infrastructure incidents.',
+          responses: { '200': { description: 'Array of Incident objects' } },
+        },
+      },
+      '/metrics/summary': {
+        get: {
+          summary: 'Telemetry & Metric Summary',
+          description: 'Aggregates node health, uptime percentage, and degraded services count.',
+          responses: { '200': { description: 'Cluster metric summary' } },
+        },
+      },
+      '/governance/status': {
+        get: {
+          summary: 'Web3 Governance & Blockchain Status',
+          description: 'Returns MST Testnet chain ID, EIP-712 signer configuration, and pending approval gates.',
+          responses: { '200': { description: 'Governance status' } },
+        },
+      },
+      '/docs': {
+        get: {
+          summary: 'Interactive Swagger UI Documentation',
+          description: 'Renders the Swagger UI for the Edge API.',
+          responses: { '200': { description: 'HTML document' } },
+        },
+      },
+    },
+  });
+});
+
+// 9. Interactive Swagger UI Documentation Page
+app.get('/docs', (c) => {
+  return c.html(`<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Horizon Edge REST API — Swagger UI</title>
+    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+    <style>
+      body { margin: 0; background: #FFF8F0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+      .topbar { display: none !important; }
+      .swagger-ui .info .title { color: #1A1A1A; font-weight: 800; }
+      .swagger-ui .opblock.opblock-get .opblock-summary-method { background: #0047AB; }
+      .swagger-ui .opblock.opblock-post .opblock-summary-method { background: #059669; }
+      .swagger-ui .btn.execute { background-color: #0047AB; color: #fff; border-color: #0047AB; }
+    </style>
+  </head>
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: '/api/v1/openapi.json',
+          dom_id: '#swagger-ui',
+          deepLinking: true,
+          presets: [SwaggerUIBundle.presets.apis],
+          layout: 'BaseLayout',
+        });
+      };
+    </script>
+  </body>
+</html>`);
+});
+
+// 10. Redoc API Reference
+app.get('/redoc', (c) => {
+  return c.html(`<!DOCTYPE html>
+<html>
+  <head>
+    <title>Horizon Edge API — ReDoc</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <style>body { margin: 0; padding: 0; background: #FFF8F0; }</style>
+  </head>
+  <body>
+    <redoc spec-url="/api/v1/openapi.json"></redoc>
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+  </body>
+</html>`);
 });
 
 export { app };
