@@ -89,7 +89,7 @@ export const LandingPage: React.FC = () => {
           HERO SECTION — DOMINATING CREAM WITH TACTILE DEPTH
           ============================================================ */}
       <section
-        className="horizon-hero relative  sm:pt-36 md:pt-44 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center z-10"
+        className="horizon-hero relative pt-28 sm:pt-36 md:pt-44 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center z-10"
         aria-label="Horizon Hero"
       >
         <div className="max-w-5xl mx-auto px-5 sm:px-8 space-y-7">
@@ -100,7 +100,7 @@ export const LandingPage: React.FC = () => {
             <h1 className="text-display font-black uppercase tracking-tight leading-none drop-shadow-sm select-none titlehero">
               Horizon
             </h1>
-            <p className="text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.2em] uppercase text-[#0047AB]">
+            <p className="text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-[#0047AB] px-2 break-words">
               Autonomous Infrastructure Recovery Platform
             </p>
           </motion.div>
@@ -116,13 +116,10 @@ export const LandingPage: React.FC = () => {
 
           {/* Tactile Buttons */}
           <motion.div
-          style={{
-            paddingBottom:"6%"
-          }}
             {...fadeUpProps(0.18)}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3.5 pt-2 pb-6 sm:pb-8 w-full max-w-xs sm:max-w-none mx-auto"
           >
-            <Link to="/dashboard">
+            <Link to="/dashboard" className="w-full sm:w-auto">
               <Button
                 variant="primary"
                 size="lg"
@@ -132,7 +129,7 @@ export const LandingPage: React.FC = () => {
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
-            <Link to="/topology">
+            <Link to="/topology" className="w-full sm:w-auto">
               <Button
                 variant="secondary"
                 size="lg"
@@ -156,17 +153,17 @@ export const LandingPage: React.FC = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-12 sm:mt-16"
         >
-          <div className="cobalt-patch p-6 sm:p-9 text-left">
+          <div className="cobalt-patch p-4 sm:p-9 text-left rounded-2xl sm:rounded-[2.5rem]">
             {/* Top Tactical Bezel */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pb-5 border-b border-white/15">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 sm:pb-5 border-b border-white/15">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <span className="w-2.5 h-2.5 rounded-full bg-red-400 border border-red-500 shadow-sm" />
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400 border border-amber-500 shadow-sm" />
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-emerald-500 shadow-sm" />
                 </div>
                 <div className="h-4 w-px bg-white/20" />
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#E0ECFF]">
+                <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#E0ECFF] break-words">
                   Live Autonomous Engine Preview &bull; Kahn Topo Sort
                 </span>
               </div>

@@ -102,10 +102,10 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* Spacious Skeuomorphic Porcelain Floating Dock Navbar */}
-      <header className="sticky top-4 sm:top-5 z-50 w-full px-4 sm:px-8 pointer-events-none flex justify-center">
+      <header className="sticky top-3 sm:top-5 z-50 w-full px-3 sm:px-8 pointer-events-none flex justify-center">
         <div
           ref={navRef}
-          className="pointer-events-auto w-full max-w-6xl rounded-2xl sm:rounded-full bg-white/95 backdrop-blur-2xl border border-[rgba(26,26,26,0.14)] shadow-[inset_0_1px_0_#FFFFFF,0_8px_32px_-4px_rgba(26,26,26,0.10),0_2px_8px_rgba(0,71,171,0.06)] px-5 sm:px-7 py-3 sm:py-3.5 flex items-center justify-between gap-4 transition-all"
+          className="pointer-events-auto w-full max-w-6xl rounded-2xl sm:rounded-full bg-white/95 backdrop-blur-2xl border border-[rgba(26,26,26,0.14)] shadow-[inset_0_1px_0_#FFFFFF,0_8px_32px_-4px_rgba(26,26,26,0.10),0_2px_8px_rgba(0,71,171,0.06)] px-3.5 sm:px-7 py-2.5 sm:py-3.5 flex items-center justify-between gap-2 sm:gap-4 transition-all"
         >
           {/* Brand Left: logo.png Logo */}
           <Link to="/" className="flex items-center gap-3 group shrink-0">
@@ -437,7 +437,7 @@ export const Navbar: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => toggleDropdown('account')}
-                  className="skeuo-btn-primary flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold cursor-pointer"
+                  className="skeuo-btn-primary flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-bold cursor-pointer shrink-0"
                 >
                   <UserIcon className="w-3.5 h-3.5 text-white" />
                   <span className="hidden sm:inline">Operator Access</span>
