@@ -457,3 +457,37 @@ h1.bblacnkherotit.text-3xl.sm\:text-4xl.font-black.text-\[\#1A1A1A\].tracking-ti
   background-clip: text;
   filter: brightness(0.65) contrast(2.5);
 }
+
+
+/* =====================================================================
+   DAG SVG ANIMATED DEPENDENCY FLOW
+   ===================================================================== */
+@keyframes dagFlow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes dagFlowReverse {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 24;
+  }
+}
+
+.animate-dag-flow {
+  animation: dagFlow 1.4s linear infinite;
+}
+
+.animate-dag-flow-fast {
+  animation: dagFlow 0.7s linear infinite;
+}
+
+.animate-dag-flow-reverse {
+  animation: dagFlowReverse 1.4s linear infinite;
+}
