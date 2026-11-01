@@ -516,6 +516,13 @@ export class MSTBlockchainService {
 
     const target = tierMap[tierKey] || tierMap.explorer;
 
+    // Pre-flight check: Contract 0x3EDad... only supports Tier 1 (Explorer) and Tier 2 (Guardian)
+    if (target.id > 2) {
+      throw new Error(
+        `The deployed ZentrixPass smart contract (${MST_CONFIG.subscriptionContractAddress}) on MST Testnet only accepts Tier 1 (Explorer - 5 tMSTC) and Tier 2 (Guardian - 15 tMSTC). Tier ${target.id} (${tierKey} - ${target.priceMst} tMSTC) is rejected on-chain with 'ZentrixPass: invalid tier'. Please select Explorer or Guardian to mint directly.`
+      );
+    }
+
     // Contract function: buy(uint8) -> selector 0x14107f3c + 32-byte padded uint8
     const selector = '0x14107f3c';
     const param = target.id.toString(16).padStart(64, '0');

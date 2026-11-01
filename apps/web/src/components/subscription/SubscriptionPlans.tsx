@@ -445,15 +445,20 @@ export const SubscriptionPlans: React.FC = () => {
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Transacting on MST...</span>
                       </>
-                    ) : (
+                    ) : plan.tierNumber <= 2 ? (
                       <>
                         <Wallet className="w-4 h-4" />
-                        <span>Mint Subscription NFT</span>
+                        <span>Mint Subscription NFT ({plan.mstPrice})</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>Enterprise Node ({plan.mstPrice})</span>
                       </>
                     )}
                   </Button>
                   <p className={`text-[10px] text-center mt-2 font-mono font-semibold ${isPopular ? 'text-white/70' : 'text-[#8A7B6D]'}`}>
-                    Chain ID 91562037 • Non-Custodial
+                    {plan.tierNumber <= 2 ? 'MST Testnet (91562037) • Direct Mint' : 'Tiers 1 & 2 Active on Contract 0x3EDad...'}
                   </p>
                 </div>
               </Card>
