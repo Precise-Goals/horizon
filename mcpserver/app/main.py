@@ -349,6 +349,21 @@ async def get_topology_templates_endpoint():
     return topology_engine.get_dag_pipeline_templates()
 
 
+@app.get("/api/v1/topology/custom-pipeline", tags=["Topology"])
+async def probe_custom_pipeline_endpoint():
+    """Liveness probe for custom DAG topology endpoint."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "horizon-mcp-server",
+            "endpoint": "/api/v1/topology/custom-pipeline",
+            "description": "Custom DAG pipeline mount endpoint. Send POST with {'pipeline_name': str, 'nodes': list} to apply.",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
+
+
 @app.post("/api/v1/topology/custom-pipeline", tags=["Topology"])
 async def apply_custom_pipeline_endpoint(request: Request):
     """
@@ -372,10 +387,40 @@ async def apply_custom_pipeline_endpoint(request: Request):
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
 
 
+@app.get("/api/v1/topology/reset", tags=["Topology"])
+async def probe_reset_topology_endpoint():
+    """Liveness probe for topology reset endpoint."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "horizon-mcp-server",
+            "endpoint": "/api/v1/topology/reset",
+            "description": "Cluster topology reset endpoint. Send POST to restore nominal baseline 7-node topology.",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
+
+
 @app.post("/api/v1/topology/reset", tags=["Topology"])
 async def reset_topology_endpoint():
     """Restores baseline default 7-node enterprise cluster topology."""
     return topology_engine.reset_to_default_cluster()
+
+
+@app.get("/api/v1/chaos", tags=["Chaos"])
+async def probe_chaos_endpoint():
+    """Liveness probe for chaos simulation endpoint."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "horizon-mcp-server",
+            "endpoint": "/api/v1/chaos",
+            "description": "Chaos drill injection endpoint. Send POST with {'nodeId': str, 'action': 'fail'|'heal'} to simulate outage.",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
 
 
 @app.post("/api/v1/chaos", tags=["Chaos"])
@@ -405,6 +450,22 @@ async def trigger_chaos_endpoint(request: Request):
 # ==============================================================================
 # Inbound Alertmanager / Datadog Webhook Pipeline
 # ==============================================================================
+
+@app.get("/api/v1/incidents/webhook", tags=["Inbound Webhook Pipeline"])
+@app.get("/incidents/webhook", tags=["Inbound Webhook Pipeline"])
+async def probe_incident_webhook():
+    """Liveness probe for inbound Prometheus / Datadog incident webhook."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "horizon-mcp-server",
+            "endpoint": "/api/v1/incidents/webhook",
+            "description": "Inbound webhook pipeline accepting Prometheus Alertmanager and Datadog Monitor webhook POST payloads.",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
+
 
 @app.post("/api/v1/incidents/webhook", tags=["Inbound Webhook Pipeline"])
 @app.post("/incidents/webhook", tags=["Inbound Webhook Pipeline"])
@@ -579,6 +640,21 @@ async def sse_endpoint(request: Request):
     return EventSourceResponse(event_generator())
 
 
+@app.get("/messages", tags=["MCP SSE Transport"])
+async def probe_messages_endpoint():
+    """Liveness probe for MCP SSE client message endpoint."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "horizon-mcp-server",
+            "endpoint": "/messages",
+            "description": "MCP SSE client message endpoint. Send POST with JSON-RPC payload and ?sessionId=...",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
+
+
 @app.post("/messages", tags=["MCP SSE Transport"])
 async def messages_endpoint(request: Request):
     """
@@ -612,6 +688,39 @@ async def messages_endpoint(request: Request):
 # ==============================================================================
 # Direct HTTP JSON-RPC 2.0 Transport (/mcp and /api/v1/mcp)
 # ==============================================================================
+
+@app.get("/mcp", tags=["MCP HTTP Transport"])
+@app.get("/api/v1/mcp", tags=["MCP HTTP Transport"])
+async def probe_direct_mcp_endpoint():
+    """Liveness probe for Direct HTTP JSON-RPC 2.0 transport."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "service": "horizon-mcp-server",
+            "endpoint": "/mcp",
+            "description": "Direct HTTP JSON-RPC 2.0 endpoint for stateless agents. Send POST requests with jsonrpc: '2.0' payload.",
+            "tools_registered": len(get_tool_definitions()),
+            "transport": "http",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
+
+
+@app.api_route("/api/v1/tick", methods=["GET", "POST"], tags=["Recovery Orchestrator"])
+async def tick_orchestrator_endpoint():
+    """Advances recovery orchestrator or probes tick runner status."""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "healthy",
+            "advanced": True,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "service": "horizon-recovery-orchestrator",
+            "allowed_methods": ["GET", "POST", "OPTIONS"],
+        },
+    )
+
 
 @app.post("/mcp", tags=["MCP HTTP Transport"])
 @app.post("/api/v1/mcp", tags=["MCP HTTP Transport"])

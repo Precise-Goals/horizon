@@ -102,18 +102,53 @@ export const DocsPage: React.FC = () => {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  const handleProbeLiveApi = async (path: string, liveUrl: string) => {
+  const handleProbeLiveApi = async (
+    path: string,
+    liveUrl: string,
+    method: string = 'GET',
+    payload?: string
+  ) => {
     setProbeResults((prev) => ({
       ...prev,
       [path]: { loading: true },
     }));
     const start = performance.now();
-    try {
-      const res = await fetch(liveUrl, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-      });
-      const elapsed = Math.round(performance.now() - start);
+    const isPost = method.toUpperCase() === 'POST';
+
+    // Target URL: if running in local development, prioritize active local backend for instant 200 OK
+    const isLocalhost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+    const urlsToTry = isLocalhost
+      ? [`http://localhost:10000${path}`, liveUrl]
+      : [liveUrl];
+
+    let lastError: any = null;
+    let res: Response | null = null;
+
+    for (const url of urlsToTry) {
+      try {
+        const fetchOptions: RequestInit = {
+          method: isPost ? 'POST' : 'GET',
+          headers: {
+            Accept: 'application/json, text/plain, */*',
+            ...(isPost && { 'Content-Type': 'application/json' }),
+          },
+          ...(isPost && payload ? { body: payload } : {}),
+          signal: AbortSignal.timeout(6000),
+        };
+        const probeRes = await fetch(url, fetchOptions);
+        res = probeRes;
+        break;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+
+    const elapsed = Math.round(performance.now() - start);
+
+    if (res) {
       let preview = '';
       try {
         const json = await res.json();
@@ -126,13 +161,12 @@ export const DocsPage: React.FC = () => {
         [path]: {
           loading: false,
           status: res.status,
-          statusText: res.statusText || 'OK',
+          statusText: res.statusText || (res.status === 200 ? 'OK' : 'Response Received'),
           timeMs: elapsed,
-          data: preview.slice(0, 350),
+          data: preview.slice(0, 450),
         },
       }));
-    } catch (err: any) {
-      const elapsed = Math.round(performance.now() - start);
+    } else {
       setProbeResults((prev) => ({
         ...prev,
         [path]: {
@@ -141,7 +175,8 @@ export const DocsPage: React.FC = () => {
           statusText: 'Direct Browser Access',
           timeMs: elapsed,
           error:
-            'Browser CORS security policy intercepted direct in-page fetch. Click "Check Live API" to view live response directly.',
+            lastError?.message ||
+            'Browser CORS security policy or sleeping instance intercepted direct in-page fetch. Click "Check Live API" to view live response directly.',
         },
       }));
     }
@@ -1999,7 +2034,7 @@ export const DocsPage: React.FC = () => {
 
                       {/* Interactive Inline Probe Button */}
                       <button
-                        onClick={() => handleProbeLiveApi(ep.path, ep.liveUrl)}
+                        onClick={() => handleProbeLiveApi(ep.path, ep.liveUrl, ep.method, ep.payload)}
                         disabled={probeResults[ep.path]?.loading}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-[#FAF3EA] text-[#5A4E44] hover:text-[#1A1A1A] border border-[#E5D7C5] hover:bg-[#F4EBE0] transition-all cursor-pointer shrink-0 disabled:opacity-50"
                         title="Probe live status and latency"

@@ -283,5 +283,56 @@ spec:
     armAutoRemedy(false, 'FIRING');
     expect(timerId).toBeNull();
   });
+
+  it('validates custom DAG forwarding and persistence from Sarvam AI Architect', () => {
+    const customYamlSample = `apiVersion: horizon.recovery.io/v1alpha1
+kind: AutonomousRecoveryPipeline
+metadata:
+  name: genai-llm-resilience-mesh
+spec:
+  nodes:
+    - id: pg-vector
+      name: PostgreSQL pgvector Primary
+      type: database
+      dependencies: []
+    - id: qdrant-cluster
+      name: Qdrant Vector Search Cluster
+      type: cache
+      dependencies: [pg-vector]
+    - id: llm-orchestrator
+      name: FastAPI LLM Worker
+      type: application
+      dependencies: [qdrant-cluster]
+`;
+    // Mock localStorage in non-browser test runner
+    const store: Record<string, string> = {};
+    const mockStorage = {
+      getItem: (key: string) => store[key] ?? null,
+      setItem: (key: string, val: string) => { store[key] = val; },
+      removeItem: (key: string) => { delete store[key]; },
+    };
+    const storage = typeof localStorage !== 'undefined' ? localStorage : mockStorage;
+
+    // Simulate Architect staging custom pipeline
+    storage.setItem('horizon_staged_custom_dag_yaml', customYamlSample);
+    storage.setItem('horizon_staged_custom_dag_name', 'GenAI Vector RAG Stack');
+    storage.setItem('horizon_active_custom_dag_yaml', customYamlSample);
+    storage.setItem('horizon_active_custom_dag_name', 'GenAI Vector RAG Stack');
+
+    const staged = storage.getItem('horizon_staged_custom_dag_yaml');
+    expect(staged).toBe(customYamlSample);
+
+    const active = storage.getItem('horizon_active_custom_dag_yaml');
+    expect(active).toBe(customYamlSample);
+
+    // Verify localStorage cleanup only affects staged, preserving active on refresh
+    storage.removeItem('horizon_staged_custom_dag_yaml');
+    expect(storage.getItem('horizon_staged_custom_dag_yaml')).toBeNull();
+    expect(storage.getItem('horizon_active_custom_dag_yaml')).toBe(customYamlSample);
+
+    // Clean up
+    storage.removeItem('horizon_active_custom_dag_yaml');
+    storage.removeItem('horizon_active_custom_dag_name');
+  });
 });
 

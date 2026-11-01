@@ -59,6 +59,18 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
     return <>{children}</>;
   }
 
+  // Prevent flash of login/onboarding screen while auth state is resolving
+  if (isLoading) {
+    return (
+      <div className="horizon-onboarding-loading min-h-screen w-full bg-[#FFF8F0] flex flex-col items-center justify-center p-4">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0047AB]" />
+        <span className="text-xs font-mono font-medium text-[#6E6258] mt-3">
+          Verifying security clearance...
+        </span>
+      </div>
+    );
+  }
+
   const handleGoogleSignIn = async () => {
     setLocalError(null);
     clearError();

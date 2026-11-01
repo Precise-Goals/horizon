@@ -231,3 +231,25 @@ async def test_rest_node_urgency_endpoint(async_client: AsyncClient):
     assert data["severity"] == "P1_CRITICAL"
     assert data["escalate_pager"] is True
 
+
+@pytest.mark.asyncio
+async def test_probe_endpoints_get_method_allowed(async_client: AsyncClient):
+    """Verifies that health probe GET requests on POST endpoints return 200 OK without 405 Method Not Allowed."""
+    probe_routes = [
+        "/mcp",
+        "/api/v1/mcp",
+        "/api/v1/incidents/webhook",
+        "/incidents/webhook",
+        "/api/v1/chaos",
+        "/api/v1/tick",
+        "/messages",
+        "/api/v1/topology/custom-pipeline",
+        "/api/v1/topology/reset",
+    ]
+    for route in probe_routes:
+        res = await async_client.get(route)
+        assert res.status_code == 200, f"Route {route} returned status {res.status_code} instead of 200"
+        data = res.json()
+        assert data.get("status") == "healthy", f"Route {route} did not report healthy status"
+
+

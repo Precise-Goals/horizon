@@ -224,9 +224,13 @@ export const ArchitectPage: React.FC = () => {
     try {
       localStorage.setItem("horizon_staged_custom_dag_yaml", architecture.yamlPipeline);
       localStorage.setItem("horizon_staged_custom_dag_name", architecture.architectureName);
+      localStorage.setItem("horizon_active_custom_dag_yaml", architecture.yamlPipeline);
+      localStorage.setItem("horizon_active_custom_dag_name", architecture.architectureName);
     } catch {
       // Storage fallback safe
     }
+    // Synchronously deploy to cluster state reactive store
+    clusterState.setCustomTopology(architecture.nodes, architecture.architectureName);
     navigate("/observability");
   };
 

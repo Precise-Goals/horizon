@@ -40,9 +40,17 @@ export interface AuthContextType {
 export const AuthContext = createContext<AuthContextType | null>(null);
 
 const STORAGE_KEY_WALLET = 'horizon_bridgekey_wallet';
+const STORAGE_KEY_USER = 'horizon_auth_user';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<OperatorUser | null>(null);
+  const [user, setUser] = useState<OperatorUser | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_USER);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [wallet, setWallet] = useState<WalletState | null>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_WALLET);
@@ -51,7 +59,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return null;
     }
   });
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    // If user and wallet are already restored synchronously from storage, we are not blocking
+    try {
+      const savedUser = localStorage.getItem(STORAGE_KEY_USER);
+      const savedWallet = localStorage.getItem(STORAGE_KEY_WALLET);
+      return !(savedUser && savedWallet);
+    } catch {
+      return true;
+    }
+  });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isSyncingRef = React.useRef<boolean>(false);
 
@@ -128,8 +145,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             role: 'Commander',
           };
           setUser(operator);
+      try {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(operator));
+      } catch {}
+          try {
+            localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(operator));
+          } catch {}
         } else {
           setUser(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY_USER);
+    } catch {}
+          try {
+            localStorage.removeItem(STORAGE_KEY_USER);
+          } catch {}
         }
         setIsLoading(false);
       },
@@ -216,6 +245,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: 'Commander',
       };
       setUser(operator);
+      try {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(operator));
+      } catch {}
     } catch (err: any) {
       console.error('[Firebase Login Failed]', err);
       const message = err?.message || 'Authentication failed. Please verify your credentials.';
@@ -239,6 +271,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: 'Commander',
       };
       setUser(operator);
+      try {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(operator));
+      } catch {}
     } catch (err: any) {
       console.error('[Firebase Registration Failed]', err);
       const message = err?.message || 'Registration failed. Please check password complexity.';
@@ -264,6 +299,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: 'Commander',
       };
       setUser(operator);
+      try {
+        localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(operator));
+      } catch {}
     } catch (err: any) {
       console.error('[Firebase Google Login Failed]', err);
       const message = err?.message || 'Google sign-in failed. Please check popup permissions.';
@@ -324,6 +362,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.warn('Sign out warning:', e);
     }
     setUser(null);
+    try {
+      localStorage.removeItem(STORAGE_KEY_USER);
+    } catch {}
     disconnectWallet();
     setIsLoading(false);
   };

@@ -123,6 +123,48 @@ export interface ObservabilityPageProps {
   className?: string;
 }
 
+function getSavedOrStagedPipeline(): {
+  yaml: string;
+  name: string;
+  validation: PipelineValidationResult;
+  initialProbes: ServiceProbe[];
+} | null {
+  try {
+    const stagedYaml = localStorage.getItem('horizon_staged_custom_dag_yaml');
+    const stagedName = localStorage.getItem('horizon_staged_custom_dag_name');
+    const activeYaml = localStorage.getItem('horizon_active_custom_dag_yaml');
+    const activeName = localStorage.getItem('horizon_active_custom_dag_name');
+
+    const yamlToUse = stagedYaml || activeYaml;
+    const nameToUse = stagedName || activeName || 'Custom Infrastructure Pipeline';
+
+    if (yamlToUse && yamlToUse.trim().length > 0) {
+      const spec = parseCustomDagYaml(yamlToUse);
+      const validation = validateAndCompilePipeline(spec);
+      if (validation.isValid && validation.nodes.length > 0) {
+        const initialProbes: ServiceProbe[] = validation.nodes.map((n) => ({
+          id: n.id,
+          name: n.name || n.id,
+          type: n.type,
+          status: 'healthy',
+          latencyMs: n.type === 'database' ? 4.2 : n.type === 'cache' ? 1.8 : n.type === 'gateway' ? 8.5 : 14.0,
+          errorRate: 0.0,
+          consecutiveMisses: 0,
+        }));
+        return {
+          yaml: yamlToUse,
+          name: nameToUse,
+          validation,
+          initialProbes,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('[ObservabilityPage] Error retrieving custom pipeline:', err);
+  }
+  return null;
+}
+
 export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className }) => {
   // Telemetry stream
   const [telemetryHistory, setTelemetryHistory] = useState<TelemetryPoint[]>(() => {
@@ -201,16 +243,23 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
     payload?: unknown;
   }>({ state: 'idle' });
 
-  // Service probe list synced with cluster state
-  const [services, setServices] = useState<ServiceProbe[]>([
-    { id: 'db-primary', name: 'PostgreSQL Primary', type: 'database', status: 'healthy', latencyMs: 4.2, errorRate: 0.0, consecutiveMisses: 0 },
-    { id: 'redis-cache', name: 'Redis Cache Master', type: 'cache', status: 'healthy', latencyMs: 1.8, errorRate: 0.0, consecutiveMisses: 0 },
-    { id: 'kafka-queue', name: 'Kafka Event Bus', type: 'queue', status: 'healthy', latencyMs: 6.5, errorRate: 0.0, consecutiveMisses: 0 },
-    { id: 'auth-service', name: 'OAuth2 / JWT Service', type: 'service', status: 'healthy', latencyMs: 14.1, errorRate: 0.0, consecutiveMisses: 0 },
-    { id: 'payment-worker', name: 'Payment Worker', type: 'service', status: 'healthy', latencyMs: 18.4, errorRate: 0.0, consecutiveMisses: 0 },
-    { id: 'api-gateway', name: 'Envoy API Gateway', type: 'ingress', status: 'healthy', latencyMs: 8.2, errorRate: 0.0, consecutiveMisses: 0 },
-    { id: 'web-frontend', name: 'Client Portal', type: 'frontend', status: 'healthy', latencyMs: 22.0, errorRate: 0.0, consecutiveMisses: 0 },
-  ]);
+  const initialPipeline = useMemo(() => getSavedOrStagedPipeline(), []);
+
+  // Service probe list synced with cluster state (instantly hydrated from staged/active custom DAG if available)
+  const [services, setServices] = useState<ServiceProbe[]>(() => {
+    if (initialPipeline) {
+      return initialPipeline.initialProbes;
+    }
+    return [
+      { id: 'db-primary', name: 'PostgreSQL Primary', type: 'database', status: 'healthy', latencyMs: 4.2, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'redis-cache', name: 'Redis Cache Master', type: 'cache', status: 'healthy', latencyMs: 1.8, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'kafka-queue', name: 'Kafka Event Bus', type: 'queue', status: 'healthy', latencyMs: 6.5, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'auth-service', name: 'OAuth2 / JWT Service', type: 'service', status: 'healthy', latencyMs: 14.1, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'payment-worker', name: 'Payment Worker', type: 'service', status: 'healthy', latencyMs: 18.4, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'api-gateway', name: 'Envoy API Gateway', type: 'ingress', status: 'healthy', latencyMs: 8.2, errorRate: 0.0, consecutiveMisses: 0 },
+      { id: 'web-frontend', name: 'Client Portal', type: 'frontend', status: 'healthy', latencyMs: 22.0, errorRate: 0.0, consecutiveMisses: 0 },
+    ];
+  });
 
   const servicesRef = useRef<ServiceProbe[]>(services);
   useEffect(() => {
@@ -218,25 +267,33 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   }, [services]);
 
   // Dynamic Custom DAG YAML Pipeline state
-  const [customYaml, setCustomYaml] = useState<string>(ECOMMERCE_TEMPLATE_YAML);
+  const [customYaml, setCustomYaml] = useState<string>(() => (initialPipeline ? initialPipeline.yaml : ECOMMERCE_TEMPLATE_YAML));
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('ecommerce');
-  const [isCustomPipelineActive, setIsCustomPipelineActive] = useState<boolean>(false);
-  const [activePipelineName, setActivePipelineName] = useState<string>('Default Enterprise 7-Tier Mesh');
+  const [isCustomPipelineActive, setIsCustomPipelineActive] = useState<boolean>(() => Boolean(initialPipeline));
+  const [activePipelineName, setActivePipelineName] = useState<string>(() => (initialPipeline ? initialPipeline.name : 'Default Enterprise 7-Tier Mesh'));
   const [isYamlEditorExpanded, setIsYamlEditorExpanded] = useState<boolean>(true);
   const [deployProgress, setDeployProgress] = useState<DeploymentProgress | null>(null);
   const [isDeploying, setIsDeploying] = useState<boolean>(false);
-  const [customBlastRadiusMap, setCustomBlastRadiusMap] = useState<Record<string, string[]>>({
-    'db-primary': ['redis-cache', 'auth-service', 'payment-worker'],
-    'redis-cache': ['auth-service', 'api-gateway'],
-    'kafka-queue': ['payment-worker', 'api-gateway'],
-    'auth-service': ['api-gateway', 'web-frontend'],
-    'payment-worker': ['api-gateway', 'web-frontend'],
-    'api-gateway': ['web-frontend'],
-    'web-frontend': [],
+  const [customBlastRadiusMap, setCustomBlastRadiusMap] = useState<Record<string, string[]>>(() => {
+    if (initialPipeline) {
+      return initialPipeline.validation.blastRadiusMap;
+    }
+    return {
+      'db-primary': ['redis-cache', 'auth-service', 'payment-worker'],
+      'redis-cache': ['auth-service', 'api-gateway'],
+      'kafka-queue': ['payment-worker', 'api-gateway'],
+      'auth-service': ['api-gateway', 'web-frontend'],
+      'payment-worker': ['api-gateway', 'web-frontend'],
+      'api-gateway': ['web-frontend'],
+      'web-frontend': [],
+    };
   });
 
   // Real-time validation computation for current YAML in editor
   const [pipelineValidation, setPipelineValidation] = useState<PipelineValidationResult>(() => {
+    if (initialPipeline) {
+      return initialPipeline.validation;
+    }
     try {
       const spec = parseCustomDagYaml(ECOMMERCE_TEMPLATE_YAML);
       return validateAndCompilePipeline(spec);
@@ -306,6 +363,8 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
       if (stagedYaml && stagedYaml.trim().length > 0) {
         localStorage.removeItem('horizon_staged_custom_dag_yaml');
         localStorage.removeItem('horizon_staged_custom_dag_name');
+        localStorage.setItem('horizon_active_custom_dag_yaml', stagedYaml);
+        localStorage.setItem('horizon_active_custom_dag_name', stagedName || 'Agent Synthesized Architecture');
 
         const pipelineName = stagedName || 'Agent Synthesized Architecture';
         handleYamlChange(stagedYaml);
@@ -344,11 +403,15 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
           `🚀 [AGENT DAG IMPORTED] Loaded custom architecture "${pipelineName}" from Sarvam AI Architect.`,
           `   Nodes, blast radius, and background SHA-256 checksums synchronized. Ready for live failure injection!`,
         ]);
+      } else if (initialPipeline) {
+        // Hydrate clusterState from persisted active custom pipeline
+        const systemNodes = convertCustomNodesToSystemNodes(initialPipeline.validation.nodes);
+        clusterState.setCustomTopology(systemNodes, initialPipeline.name);
       }
     } catch {
       // Storage safe
     }
-  }, []);
+  }, [initialPipeline]);
 
   // Handler for deploying custom pipeline to the live cluster with synchronous node-by-node SHA-256 verification
   const handleApplyCustomPipeline = async (forceRestart = false) => {
@@ -450,6 +513,12 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
   const handleResetToDefaultCluster = () => {
     stopAlertAudio();
     setIsAlertToastOpen(false);
+    try {
+      localStorage.removeItem('horizon_active_custom_dag_yaml');
+      localStorage.removeItem('horizon_active_custom_dag_name');
+      localStorage.removeItem('horizon_staged_custom_dag_yaml');
+      localStorage.removeItem('horizon_staged_custom_dag_name');
+    } catch {}
     clusterState.resetToDefaultTopology();
     setServices([
       { id: 'db-primary', name: 'PostgreSQL Primary', type: 'database', status: 'healthy', latencyMs: 4.2, errorRate: 0.0, consecutiveMisses: 0 },
