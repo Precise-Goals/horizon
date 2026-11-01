@@ -55,6 +55,7 @@ class McpToolResult(BaseModel):
 
 NodeType = Literal["database", "cache", "application", "gateway"]
 NodeStatus = Literal["healthy", "degraded", "down", "recovering"]
+StepRisk = Literal["low", "medium", "high"]
 
 PlaybookAction = Literal[
     "database_failover",
