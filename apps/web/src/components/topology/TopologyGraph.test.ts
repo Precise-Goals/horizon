@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'bun:test';
+import { describe, expect, it, beforeEach } from 'bun:test';
 import { TopologyGraph } from './TopologyGraph';
 import { clusterState } from '../../engine/state';
 
 describe('TopologyGraph Component & Autonomous DAG Suite', () => {
+  beforeEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
   it('exports TopologyGraph as a valid React functional component', () => {
     expect(TopologyGraph).toBeDefined();
     expect(typeof TopologyGraph).toBe('function');

@@ -1,9 +1,16 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { autonomousWatchdog } from './watchdog';
 import { notificationHub } from './notificationHub';
 import { clusterState } from './state';
 
 describe('Autonomous Watchdog & Notification Hub Suite', () => {
+  beforeEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
+
+  afterEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
   it('tracks rolling MTTR metrics and watchdog status', () => {
     const metrics = autonomousWatchdog.getMetrics();
     expect(metrics).toBeDefined();

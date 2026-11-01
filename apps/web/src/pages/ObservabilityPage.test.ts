@@ -1,10 +1,17 @@
-import { describe, it, expect, spyOn } from 'bun:test';
+import { describe, it, expect, spyOn, beforeEach, afterEach } from 'bun:test';
 import { clusterState } from '../engine/state';
 import { notificationHub } from '../engine/notificationHub';
 import { sarvamAgent } from '../engine/sarvamAgent';
 import { ObservabilityPage } from './ObservabilityPage';
 
 describe('Observability & Real-time Telemetry Pipeline Suite', () => {
+  beforeEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
+
+  afterEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
   it('exports ObservabilityPage as a valid named React functional component', () => {
     expect(ObservabilityPage).toBeDefined();
     expect(typeof ObservabilityPage).toBe('function');

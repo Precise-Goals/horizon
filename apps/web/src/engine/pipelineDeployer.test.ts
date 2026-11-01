@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'bun:test';
 import {
   SynchronousPipelineDeployer,
   type SynchronousNodeState,
@@ -33,6 +33,14 @@ describe('Synchronous Pipeline Deployer & Checksum Verifier Suite', () => {
 
   beforeEach(() => {
     deployer = new SynchronousPipelineDeployer();
+    clusterState.resetToDefaultTopology();
+  });
+
+  afterEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
+
+  afterAll(() => {
     clusterState.resetToDefaultTopology();
   });
 

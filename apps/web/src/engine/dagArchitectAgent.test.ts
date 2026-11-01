@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
 import { dagArchitectAgent } from './dagArchitectAgent';
 import { clusterState } from './state';
 
 describe('DagArchitectAgent Engine Suite', () => {
+  beforeEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
+
+  afterEach(() => {
+    clusterState.resetToDefaultTopology();
+  });
   it('synthesizes e-commerce microservices flow into valid acyclic DAG and tiers', () => {
     const prompt = 'We run an e-commerce platform with MySQL master, Redis cache, Auth worker, Stripe payment service, Order API, Envoy Gateway, and Next.js frontend.';
     const result = dagArchitectAgent.synthesizeArchitecture(prompt);
