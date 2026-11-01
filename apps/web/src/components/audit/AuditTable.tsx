@@ -3,6 +3,7 @@ import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
 import { fetchAuditLogs } from '../../lib/api';
+import { MST_CONFIG } from '../../engine/mstBlockchain';
 import type { AuditLogEntry } from '../../types';
 import {
   Search,
@@ -10,6 +11,7 @@ import {
   CheckCircle,
   Filter,
   RefreshCw,
+  ExternalLink,
 } from 'lucide-react';
 
 export const AuditTable: React.FC = () => {
@@ -153,10 +155,17 @@ export const AuditTable: React.FC = () => {
                       </Badge>
                     </td>
                     <td className="p-3.5 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[10px] text-[#0047AB] font-bold shadow-xs">
+                      <a
+                        href={`${MST_CONFIG.explorerUrl}/address/${MST_CONFIG.auditVaultContractAddress}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[10px] text-[#0047AB] font-bold hover:bg-blue-100 hover:border-[#0047AB] transition-colors shadow-xs"
+                        title={`Verify on MSTScan: ${MST_CONFIG.auditVaultContractAddress}`}
+                      >
                         <CheckCircle className="w-3 h-3 text-emerald-600" />
                         <span>0x{log.id.slice(0, 6)}...{log.id.slice(-4)}</span>
-                      </span>
+                        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                      </a>
                     </td>
                   </tr>
                 );
@@ -166,9 +175,21 @@ export const AuditTable: React.FC = () => {
         </table>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-[#EADCC9] flex items-center justify-between text-xs text-[#6E6258] font-medium">
+      <div className="mt-4 pt-3 border-t border-[#EADCC9] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#6E6258] font-medium">
         <span>Displaying {filteredLogs.length} verified incident transitions</span>
-        <span className="font-mono text-[10px] text-[#8A7B6D] font-bold">Smart Contract: HorizonAuditVault.sol</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="font-mono text-[11px] text-[#6E6258] font-bold">Smart Contract:</span>
+          <a
+            href={`${MST_CONFIG.explorerUrl}/address/${MST_CONFIG.auditVaultContractAddress}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[11px] text-[#0047AB] hover:underline font-bold inline-flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded border border-blue-200"
+            title="View HorizonAuditVault on MSTScan"
+          >
+            <span>HorizonAuditVault.sol ({MST_CONFIG.auditVaultContractAddress.slice(0, 6)}...{MST_CONFIG.auditVaultContractAddress.slice(-4)})</span>
+            <ExternalLink className="w-3 h-3" />
+          </a>
+        </div>
       </div>
     </Card>
   );
