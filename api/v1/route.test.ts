@@ -87,4 +87,47 @@ describe('Serverless API Route Functions (api/v1)', () => {
     expect(body.chain_id).toBe(91562037);
     expect(body.dual_path_mode).toBe('EIP-712-enforced');
   });
+
+  it('GET /api/v1/docs returns interactive Swagger UI documentation with HTTP 200', async () => {
+    const res = await app.request('/api/v1/docs');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/html');
+    const html = await res.text();
+    expect(html).toContain('swagger-ui');
+    expect(html).toContain('/api/v1/openapi.json');
+  });
+
+  it('GET /api/v1/openapi.json returns valid OpenAPI 3.0 specification', async () => {
+    const res = await app.request('/api/v1/openapi.json');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('application/json');
+    const schema = await res.json();
+    expect(schema.openapi).toBe('3.0.0');
+    expect(schema.info.title).toContain('Horizon');
+    expect(schema.paths['/health']).toBeDefined();
+    expect(schema.paths['/chaos']).toBeDefined();
+  });
+
+  it('verifies CORS headers and OPTIONS preflight on Edge API', async () => {
+    // 1. GET with Origin
+    const getRes = await app.request('/api/v1/health', {
+      headers: { Origin: 'https://horizon-aiops.vercel.app' },
+    });
+    expect(getRes.status).toBe(200);
+    expect(getRes.headers.get('access-control-allow-origin')).toBe('*');
+
+    // 2. OPTIONS Preflight
+    const optionsRes = await app.request('/api/v1/chaos', {
+      method: 'OPTIONS',
+      headers: {
+        Origin: 'https://horizon-aiops.vercel.app',
+        'Access-Control-Request-Method': 'POST',
+        'Access-Control-Request-Headers': 'Content-Type, Authorization',
+      },
+    });
+    expect(optionsRes.status).toBe(204);
+    expect(optionsRes.headers.get('access-control-allow-origin')).toBe('*');
+    expect(optionsRes.headers.get('access-control-allow-methods')).toContain('POST');
+    expect(optionsRes.headers.get('access-control-allow-headers')).toContain('Content-Type');
+  });
 });

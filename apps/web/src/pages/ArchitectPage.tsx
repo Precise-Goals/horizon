@@ -768,7 +768,12 @@ export const ArchitectPage: React.FC = () => {
 
                                 {/* 1-Click Simulate in Observability Hub */}
                                 <button
-                                  onClick={() => handleImportToObservability(decoded)}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleImportToObservability(decoded);
+                                  }}
                                   className="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 bg-[#FFF8F0] hover:bg-[#F5ECE0] text-[#1A1A1A] border border-[#D5C7B5] hover:border-[#1A1A1A] shadow-[0_2px_6px_rgba(26,26,26,0.06)]"
                                   title="Import DAG directly into Observability Hub to simulate failure & blast radius"
                                 >

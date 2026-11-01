@@ -51,6 +51,9 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState<Point>({ x: 0, y: 0 });
   const [positions, setPositions] = useState<Record<string, Point>>({});
+  const positionsRef = useRef<Record<string, Point>>(positions);
+  positionsRef.current = positions;
+
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Interactive interaction states
@@ -91,7 +94,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
    * and centers & scales them with generous padding so 100% of the DAG is visible.
    */
   const fitToView = useCallback((customPositions?: Record<string, Point>) => {
-    const activePositions = customPositions || positions;
+    const activePositions = customPositions || positionsRef.current;
     const nodeIds = architecture.nodes.map((n) => n.id);
     const validPositions = nodeIds
       .map((id) => activePositions[id])
@@ -139,7 +142,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
 
     setZoom(optimalZoom);
     setPan({ x: targetPanX, y: targetPanY });
-  }, [architecture.nodes, positions, isFullscreen]);
+  }, [architecture.nodes, isFullscreen]);
 
   /**
    * Initial spacious hierarchical tree layout calculation.
@@ -148,7 +151,6 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
   const computeInitialTreeLayout = useCallback(() => {
     const newPositions: Record<string, Point> = {};
     const levels = architecture.topologicalLevels.slice().reverse(); // Reverse so Ingress is at top
-    const totalLevels = levels.length;
 
     // Spacing constants
     const levelHeight = 160;
@@ -167,6 +169,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
       });
     });
 
+    positionsRef.current = newPositions;
     setPositions(newPositions);
 
     // Automatically fit graph to view once positions are populated
@@ -289,29 +292,37 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
     };
   }, [draggingNodeId, isPanning, zoom]);
 
-  // Smooth Interactive Mousewheel Zoom anchored to cursor position
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // Native Non-Passive Mousewheel Zoom listener to prevent passive event listener warnings
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
 
-    if (!containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const cursorX = e.clientX - rect.left;
-    const cursorY = e.clientY - rect.top;
+    const handleNativeWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
-    const nextZoom = Math.min(2.2, Math.max(0.3, zoom * zoomFactor));
+      const rect = el.getBoundingClientRect();
+      const cursorX = e.clientX - rect.left;
+      const cursorY = e.clientY - rect.top;
 
-    // Anchor canvas coordinates under cursor
-    const canvasX = (cursorX - pan.x) / zoom;
-    const canvasY = (cursorY - pan.y) / zoom;
+      const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+      setZoom((prevZoom) => {
+        const nextZoom = Math.min(2.2, Math.max(0.3, prevZoom * zoomFactor));
+        setPan((prevPan) => {
+          const canvasX = (cursorX - prevPan.x) / prevZoom;
+          const canvasY = (cursorY - prevPan.y) / prevZoom;
+          return {
+            x: cursorX - canvasX * nextZoom,
+            y: cursorY - canvasY * nextZoom,
+          };
+        });
+        return nextZoom;
+      });
+    };
 
-    const nextPanX = cursorX - canvasX * nextZoom;
-    const nextPanY = cursorY - canvasY * nextZoom;
-
-    setZoom(nextZoom);
-    setPan({ x: nextPanX, y: nextPanY });
-  };
+    el.addEventListener('wheel', handleNativeWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleNativeWheel);
+  }, []);
 
   const handleStepZoom = (delta: number) => {
     if (!containerRef.current) return;
@@ -344,7 +355,6 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
         className
       )}
       onMouseDown={handleMouseDownCanvas}
-      onWheel={handleWheel}
       onClick={() => onSelectNode(null)}
     >
       {/* ── Miro Toolbar & Controls Bar ── */}
