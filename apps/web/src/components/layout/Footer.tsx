@@ -57,7 +57,7 @@ export const Footer: React.FC = () => {
           <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8 sm:gap-10">
             {/* Column 1: Core Platform */}
             <div className="space-y-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+              <span className="text-xs font-mono tracking-wider text-zinc-400 font-bold block">
                 Platform
               </span>
               <ul className="space-y-2.5 text-sm">
@@ -111,7 +111,7 @@ export const Footer: React.FC = () => {
 
             {/* Column 2: Developer & AI */}
             <div className="space-y-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+              <span className="text-xs font-mono tracking-wider text-zinc-400 font-bold block">
                 Developer & MCP
               </span>
               <ul className="space-y-2.5 text-sm">
@@ -158,7 +158,7 @@ export const Footer: React.FC = () => {
 
             {/* Column 3: Governance & Web3 */}
             <div className="space-y-4">
-              <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold block">
+              <span className="text-xs font-mono tracking-wider text-zinc-400 font-bold block">
                 Governance & Web3
               </span>
               <ul className="space-y-2.5 text-sm">

@@ -62,7 +62,7 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
                   )}
                 />
               </div>
-              <h4 className="text-xs sm:text-sm font-black text-[#1A1A1A] uppercase tracking-wider flex items-center gap-1.5">
+              <h4 className="text-xs sm:text-sm font-black text-[#1A1A1A] tracking-wider flex items-center gap-1.5">
                 <Flame className={cn('w-4 h-4', isResolved ? 'text-emerald-600' : 'text-red-600 animate-pulse')} />
                 <span>{isResolved ? 'Failure Resolved' : 'Alert: Node Failure'}</span>
               </h4>
@@ -116,7 +116,7 @@ export const AlertSoundToast: React.FC<AlertSoundToastProps> = ({
               {isSounding ? (
                 <button
                   onClick={onStopAlert}
-                  className="w-full py-2.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 active:translate-x-0.5 active:translate-y-0.5 border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl font-black text-xs tracking-wider text-white bg-red-600 hover:bg-red-700 active:translate-x-0.5 active:translate-y-0.5 border-2 border-[#1A1A1A] shadow-[3px_3px_0px_#1A1A1A] transition-all flex items-center justify-center gap-2 cursor-pointer"
                   title="Stop the alert sound tune immediately"
                 >
                   <VolumeX className="w-4 h-4" />

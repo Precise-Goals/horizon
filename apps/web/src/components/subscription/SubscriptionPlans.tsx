@@ -403,7 +403,7 @@ export const SubscriptionPlans: React.FC = () => {
                   </div>
 
                   <div className="space-y-3 mb-5">
-                    <span className={`text-xs font-bold uppercase tracking-wider block ${isPopular ? 'text-white/70' : 'text-[#8A7B6D]'}`}>
+                    <span className={`text-xs font-bold tracking-wider block ${isPopular ? 'text-white/70' : 'text-[#8A7B6D]'}`}>
                       Plan Capabilities
                     </span>
                     <ul className="space-y-2.5">
@@ -497,19 +497,19 @@ export const SubscriptionPlans: React.FC = () => {
               {/* Trait Summary Pills */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
                 <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Rate Limit</span>
+                  <span className="text-[10px] text-[#8A7B6D] block">Rate Limit</span>
                   <span className="text-sm font-black text-[#0047AB]">{inspectedPlan.autologgingRateLimit} / min</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Theme Color</span>
+                  <span className="text-[10px] text-[#8A7B6D] block">Theme Color</span>
                   <span className="text-sm font-black text-[#0047AB]">#0047AB</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Tier Level</span>
+                  <span className="text-[10px] text-[#8A7B6D] block">Tier Level</span>
                   <span className="text-sm font-black text-[#1A1A1A]">{inspectedPlan.tierNumber} / 4</span>
                 </div>
                 <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] uppercase block">Standard</span>
+                  <span className="text-[10px] text-[#8A7B6D] block">Standard</span>
                   <span className="text-sm font-black text-emerald-800">ERC-721</span>
                 </div>
               </div>

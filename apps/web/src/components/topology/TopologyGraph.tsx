@@ -455,7 +455,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3.5 pb-1 text-xs relative z-10">
             {/* Filter pills with primary node auto-selection */}
             <div className="flex items-center gap-1.5 text-xs">
-              <span className="text-[10px] font-mono tracking-wider text-[#8A7B6D] font-bold uppercase mr-1">
+              <span className="text-[10px] font-mono tracking-wider text-[#8A7B6D] font-bold mr-1">
                 Filter:
               </span>
               {[
@@ -475,7 +475,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                     }
                   }}
                   className={cn(
-                    'px-2.5 py-1 rounded-lg font-mono text-[10px] tracking-wider font-bold uppercase transition-colors cursor-pointer',
+                    'px-2.5 py-1 rounded-lg font-mono text-[10px] tracking-wider font-bold transition-colors cursor-pointer',
                     filter === f.id
                       ? 'bg-[#0047AB] text-white shadow-xs'
                       : 'bg-white border border-[#E5D7C5] text-[#6E6258] hover:bg-[#FAF3EA]'
@@ -496,7 +496,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 <button
                   type="button"
                   onClick={handleRestoreAll}
-                  className="ml-1 underline hover:text-red-900 cursor-pointer font-mono text-[10px] uppercase font-bold"
+                  className="ml-1 underline hover:text-red-900 cursor-pointer font-mono text-[10px] font-bold"
                 >
                   Heal All
                 </button>
@@ -535,8 +535,8 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-wider text-[9px] font-black border border-[#0047AB]/20">
                         L3
                       </span>
-                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase group-hover:text-[#0047AB]">
-                        INGRESS
+                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] group-hover:text-[#0047AB]">
+                        Ingress
                       </span>
                     </div>
                     <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
@@ -563,8 +563,8 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       <span className="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono tracking-wider text-[9px] font-black border border-indigo-200">
                         L2
                       </span>
-                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase group-hover:text-indigo-700">
-                        GATEWAY
+                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] group-hover:text-indigo-700">
+                        Gateway
                       </span>
                     </div>
                     <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
@@ -591,8 +591,8 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 font-mono tracking-wider text-[9px] font-black border border-emerald-200">
                         L1
                       </span>
-                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] uppercase group-hover:text-emerald-800">
-                        CORE
+                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#1A1A1A] group-hover:text-emerald-800">
+                        Core
                       </span>
                     </div>
                     <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
@@ -619,8 +619,8 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       <span className="px-1.5 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-mono tracking-wider text-[9px] font-black border border-[#0047AB]/25">
                         L0
                       </span>
-                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#0047AB] uppercase group-hover:underline">
-                        DATA
+                      <span className="font-mono tracking-wider text-[10px] font-bold text-[#0047AB] group-hover:underline">
+                        Data
                       </span>
                     </div>
                     <span className="font-mono text-[9px] text-[#8A7B6D] tracking-wide mt-1 pl-0.5">
@@ -817,7 +817,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
 
                           {/* Mode Tag / Sequence Pill */}
                           <div className="flex items-center justify-between gap-1 mb-1.5">
-                            <span className="text-[9px] font-mono tracking-widest font-black px-1.5 py-0.5 rounded bg-[#F4EBE0] border border-[#E0D0BE] text-[#5A4E44] uppercase">
+                            <span className="text-[9px] font-mono tracking-widest font-black px-1.5 py-0.5 rounded bg-[#F4EBE0] border border-[#E0D0BE] text-[#5A4E44] ">
                               {viewMode === 'recovery' ? `STEP ${meta.recoveryStep}` : meta.tierLabel}
                             </span>
 
@@ -853,7 +853,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                               <div className="text-xs font-black text-[#1A1A1A] truncate leading-tight">
                                 {meta.name}
                               </div>
-                              <div className="text-[10px] text-[#6E6258] font-mono tracking-wider uppercase font-bold truncate">
+                              <div className="text-[10px] text-[#6E6258] font-mono tracking-wider font-bold truncate">
                                 {meta.port} &bull; {meta.latency}
                               </div>
                             </div>
@@ -872,10 +872,10 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                 {/* 1. Target Service Overview */}
                 <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5]">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[9px] text-[#8A7B6D] uppercase font-mono tracking-wider font-bold">
+                    <span className="text-[9px] text-[#8A7B6D] font-mono tracking-wider font-bold">
                       TARGET SERVICE
                     </span>
-                    <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 uppercase">
+                    <span className="text-[9px] font-mono tracking-widest px-2 py-0.5 rounded bg-[#0047AB]/10 text-[#0047AB] font-black border border-[#0047AB]/20 ">
                       {selectedNodeMeta.tierLabel} &bull; {selectedNodeMeta.tierName}
                     </span>
                   </div>
@@ -902,13 +902,13 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
 
                   <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t border-[#E5D7C5]/60 text-xs font-mono">
                     <div className="p-1.5 rounded-lg bg-white/80 border border-[#D9C8B5]">
-                      <span className="text-[8px] text-[#8A7B6D] block tracking-wider uppercase font-bold">PORT / PROTOCOL</span>
+                      <span className="text-[8px] text-[#8A7B6D] block tracking-wider font-bold">Port / Protocol</span>
                       <span className="font-bold text-[#1A1A1A] text-[9.5px] truncate block">
                         {selectedNodeMeta.port} ({selectedNodeMeta.protocol})
                       </span>
                     </div>
                     <div className="p-1.5 rounded-lg bg-white/80 border border-[#D9C8B5]">
-                      <span className="text-[8px] text-[#8A7B6D] block tracking-wider uppercase font-bold">TELEMETRY P99</span>
+                      <span className="text-[8px] text-[#8A7B6D] block tracking-wider font-bold">Telemetry P99</span>
                       <span className="font-bold text-[#0047AB] text-[9.5px] block">
                         {selectedNodeMeta.latency}
                       </span>
@@ -923,7 +923,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       <Radio className="w-3.5 h-3.5 text-[#0047AB]" />
                       <span>Upstream Prerequisites</span>
                     </span>
-                    <span className="text-[9px] font-mono tracking-wider font-bold text-[#6E6258] uppercase">
+                    <span className="text-[9px] font-mono tracking-wider font-bold text-[#6E6258] ">
                       {upstreamDependencies.length} REQUIRED
                     </span>
                   </div>
@@ -966,7 +966,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                       <Flame className="w-3.5 h-3.5 text-amber-300" />
                       <span>Cascaded Blast Radius</span>
                     </span>
-                    <span className="text-[9px] font-mono tracking-wider font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30 uppercase">
+                    <span className="text-[9px] font-mono tracking-wider font-bold px-1.5 py-0.5 rounded-full bg-white/20 text-white border border-white/30 ">
                       {blastRadius.length} DOWNSTREAM
                     </span>
                   </div>
@@ -994,7 +994,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
                               <span className="text-white font-semibold truncate mr-1">
                                 {depMeta ? depMeta.name : depId}
                               </span>
-                              <span className="text-[8px] font-mono tracking-wider text-amber-300 font-bold px-1 py-0.2 rounded bg-amber-500/20 border border-amber-400/30 uppercase shrink-0">
+                              <span className="text-[8px] font-mono tracking-wider text-amber-300 font-bold px-1 py-0.2 rounded bg-amber-500/20 border border-amber-400/30 shrink-0">
                                 {isSelectedDown ? 'IMPAIRED' : 'AT RISK'}
                               </span>
                             </div>
@@ -1050,7 +1050,7 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
 
         {/* Legend Footer */}
         <div className="mt-4 pt-3 border-t border-[#EADCC9] flex flex-wrap items-center justify-between text-xs text-[#6E6258] relative z-10 gap-3">
-          <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tracking-wider uppercase">
+          <div className="flex flex-wrap items-center gap-3 font-mono text-[11px] tracking-wider ">
             <span className="flex items-center gap-1.5 font-bold">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" /> Healthy
             </span>
@@ -1066,13 +1066,13 @@ export const TopologyGraph: React.FC<TopologyGraphProps> = ({ className = '' }) 
           </div>
 
           <div className="flex items-center gap-2.5">
-            <span className="font-mono text-[10px] tracking-wider text-[#8A7B6D] font-bold uppercase hidden sm:inline">
+            <span className="font-mono text-[10px] tracking-wider text-[#8A7B6D] font-bold hidden sm:inline">
               Select any tier or node to inspect blast radius & playbook &rarr;
             </span>
             <button
               type="button"
               onClick={() => setIsInspectorOpen((prev) => !prev)}
-              className="px-2.5 py-1 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5] hover:border-[#0047AB]/40 text-[#1A1A1A] font-mono text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-2.5 py-1 rounded-lg bg-[#FAF3EA] border border-[#E5D7C5] hover:border-[#0047AB]/40 text-[#1A1A1A] font-mono text-[10px] font-bold tracking-wider transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <SlidersHorizontal className="w-3 h-3 text-[#0047AB]" />
               <span>{isInspectorOpen ? 'Hide Inspector' : 'Show Inspector'}</span>

@@ -152,7 +152,7 @@ export const RecoveryTimeline: React.FC = () => {
         {/* Dynamic Node Failure Selector Strip */}
         <div className="py-4 border-b border-[#EADCC9] flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono text-[#8A7B6D] uppercase font-bold">Test Any Node:</span>
+            <span className="text-[11px] font-mono text-[#8A7B6D] font-bold">Test Any Node:</span>
             <div className="flex flex-wrap gap-1.5">
               {nodes.slice(0, 6).map((node) => (
                 <button
@@ -236,7 +236,7 @@ export const RecoveryTimeline: React.FC = () => {
                         {step.service}
                       </span>
                       <span
-                        className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded ${
+                        className={`text-[10px] font-mono font-bold  px-2 py-0.5 rounded ${
                           isDone
                             ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                             : isWaiting

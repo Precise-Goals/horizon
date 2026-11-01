@@ -120,7 +120,7 @@ export const CommandBar: React.FC = () => {
 
       {/* Suggested Quick Prompts */}
       <div className="flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-[#EADCC9]">
-        <span className="text-[10px] font-mono font-bold text-[#8A7B6D] uppercase">Quick Prompts:</span>
+        <span className="text-[10px] font-mono font-bold text-[#8A7B6D] ">Quick Prompts:</span>
         {quickPrompts.map((qp, i) => (
           <button
             key={i}
@@ -153,7 +153,7 @@ export const CommandBar: React.FC = () => {
                   <Bot className="w-4 h-4" />
                   Sarvam AI Agent Reasoning
                 </span>
-                <span className="font-mono text-[10px] font-bold text-[#403830] uppercase px-2 py-0.5 rounded bg-white/80 border border-[#D9C8B5]">
+                <span className="font-mono text-[10px] font-bold text-[#403830] px-2 py-0.5 rounded bg-white/80 border border-[#D9C8B5]">
                   Action: {result.actionType}
                 </span>
               </div>

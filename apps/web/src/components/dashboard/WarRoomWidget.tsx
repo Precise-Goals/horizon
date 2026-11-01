@@ -164,7 +164,7 @@ export const WarRoomWidget: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {msg.badge && (
-                    <span className="font-mono text-[9px] uppercase px-1.5 py-0.2 rounded bg-[#FEF6E7] text-[#B45309] border border-[#D97706]/20 font-bold">
+                    <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-[#FEF6E7] text-[#B45309] border border-[#D97706]/20 font-bold">
                       {msg.badge}
                     </span>
                   )}

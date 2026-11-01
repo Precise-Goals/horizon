@@ -474,7 +474,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
               <span className="text-xs font-bold text-[#1A1A1A] truncate">
                 {blastInfo.selectedNode.name}
               </span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF3EA] text-[#6E6258] uppercase font-bold">
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FAF3EA] text-[#6E6258] font-bold">
                 {blastInfo.selectedNode.type}
               </span>
             </div>
@@ -489,7 +489,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
 
           <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
             <div className="p-2 rounded-xl bg-emerald-50 border border-emerald-200">
-              <span className="text-[9px] uppercase font-bold text-emerald-800 block">
+              <span className="text-[9px] font-bold text-emerald-800 block">
                 Upstream Deps
               </span>
               <span className="text-emerald-950 font-bold">
@@ -498,7 +498,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
             </div>
 
             <div className="p-2 rounded-xl bg-rose-50 border border-rose-200">
-              <span className="text-[9px] uppercase font-bold text-rose-800 block">
+              <span className="text-[9px] font-bold text-rose-800 block">
                 Blast Radius
               </span>
               <span className="text-rose-950 font-bold">
@@ -673,7 +673,7 @@ export const MiroDagCanvas: React.FC<MiroDagCanvasProps> = ({
                     <span className="text-xs font-bold text-[#1A1A1A] block truncate leading-tight">
                       {node.name}
                     </span>
-                    <span className="text-[9px] font-mono text-[#8A7B6D] uppercase block truncate">
+                    <span className="text-[9px] font-mono text-[#8A7B6D] block truncate">
                       {node.type}
                     </span>
                   </div>

@@ -104,7 +104,7 @@ export const RecentActivityWidget: React.FC = () => {
                       </div>
                       <span
                         className={cn(
-                          'text-[10px] font-mono px-2 py-0.5 rounded-full uppercase font-bold shrink-0 border',
+                          'text-[10px] font-mono px-2 py-0.5 rounded-full font-bold shrink-0 border',
                           isCrit
                             ? 'bg-[#FDF2F2] text-[#B91C1C] border-[#DC2626]/30'
                             : isWarn
@@ -121,7 +121,7 @@ export const RecentActivityWidget: React.FC = () => {
                     </p>
 
                     <div className="flex items-center justify-between text-xs text-[#777777] pt-1.5 border-t border-[rgba(26,26,26,0.06)]">
-                      <span className="font-mono text-xs uppercase tracking-wider text-[#1A1A1A] font-bold">
+                      <span className="font-mono text-xs tracking-wider text-[#1A1A1A] font-bold">
                         {log.actor}
                       </span>
                       <span className="flex items-center gap-1 font-mono text-xs">

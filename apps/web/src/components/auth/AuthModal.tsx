@@ -88,7 +88,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         <div className="relative flex items-center my-3">
           <div className="flex-grow border-t border-white/[0.08]" />
-          <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#6E7A94] uppercase tracking-wider">
+          <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#6E7A94] tracking-wider">
             Or Continue With
           </span>
           <div className="flex-grow border-t border-white/[0.08]" />

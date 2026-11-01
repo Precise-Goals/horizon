@@ -590,7 +590,7 @@ export const ArchitectPage: React.FC = () => {
                     <span>&bull;</span>
                     <span>{msg.timestamp}</span>
                     {msg.mode && (
-                      <span className="text-[9px] px-2 py-0.5 rounded-full font-mono uppercase bg-[#FAF3EA] text-[#6E6258] border border-[#E5D7C5]">
+                      <span className="text-[9px] px-2 py-0.5 rounded-full font-mono bg-[#FAF3EA] text-[#6E6258] border border-[#E5D7C5]">
                         {msg.mode}
                       </span>
                     )}

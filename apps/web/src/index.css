@@ -12,20 +12,15 @@
 
 
 /* =====================================================================
-   GEIST & SPACE GROTESK AI ENGINEERING TYPOGRAPHY STACK
+   MONTSERRAT TYPOGRAPHY STACK (Consistent Neo-Brutal & Sans Heading)
    ===================================================================== */
-@import "@fontsource/geist-sans/300.css";
-@import "@fontsource/geist-sans/400.css";
-@import "@fontsource/geist-sans/500.css";
-@import "@fontsource/geist-sans/600.css";
-@import "@fontsource/geist-sans/700.css";
-@import "@fontsource/geist-sans/800.css";
-@import "@fontsource/geist-sans/900.css";
-
-@import "@fontsource/space-grotesk/400.css";
-@import "@fontsource/space-grotesk/500.css";
-@import "@fontsource/space-grotesk/600.css";
-@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/montserrat/300.css";
+@import "@fontsource/montserrat/400.css";
+@import "@fontsource/montserrat/500.css";
+@import "@fontsource/montserrat/600.css";
+@import "@fontsource/montserrat/700.css";
+@import "@fontsource/montserrat/800.css";
+@import "@fontsource/montserrat/900.css";
 
 @plugin "daisyui";
 
@@ -63,9 +58,11 @@
   --font-sans:
     "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-heading:
-    "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-geist: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-tech: "Space Grotesk", "Geist", -apple-system, sans-serif;
+    "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-montserrat: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-poppins: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-geist: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-tech: "Montserrat", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
 
   --color-background: var(--background);
@@ -162,7 +159,7 @@
   h5,
   h6 {
     font-family:
-      "Poppins",
+      "Montserrat",
       -apple-system,
       BlinkMacSystemFont,
       "Segoe UI",
@@ -393,7 +390,6 @@
   font-weight: 700;
   font-family: "JetBrains Mono", ui-monospace, Consolas, monospace;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
   border: 1px solid rgba(26, 26, 26, 0.12);
   background: #f4ebe0;
   color: #1a1a1a;
@@ -430,7 +426,6 @@
   font-size: 0.6875rem;
   font-weight: 750;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: #555555;
 }
 
@@ -515,20 +510,34 @@ h1.bblacnkherotit.text-3xl.sm\:text-4xl.font-black.text-\[\#1A1A1A\].tracking-ti
 }
 
 /* =====================================================================
-   GEIST & SPACE GROTESK AI ENGINEERING TYPOGRAPHY RULES
+   MONTSERRAT & POPPINS CONSISTENT TYPOGRAPHY RULES
    ===================================================================== */
+.font-montserrat {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+.font-poppins {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* Compatibility aliases */
 .font-geist {
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
 
 .font-tech {
-  font-family: 'Space Grotesk', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
-/* Scoped Modern AI Tech Typography for Docs and Sub-pages */
+.font-silvana {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+/* Scoped Typography for Docs and Sub-pages */
 .docs-page-container,
-.tech-scope {
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+.tech-scope,
+.silvana-scope {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 .docs-page-container h1,
@@ -543,7 +552,7 @@ h1.bblacnkherotit.text-3xl.sm\:text-4xl.font-black.text-\[\#1A1A1A\].tracking-ti
 .tech-scope h4,
 .tech-scope h5,
 .tech-scope h6 {
-  font-family: 'Space Grotesk', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -555,7 +564,7 @@ h1.bblacnkherotit.text-3xl.sm\:text-4xl.font-black.text-\[\#1A1A1A\].tracking-ti
 .tech-scope li,
 .tech-scope td,
 .tech-scope th {
-  font-family: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 /* Ensure code, terminals, badges and monospace elements strictly retain JetBrains Mono */

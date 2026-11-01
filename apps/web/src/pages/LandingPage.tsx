@@ -100,7 +100,7 @@ export const LandingPage: React.FC = () => {
             <h1 className="text-display font-black uppercase tracking-tight leading-none drop-shadow-sm select-none titlehero">
               Horizon
             </h1>
-            <p className="text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.15em] sm:tracking-[0.2em] uppercase text-[#0047AB] px-2 break-words">
+            <p className="text-xs sm:text-sm md:text-base font-mono font-bold tracking-[0.15em] sm:tracking-[0.2em] text-[#0047AB] px-2 break-words">
               Autonomous Infrastructure Recovery Platform
             </p>
           </motion.div>
@@ -163,7 +163,7 @@ export const LandingPage: React.FC = () => {
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 border border-emerald-500 shadow-sm" />
                 </div>
                 <div className="h-4 w-px bg-white/20" />
-                <span className="text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider text-[#E0ECFF] break-words">
+                <span className="text-[10px] sm:text-xs font-mono font-bold tracking-wider text-[#E0ECFF] break-words">
                   Live Autonomous Engine Preview &bull; Kahn Topo Sort
                 </span>
               </div>
@@ -189,17 +189,17 @@ export const LandingPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
                   <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
-                    <div className="text-[10px] text-[#C8DCFF] uppercase font-bold">Tier 0 (Root Data)</div>
+                    <div className="text-[10px] text-[#C8DCFF] font-bold">Tier 0 (Root Data)</div>
                     <div className="text-white font-bold mt-1">PostgreSQL Primary</div>
                     <div className="text-[11px] text-emerald-300 mt-0.5">● Port 5432 HEALTHY</div>
                   </div>
                   <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
-                    <div className="text-[10px] text-[#C8DCFF] uppercase font-bold">Tier 1 (Cache)</div>
+                    <div className="text-[10px] text-[#C8DCFF] font-bold">Tier 1 (Cache)</div>
                     <div className="text-white font-bold mt-1">Redis Cluster</div>
                     <div className="text-[11px] text-emerald-300 mt-0.5">● Port 6379 HEALTHY</div>
                   </div>
                   <div className="p-3.5 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
-                    <div className="text-[10px] text-[#C8DCFF] uppercase font-bold">Tier 2 (Gateway)</div>
+                    <div className="text-[10px] text-[#C8DCFF] font-bold">Tier 2 (Gateway)</div>
                     <div className="text-white font-bold mt-1">API Edge Gateway</div>
                     <div className="text-[11px] text-emerald-300 mt-0.5">● Port 8080 HEALTHY</div>
                   </div>
@@ -247,7 +247,7 @@ export const LandingPage: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-14">
           <div className="text-center max-w-3xl mx-auto space-y-2.5">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0047AB]">
+            <span className="text-xs font-mono font-bold tracking-wider text-[#0047AB]">
               Core Architectural Pillars
             </span>
             <h2 id="pillars-heading" className="text-hero text-[#1A1A1A]">
@@ -415,7 +415,7 @@ export const LandingPage: React.FC = () => {
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-16">
           <div className="text-center max-w-3xl mx-auto space-y-2.5">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-cyan-300">
+            <span className="text-xs font-mono font-bold tracking-wider text-cyan-300">
               System Architecture & Methodology
             </span>
             <h2 id="lifecycle-heading" className="text-hero-hioli text-white">
@@ -477,7 +477,7 @@ export const LandingPage: React.FC = () => {
                   key={spec.label}
                   className="p-4 sm:p-5 rounded-[1.75rem] bg-white/10 border border-white/15 space-y-1 font-mono"
                 >
-                  <div className="text-[11px] font-bold text-[#C8DCFF] uppercase tracking-wider">
+                  <div className="text-[11px] font-bold text-[#C8DCFF] tracking-wider">
                     {spec.label}
                   </div>
                   <div className="text-xl sm:text-2xl font-black text-white">
@@ -502,7 +502,7 @@ export const LandingPage: React.FC = () => {
       >
         <div className="max-w-4xl mx-auto px-5 sm:px-8 space-y-10">
           <div className="text-center space-y-2.5">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider text-[#0047AB]">
+            <span className="text-xs font-mono font-bold tracking-wider text-[#0047AB]">
               Technical Clarity
             </span>
             <h2 id="faq-heading" className="text-hero text-[#1A1A1A]">

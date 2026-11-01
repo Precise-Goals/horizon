@@ -13,7 +13,7 @@ import { cn } from '../../lib/utils';
  * - Dominating cream background (#FFF8F0) with skeuomorphic porcelain depth.
  * - Fluid, component-by-component Framer Motion transitions.
  * - Subtle ambient cobalt blue lighting.
- * - Modern Geist & Space Grotesk AI engineering typography applied across pages, preserving sans on home hero/navbar/footer.
+ * - Consistent Montserrat (headings) and Poppins (body) typography applied across pages, preserving hero/navbar/footer brand styling.
  */
 export const RootLayout: React.FC = () => {
   const location = useLocation();

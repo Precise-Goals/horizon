@@ -105,7 +105,7 @@ export const AuditTable: React.FC = () => {
       <div className="overflow-x-auto rounded-xl border border-[#E5D7C5] bg-white shadow-xs">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-[#FAF3EA] border-b border-[#EADCC9] text-[#6E6258] uppercase font-mono tracking-wider text-[11px] font-bold">
+            <tr className="bg-[#FAF3EA] border-b border-[#EADCC9] text-[#6E6258] font-mono tracking-wider text-[11px] font-bold">
               <th className="p-3.5">Timestamp</th>
               <th className="p-3.5">Actor</th>
               <th className="p-3.5">Action Executed</th>

@@ -30,7 +30,7 @@ export const KindredFooter: React.FC = () => {
 
           {/* Platform */}
           <div className="space-y-3">
-            <div className="font-semibold text-neutral-900 text-xs uppercase tracking-wider">
+            <div className="font-semibold text-neutral-900 text-xs tracking-wider">
               Platform
             </div>
             <ul className="space-y-2 text-xs">
@@ -44,7 +44,7 @@ export const KindredFooter: React.FC = () => {
 
           {/* Governance */}
           <div className="space-y-3">
-            <div className="font-semibold text-neutral-900 text-xs uppercase tracking-wider">
+            <div className="font-semibold text-neutral-900 text-xs tracking-wider">
               Governance
             </div>
             <ul className="space-y-2 text-xs">
@@ -57,7 +57,7 @@ export const KindredFooter: React.FC = () => {
 
           {/* Security */}
           <div className="space-y-3">
-            <div className="font-semibold text-neutral-900 text-xs uppercase tracking-wider">
+            <div className="font-semibold text-neutral-900 text-xs tracking-wider">
               Assurance
             </div>
             <ul className="space-y-2 text-xs">

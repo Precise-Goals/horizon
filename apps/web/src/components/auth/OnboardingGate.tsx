@@ -186,7 +186,7 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
               </p>
             </div>
           </div>
-          <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 uppercase tracking-wider font-bold">
+          <span className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 tracking-wider font-bold">
             MST Testnet
           </span>
         </div>
@@ -316,7 +316,7 @@ export const OnboardingGate: React.FC<{ children: React.ReactNode }> = ({ childr
 
             <div className="relative flex items-center my-3">
               <div className="flex-grow border-t border-black/10" />
-              <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#777777] uppercase tracking-wider">
+              <span className="flex-shrink-0 mx-3 text-[10px] font-mono text-[#777777] tracking-wider">
                 Or Continue With
               </span>
               <div className="flex-grow border-t border-black/10" />
