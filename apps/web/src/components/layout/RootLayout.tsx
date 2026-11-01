@@ -13,13 +13,14 @@ import { cn } from '../../lib/utils';
  * - Dominating cream background (#FFF8F0) with skeuomorphic porcelain depth.
  * - Fluid, component-by-component Framer Motion transitions.
  * - Subtle ambient cobalt blue lighting.
- * - Editorial Silvana typography applied across pages, preserving sans on home hero/navbar/footer.
+ * - Modern Geist & Space Grotesk AI engineering typography applied across pages, preserving sans on home hero/navbar/footer.
  */
 export const RootLayout: React.FC = () => {
   const location = useLocation();
   const isHome = location.pathname === '/';
   const isPatents = location.pathname.startsWith('/patents') || location.pathname === '/governance/patents';
   const isArchitect = location.pathname.startsWith('/architect');
+  const isTopology = location.pathname.startsWith('/topology');
 
   return (
     <OnboardingGate>
@@ -48,6 +49,8 @@ export const RootLayout: React.FC = () => {
                 ? 'max-w-7xl px-2 sm:px-4 py-3 sm:py-5 flex-1 flex flex-col'
                 : isPatents
                 ? 'max-w-5xl px-3 sm:px-6 py-6 sm:py-8'
+                : isTopology
+                ? 'max-w-[1360px] px-3 sm:px-6 py-6 sm:py-8'
                 : 'max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12'
             )}
           >
@@ -58,7 +61,7 @@ export const RootLayout: React.FC = () => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.995 }}
                 transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                className={cn('w-full', !isHome && 'silvana-scope')}
+                className={cn('w-full', !isHome && !isTopology && 'tech-scope')}
               >
                 <Outlet />
               </motion.div>
