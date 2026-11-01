@@ -1,66 +1,77 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card } from '../common/Card';
-import { Button } from '../common/Button';
 import { useAuth } from '../../context/useAuth';
 import { mstBlockchain, MST_CONFIG } from '../../engine/mstBlockchain';
 import { clusterState } from '../../engine/state';
 import {
-  NFT_PLANS_LIST,
-  CANONICAL_NFT_IMAGE_URL,
-  COBALT_BLUE_THEME_HEX,
-  buildNFTMetadata,
-  type NFTPlanDefinition,
-  type NFTTierKey,
-} from '../../engine/nftMetadata';
-import {
-  Check,
-  Gem,
-  Wallet,
-  CheckCircle2,
-  ExternalLink,
-  Loader2,
-  AlertCircle,
+  Box,
+  Rocket,
+  Shield,
   ShieldCheck,
-  PlusCircle,
-  Copy,
+  Zap,
+  Server,
+  Clock,
+  FileText,
+  Share2,
+  BarChart3,
+  Layers,
   Sparkles,
-  Activity,
-  FileCode,
-  X,
-  Eye,
+  ArrowRight,
+  Loader2,
+  Crown,
+  ExternalLink,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
-import { Link } from 'react-router';
 
-interface MintReceipt {
+interface ActiveReceipt {
   txHash: string;
   tokenId: number;
   blockNumber: number;
   tier: string;
-  autologgingRateLimit?: number;
-  contractAddress: string;
+  autologgingRateLimit: number;
   explorerUrl: string;
   tokenUrl: string;
-  addedToWallet?: boolean;
 }
 
 export const SubscriptionPlans: React.FC = () => {
   const { wallet } = useAuth();
   const [mintingTier, setMintingTier] = useState<string | null>(null);
-  const [activeReceipt, setActiveReceipt] = useState<MintReceipt | null>(null);
+  const [activeReceipt, setActiveReceipt] = useState<ActiveReceipt | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
-  const [userPass, setUserPass] = useState<Awaited<ReturnType<typeof mstBlockchain.getUserPass>>>(null);
   const [walletStatus, setWalletStatus] = useState<string | null>(null);
-  const [copiedContract, setCopiedContract] = useState(false);
-  const [copiedMetadata, setCopiedMetadata] = useState(false);
-  const [inspectedPlan, setInspectedPlan] = useState<NFTPlanDefinition | null>(null);
+  const [userPass, setUserPass] = useState<{
+    hasPass: boolean;
+    tokenId?: number;
+    tier?: string | number;
+    tierName?: string;
+    autologgingRateLimit?: number;
+    tokenUrl?: string;
+    explorerUrl?: string;
+  } | null>(null);
 
   const fetchUserPass = async () => {
+    // Check local storage for free tier
+    const activeTier = typeof localStorage !== 'undefined' ? localStorage.getItem('horizon_active_tier') : null;
+    if (activeTier === 'free') {
+      setUserPass({
+        hasPass: true,
+        tokenId: 0,
+        tier: 'FREE',
+        tierName: 'Free Plan',
+        autologgingRateLimit: 1,
+      });
+      return;
+    }
+
+    if (!wallet?.address) return;
     try {
-      const pass = await mstBlockchain.getUserPass(wallet?.address || MST_CONFIG.operatorAddress);
-      setUserPass(pass);
-    } catch {
-      // User pass fetch failure handled gracefully
+      const pass = await mstBlockchain.getUserPass(wallet.address);
+      if (pass && pass.hasPass) {
+        setUserPass(pass);
+      }
+    } catch (err) {
+      console.warn('[SubscriptionPlans] Failed to query user pass:', err);
     }
   };
 
@@ -68,22 +79,61 @@ export const SubscriptionPlans: React.FC = () => {
     fetchUserPass();
   }, [wallet?.address]);
 
-  const plans = NFT_PLANS_LIST;
-
-  const handleMint = async (tierKey: NFTTierKey) => {
+  // Activate Free Plan (UI Interface Tier)
+  const handleActivateFree = () => {
     setMintError(null);
-    setActiveReceipt(null);
     setWalletStatus(null);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('horizon_active_tier', 'free');
+      }
+      setUserPass({
+        hasPass: true,
+        tokenId: 0,
+        tier: 'FREE',
+        tierName: 'Free Plan',
+        autologgingRateLimit: 1,
+      });
+      setWalletStatus('Free Tier Activated! Full UI & Simulation capabilities enabled.');
+      clusterState.addAuditLog({
+        id: Math.random().toString(36).substring(2, 9),
+        timestamp: new Date().toISOString(),
+        actor: wallet?.address || 'OPERATOR',
+        action: 'Free Plan Activated (UI Mode)',
+        details: 'Core capabilities and testnet simulation active',
+        severity: 'info',
+      });
+    } catch (err: any) {
+      setMintError(err.message || 'Failed to activate free tier.');
+    }
+  };
+
+  // Mint On-Chain NFT (Explorer = Tier 1, Guardian = Tier 2)
+  const handleMint = async (tierKey: 'explorer' | 'guardian') => {
     setMintingTier(tierKey);
+    setMintError(null);
+    setWalletStatus(null);
 
     try {
       const receipt = await mstBlockchain.mintSubscriptionNFT(tierKey, wallet?.address);
       setActiveReceipt(receipt);
-
-      // Refresh pass status from on-chain RPC
       await fetchUserPass();
 
-      // Record to cluster audit trail
+      // Automatically register and prompt NFT in BridgeKey / Web3 wallet
+      setWalletStatus(`NFT #${receipt.tokenId} minted! Prompting BridgeKey to register NFT...`);
+      setTimeout(async () => {
+        try {
+          const registered = await mstBlockchain.watchAssetInWallet(receipt.tokenId);
+          if (registered) {
+            setWalletStatus(`NFT #${receipt.tokenId} successfully added to your BridgeKey wallet!`);
+          } else {
+            setWalletStatus(`NFT #${receipt.tokenId} confirmed on MST Testnet (Block #${receipt.blockNumber}).`);
+          }
+        } catch (e) {
+          console.warn('Auto watch asset:', e);
+        }
+      }, 500);
+
       clusterState.addAuditLog({
         id: Math.random().toString(36).substring(2, 9),
         timestamp: new Date().toISOString(),
@@ -100,190 +150,411 @@ export const SubscriptionPlans: React.FC = () => {
     }
   };
 
-  const handleAddNFTToWallet = async (tokenId: number) => {
-    setWalletStatus('Requesting BridgeKey to register NFT (wallet_watchAsset)...');
-    try {
-      const success = await mstBlockchain.watchAssetInWallet(tokenId);
-      if (success) {
-        setWalletStatus(`NFT #${tokenId} successfully added to BridgeKey Wallet!`);
-      } else {
-        setWalletStatus(
-          `BridgeKey prompt sent. If not added automatically, please import manually in BridgeKey -> NFTs -> Import NFT with Token ID #${tokenId}.`
-        );
-      }
-    } catch (err: any) {
-      setWalletStatus(`BridgeKey interaction: ${err.message || 'Please open BridgeKey wallet to approve.'}`);
-    }
-  };
-
-  const handleCopyContract = () => {
-    navigator.clipboard.writeText(MST_CONFIG.subscriptionContractAddress);
-    setCopiedContract(true);
-    setTimeout(() => setCopiedContract(false), 2000);
-  };
-
   return (
-    <div className="space-y-8">
-      {/* Return to Homepage Navigation */}
-      <div className="flex items-center justify-between">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-[#6E6258] hover:text-[#1A1A1A] transition-colors"
-        >
-          <span>&larr; Return to Homepage</span>
-        </Link>
-        <div className="flex items-center gap-2 text-xs font-mono text-[#6E6258] font-medium">
-          <span>Contract:</span>
-          <a
-            href={`${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[#0047AB] font-bold hover:underline flex items-center gap-1"
+    <div className="space-y-8 w-full">
+      {/* Wallet / Status Feedback */}
+      <AnimatePresence>
+        {walletStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-[#0047AB] flex items-center justify-between gap-3 shadow-xs"
           >
-            <span>{MST_CONFIG.subscriptionContractAddress.slice(0, 8)}...{MST_CONFIG.subscriptionContractAddress.slice(-6)}</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
-      </div>
-
-      {/* Visual Header Banner - Cobalt Blue Patch */}
-      <div className="relative overflow-hidden rounded-3xl cobalt-patch shadow-xl p-8 md:p-10 text-white">
-        <div className="relative z-10 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-white/20 border border-white/30 text-white text-xs font-mono font-bold w-fit mb-4 shadow-sm">
-            <Gem className="w-3.5 h-3.5 text-white" />
-            <span>Zentrix Pass (ZXPASS) • MST Blockchain Testnet</span>
-          </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-            Web3 Token-Gated Subscription Plans
-          </h1>
-          <p className="text-sm sm:text-base text-white/80 mt-3 max-w-2xl leading-relaxed font-medium">
-            Mint non-fungible subscription tokens on the MST Blockchain (Chain ID 91562037). Smart contracts autonomously verify authorization tiers without centralized payment gateways.
-          </p>
-        </div>
-      </div>
-
-      {/* Error Banner */}
-      {mintError && (
-        <div className="p-4 rounded-2xl bg-red-50 border border-red-300 text-red-900 flex items-start gap-3 shadow-xs">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-          <div className="space-y-1">
-            <h4 className="text-sm font-bold">Transaction Execution Failed</h4>
-            <p className="text-xs text-red-800">{mintError}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Wallet Watch Status Alert */}
-      {walletStatus && (
-        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-[#0047AB] flex items-start gap-3 shadow-xs">
-          <Sparkles className="w-5 h-5 text-[#0047AB] shrink-0 mt-0.5" />
-          <div className="text-xs space-y-1">
-            <span className="font-bold block text-sm text-[#1A1A1A]">BridgeKey NFT Synchronization</span>
-            <p className="text-[#5A4E44] font-medium">{walletStatus}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Existing Detected Pass Card */}
-      {userPass && userPass.hasPass && (
-        <div className="p-6 rounded-3xl skeuo-card border-[#E5D7C5] space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EADCC9]">
             <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[#0047AB] shadow-sm shrink-0">
-                <img
-                  src={CANONICAL_NFT_IMAGE_URL}
-                  alt="Horizon ZXPASS NFT"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-[#1A1A1A] flex items-center gap-2">
-                  <span>Active On-Chain Subscription: {userPass.tierName}</span>
-                  <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-300 font-bold">
-                    Active
-                  </span>
-                </h3>
-                <p className="text-xs text-[#6E6258] font-medium">
-                  On-chain NFT Pass verified on MST Blockchain Testnet.
-                </p>
-              </div>
+              <CheckCircle2 className="w-5 h-5 text-[#0047AB] shrink-0" />
+              <span className="text-xs sm:text-sm font-semibold">{walletStatus}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => handleAddNFTToWallet(userPass.tokenId)}
-                className="text-xs gap-1.5 font-bold rounded-xl"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>Add NFT #{userPass.tokenId} to BridgeKey</span>
-              </Button>
-              <a
-                href={userPass.tokenUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAF3EA] border border-[#E5D7C5] text-xs font-bold text-[#0047AB] hover:text-[#003380] transition-colors"
-              >
-                <span>View #{userPass.tokenId} on MSTScan</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-          </div>
+            <button
+              onClick={() => setWalletStatus(null)}
+              className="text-xs text-[#0047AB] hover:underline font-bold cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
-              <span className="text-[#8A7B6D] text-[11px] font-bold">Token ID</span>
-              <div className="text-sm font-bold text-[#1A1A1A]">#ZXPASS-{userPass.tokenId}</div>
-            </div>
-            <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
-              <span className="text-[#8A7B6D] text-[11px] font-bold">AutoLogging Rate Limit</span>
-              <div className="text-sm font-black text-[#0047AB] flex items-center gap-1">
-                <span>{userPass.autologgingRateLimit || 5} events/min</span>
+        {mintError && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-4 rounded-2xl bg-red-50 border border-red-300 text-red-900 flex items-start justify-between gap-3 shadow-xs"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h4 className="text-sm font-bold">Transaction Notice</h4>
+                <p className="text-xs text-red-800 leading-relaxed">{mintError}</p>
               </div>
             </div>
-            <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
-              <span className="text-[#8A7B6D] text-[11px] font-bold">Contract Address</span>
-              <div className="text-xs font-bold text-[#0047AB] truncate">{MST_CONFIG.subscriptionContractAddress}</div>
+            <button
+              onClick={() => setMintError(null)}
+              className="text-xs text-red-800 hover:underline font-bold cursor-pointer"
+            >
+              Dismiss
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Active Pass Banner (if verified) */}
+      {userPass && userPass.hasPass && (
+        <div className="p-5 rounded-2xl bg-[#FAF3EA] border border-[#E5D7C5] flex flex-wrap items-center justify-between gap-4 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#E0D0BE] flex items-center justify-center text-[#0047AB]">
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <div className="p-3 rounded-xl skeuo-well border-[#E5D7C5] space-y-1">
-              <span className="text-[#8A7B6D] text-[11px] font-bold">Network</span>
-              <div className="text-sm font-bold text-[#0047AB]">MST Testnet (91562037)</div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sm text-[#1A1A1A]">
+                  Active Subscription: {userPass.tierName || userPass.tier}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold font-mono">
+                  ACTIVE
+                </span>
+              </div>
+              <p className="text-xs text-[#6E6258] mt-0.5">
+                Rate Limit: {userPass.autologgingRateLimit || 5} events/min &bull; {userPass.tokenId ? `Token #ZXPASS-${userPass.tokenId}` : 'UI Interface Mode'}
+              </p>
             </div>
           </div>
+          {userPass.tokenUrl && (
+            <a
+              href={userPass.tokenUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#E5D7C5] text-xs font-bold text-[#0047AB] hover:text-[#003882] transition-colors"
+            >
+              <span>View #{userPass.tokenId} on MSTScan</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
         </div>
       )}
+
+      {/* 3-Card Pricing Grid matching ref.png */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 items-stretch max-w-6xl mx-auto">
+        {/* ===================================================================
+            CARD 1: FREE
+            =================================================================== */}
+        <motion.div
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className="bg-white border border-[#E5E7EB] rounded-[2rem] p-7 sm:p-8 flex flex-col justify-between shadow-xs relative overflow-hidden h-full"
+        >
+          {/* Subtle ambient soft shape */}
+          <div className="bg-slate-100/70 rounded-full w-56 h-56 absolute -bottom-14 -right-14 pointer-events-none blur-3xl z-0" />
+
+          <div className="relative z-10">
+            {/* Top Row: Icon & Badge */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="w-12 h-12 rounded-2xl bg-[#F8FAFC] border border-[#E2E8F0] flex items-center justify-center text-[#1A1A1A] shadow-xs">
+                <Box className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <span className="px-3.5 py-1 rounded-full text-xs font-semibold bg-[#F1F5F9] text-[#475569] border border-[#E2E8F0]/80">
+                Get Started
+              </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <h3 className="text-2xl sm:text-3xl font-black font-montserrat text-[#1A1A1A] tracking-tight">
+              Free
+            </h3>
+            <p className="text-xs sm:text-sm text-[#64748B] font-medium mt-1.5 leading-relaxed min-h-[38px]">
+              Explore core capabilities and experience MST.
+            </p>
+
+            {/* Price Block */}
+            <div className="my-6 pb-6 border-b border-[#F1F5F9]">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-4xl sm:text-5xl font-black font-montserrat text-[#1A1A1A] tracking-tight">
+                  0
+                </span>
+                <span className="text-lg sm:text-xl font-bold font-montserrat text-[#1A1A1A]">
+                  MST
+                </span>
+              </div>
+              <div className="text-xs text-[#64748B] font-medium mt-1">
+                / 30 Days (On-Chain)
+              </div>
+            </div>
+
+            {/* Features */}
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <Zap className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>1 event/min burst</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <Server className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>Up to 3 services / nodes</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <Clock className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>Basic telemetry history (7 days)</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <FileText className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>Standard audit logs</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Action Button */}
+          <button
+            type="button"
+            onClick={handleActivateFree}
+            className="w-full py-3.5 px-4 rounded-2xl bg-[#F1F5F9] hover:bg-[#E2E8F0] active:scale-[0.99] text-[#1E293B] font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer border border-[#E2E8F0] relative z-10"
+          >
+            <span>Mint Free Plan</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </motion.div>
+
+        {/* ===================================================================
+            CARD 2: EXPLORER
+            =================================================================== */}
+        <motion.div
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className="bg-white border border-[#DBEAFE] rounded-[2rem] p-7 sm:p-8 flex flex-col justify-between shadow-xs relative overflow-hidden h-full"
+        >
+          {/* Subtle blue ambient soft curve */}
+          <div className="bg-blue-100/60 rounded-full w-56 h-56 absolute -bottom-14 -right-14 pointer-events-none blur-3xl z-0" />
+
+          <div className="relative z-10">
+            {/* Top Row: Icon & Badge */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="w-12 h-12 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-center text-[#0047AB] shadow-xs">
+                <Rocket className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <span className="px-3.5 py-1 rounded-full text-xs font-semibold bg-[#EFF6FF] text-[#0047AB] border border-[#BFDBFE]/70">
+                Popular for Teams
+              </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <h3 className="text-2xl sm:text-3xl font-black font-montserrat text-[#1A1A1A] tracking-tight">
+              Explorer
+            </h3>
+            <p className="text-xs sm:text-sm text-[#64748B] font-medium mt-1.5 leading-relaxed min-h-[38px]">
+              Entry-level resilience for single cluster environments.
+            </p>
+
+            {/* Price Block */}
+            <div className="my-6 pb-6 border-b border-[#F1F5F9]">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-4xl sm:text-5xl font-black font-montserrat text-[#1A1A1A] tracking-tight">
+                  5.0
+                </span>
+                <span className="text-lg sm:text-xl font-bold font-montserrat text-[#1A1A1A]">
+                  MST
+                </span>
+              </div>
+              <div className="text-xs text-[#64748B] font-medium mt-1">
+                / 30 Days (On-Chain)
+              </div>
+            </div>
+
+            {/* Features */}
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <Zap className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>5 events/min burst</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <Server className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>Up to 10 monitored services / nodes</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <Share2 className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>Topology DAG blast radius mapping</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-[#334155] font-medium">
+                <BarChart3 className="w-4 h-4 text-[#0047AB] shrink-0 stroke-[2]" />
+                <span>24h in-memory telemetry history</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Action Button */}
+          <button
+            type="button"
+            onClick={() => handleMint('explorer')}
+            disabled={!!mintingTier}
+            className="w-full py-3.5 px-4 rounded-2xl bg-[#0047AB] hover:bg-[#003882] active:scale-[0.99] text-white font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#0047AB]/25 relative z-10 disabled:opacity-60"
+          >
+            {mintingTier === 'explorer' ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Transacting on MST...</span>
+              </>
+            ) : (
+              <>
+                <span>Mint Explorer Plan</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </motion.div>
+
+        {/* ===================================================================
+            CARD 3: GUARDIAN (Most Popular)
+            =================================================================== */}
+        <motion.div
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className="bg-gradient-to-b from-[#003380] via-[#021f57] to-[#040f2b] border border-[#1E4E9E]/70 rounded-[2rem] p-7 sm:p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden h-full text-white"
+        >
+          {/* Glowing 3D Isometric Cubes Illustration matching ref.png */}
+          <svg
+            className="absolute top-10 right-1 sm:right-3 w-36 h-40 pointer-events-none opacity-90 select-none z-0"
+            viewBox="0 0 160 180"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <filter id="glow-cube" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="10" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+              <linearGradient id="top-face" x1="80" y1="20" x2="130" y2="50" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#93C5FD" stopOpacity="0.95" />
+                <stop offset="1" stopColor="#3B82F6" stopOpacity="0.8" />
+              </linearGradient>
+              <linearGradient id="left-face" x1="30" y1="50" x2="80" y2="105" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#2563EB" stopOpacity="0.9" />
+                <stop offset="1" stopColor="#1E3A8A" stopOpacity="0.95" />
+              </linearGradient>
+              <linearGradient id="right-face" x1="80" y1="50" x2="130" y2="105" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#60A5FA" stopOpacity="0.85" />
+                <stop offset="1" stopColor="#1D4ED8" stopOpacity="0.95" />
+              </linearGradient>
+              <linearGradient id="glow-base" x1="40" y1="80" x2="120" y2="160" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#38BDF8" stopOpacity="0.7" />
+                <stop offset="0.5" stopColor="#818CF8" stopOpacity="0.5" />
+                <stop offset="1" stopColor="#1E1B4B" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+
+            {/* Ambient Cyan/Violet Back Glow */}
+            <circle cx="95" cy="85" r="55" fill="url(#glow-base)" filter="url(#glow-cube)" opacity="0.8" />
+
+            {/* Lower Isometric Glass Sub-Cube */}
+            <g transform="translate(15, 45)" opacity="0.7">
+              <path d="M60 20 L95 40 L60 60 L25 40 Z" fill="#60A5FA" fillOpacity="0.35" stroke="#93C5FD" strokeWidth="1" strokeOpacity="0.6" />
+              <path d="M25 40 L60 60 L60 100 L25 80 Z" fill="#1E40AF" fillOpacity="0.55" stroke="#60A5FA" strokeWidth="1" strokeOpacity="0.5" />
+              <path d="M60 60 L95 40 L95 80 L60 100 Z" fill="#2563EB" fillOpacity="0.45" stroke="#93C5FD" strokeWidth="1" strokeOpacity="0.5" />
+            </g>
+
+            {/* Primary Isometric Glass Cube */}
+            <g transform="translate(25, 5)">
+              <path d="M60 15 L100 38 L60 61 L20 38 Z" fill="url(#top-face)" stroke="#BFDBFE" strokeWidth="1.2" />
+              <path d="M20 38 L60 61 L60 107 L20 84 Z" fill="url(#left-face)" stroke="#93C5FD" strokeWidth="1" strokeOpacity="0.75" />
+              <path d="M60 61 L100 38 L100 84 L60 107 Z" fill="url(#right-face)" stroke="#BFDBFE" strokeWidth="1" strokeOpacity="0.85" />
+              <path d="M60 15 L60 61" stroke="#FFFFFF" strokeWidth="1.2" strokeOpacity="0.9" />
+              <circle cx="60" cy="61" r="2.5" fill="#FFFFFF" />
+            </g>
+          </svg>
+
+          <div className="relative z-10">
+            {/* Top Row: Icon & Most Popular Badge */}
+            <div className="flex items-center justify-between mb-5">
+              <div className="w-12 h-12 rounded-2xl bg-[#0F2F6E]/90 border border-[#3B82F6]/40 flex items-center justify-center text-white shadow-xs">
+                <Shield className="w-6 h-6 stroke-[1.8]" />
+              </div>
+              <span className="px-3.5 py-1 rounded-full text-xs font-bold bg-[#FFF8F0] text-[#1A1A1A] shadow-md flex items-center gap-1.5">
+                <Crown className="w-3.5 h-3.5 text-amber-600 fill-amber-500" />
+                Most Popular
+              </span>
+            </div>
+
+            {/* Title & Subtitle */}
+            <h3 className="text-2xl sm:text-3xl font-black font-montserrat text-white tracking-tight">
+              Guardian
+            </h3>
+            <p className="text-xs sm:text-sm text-[#BFDBFE] font-medium mt-1.5 leading-relaxed min-h-[38px] max-w-[240px]">
+              Production-grade resilience for multi-tier microservices.
+            </p>
+
+            {/* Price Block */}
+            <div className="my-6 pb-6 border-b border-white/15">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-4xl sm:text-5xl font-black font-montserrat text-white tracking-tight">
+                  15.0
+                </span>
+                <span className="text-lg sm:text-xl font-bold font-montserrat text-white">
+                  MST
+                </span>
+              </div>
+              <div className="text-xs text-[#93C5FD] font-medium mt-1">
+                / 30 Days (On-Chain)
+              </div>
+            </div>
+
+            {/* Features */}
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-white/95 font-medium">
+                <Zap className="w-4 h-4 text-[#60A5FA] shrink-0 stroke-[2]" />
+                <span>10 events/min burst</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-white/95 font-medium">
+                <Server className="w-4 h-4 text-[#60A5FA] shrink-0 stroke-[2]" />
+                <span>Up to 50 monitored microservices / pods</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-white/95 font-medium">
+                <Layers className="w-4 h-4 text-[#60A5FA] shrink-0 stroke-[2]" />
+                <span>Dynamic multi-tier blast radius calculation</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-white/95 font-medium">
+                <ShieldCheck className="w-4 h-4 text-[#60A5FA] shrink-0 stroke-[2]" />
+                <span>7-day on-chain Merkle audit vault</span>
+              </li>
+              <li className="flex items-center gap-3 text-xs sm:text-sm text-white/95 font-medium">
+                <Sparkles className="w-4 h-4 text-[#FDE047] shrink-0 stroke-[2]" />
+                <span>AI incident copilot (Sarvam-105B)</span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Action Button */}
+          <button
+            type="button"
+            onClick={() => handleMint('guardian')}
+            disabled={!!mintingTier}
+            className="w-full py-3.5 px-4 rounded-2xl bg-white hover:bg-[#F8FAFC] active:scale-[0.99] text-[#003882] font-black text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-black/30 relative z-10 disabled:opacity-60"
+          >
+            {mintingTier === 'guardian' ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-[#003882]" />
+                <span>Transacting on MST...</span>
+              </>
+            ) : (
+              <>
+                <span>Mint Guardian Plan</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </button>
+        </motion.div>
+      </div>
 
       {/* Confirmed Real Transaction Modal / Card */}
       {activeReceipt && (
-        <div className="p-6 rounded-3xl bg-emerald-50 border border-emerald-300 shadow-md space-y-4">
+        <div className="p-6 rounded-3xl bg-emerald-50 border border-emerald-300 shadow-md space-y-4 max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-200">
             <div className="flex items-center gap-3">
-              <div className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-[#0047AB] shadow-sm shrink-0">
-                <img
-                  src={CANONICAL_NFT_IMAGE_URL}
-                  alt="Minted Horizon NFT"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center text-white shrink-0 shadow-sm">
+                <CheckCircle2 className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-lg font-bold text-emerald-950">
                   Subscription NFT Successfully Minted On-Chain!
                 </h3>
                 <p className="text-xs text-emerald-800 font-medium">
-                  buy(uint8) confirmed on Zentrix Pass contract (0x3EDad2...) on MST Testnet.
+                  Confirmed on Zentrix Pass contract ({MST_CONFIG.subscriptionContractAddress.slice(0, 8)}...{MST_CONFIG.subscriptionContractAddress.slice(-6)}) on MST Testnet.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => handleAddNFTToWallet(activeReceipt.tokenId)}
-                className="text-xs gap-1.5 font-bold rounded-xl"
-              >
-                <PlusCircle className="w-3.5 h-3.5" />
-                <span>Add NFT #{activeReceipt.tokenId} to BridgeKey</span>
-              </Button>
               <span className="text-xs font-mono px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
                 Block #{activeReceipt.blockNumber}
               </span>
@@ -301,7 +572,7 @@ export const SubscriptionPlans: React.FC = () => {
             </div>
             <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
               <span className="text-emerald-700 text-[11px] font-bold">AutoLogging Rate Limit</span>
-              <div className="text-sm font-bold text-[#0047AB]">{activeReceipt.autologgingRateLimit || 5} events/min</div>
+              <div className="text-sm font-bold text-[#0047AB]">{activeReceipt.autologgingRateLimit} events/min</div>
             </div>
             <div className="p-3 rounded-xl bg-white border border-emerald-200 space-y-1">
               <span className="text-emerald-700 text-[11px] font-bold">Network</span>
@@ -336,293 +607,6 @@ export const SubscriptionPlans: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Grid of Plans */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {plans.map((plan) => {
-          const isMintingThis = mintingTier === plan.id;
-          const isPopular = plan.isPopular;
-
-          return (
-            <motion.div
-              key={plan.id}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="h-full flex flex-col"
-            >
-              <Card
-                className={`p-6 flex flex-col justify-between relative h-full transition-all duration-300 ${
-                  isPopular
-                    ? 'cobalt-patch shadow-xl ring-2 ring-[#0047AB]/50 text-white'
-                    : 'skeuo-card border-[#E5D7C5] bg-white text-[#1A1A1A]'
-                }`}
-              >
-                {isPopular && (
-                  <div className="absolute top-4 right-4">
-                    <span className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-white text-[#0047AB] shadow-sm">
-                      RECOMMENDED
-                    </span>
-                  </div>
-                )}
-
-                <div>
-                  <h3 className={`text-xl sm:text-2xl font-black tracking-tight ${isPopular ? 'text-white' : 'text-[#1A1A1A]'}`}>
-                    {plan.name}
-                  </h3>
-                  <p className={`text-xs sm:text-sm mt-1 min-h-[36px] font-medium ${isPopular ? 'text-white/80' : 'text-[#6E6258]'}`}>
-                    {plan.tagline}
-                  </p>
-
-                  <div className={`my-4 pb-4 border-b ${isPopular ? 'border-white/20' : 'border-[#EADCC9]'}`}>
-                    <div className={`text-3xl sm:text-4xl font-black font-mono ${isPopular ? 'text-white' : 'text-[#1A1A1A]'}`}>
-                      {plan.price}
-                    </div>
-                    <div className={`text-xs font-mono font-bold mt-1 ${isPopular ? 'text-white/90' : 'text-[#0047AB]'}`}>
-                      {plan.mstPrice}
-                    </div>
-                  </div>
-
-                  {/* AutoLogging Rate Limit Badge */}
-                  <div
-                    className={`flex items-center justify-between p-2.5 rounded-xl border font-mono text-xs mb-4 ${
-                      isPopular
-                        ? 'bg-white/10 border-white/20 text-white'
-                        : 'bg-blue-50/80 border-blue-200 text-[#0047AB]'
-                    }`}
-                  >
-                    <span className="font-bold flex items-center gap-1.5">
-                      <Activity className="w-3.5 h-3.5" />
-                      AutoLogging Rate Limit:
-                    </span>
-                    <span
-                      className={`font-black px-2 py-0.5 rounded text-[11px] shadow-xs ${
-                        isPopular ? 'bg-white text-[#0047AB]' : 'bg-[#0047AB] text-white'
-                      }`}
-                    >
-                      {plan.autologgingRateLimit} events/min
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 mb-5">
-                    <span className={`text-xs font-bold tracking-wider block ${isPopular ? 'text-white/70' : 'text-[#8A7B6D]'}`}>
-                      Plan Capabilities
-                    </span>
-                    <ul className="space-y-2.5">
-                      {plan.features.map((feat, i) => (
-                        <li key={i} className={`flex items-start gap-2.5 text-xs sm:text-sm ${isPopular ? 'text-white/90' : 'text-[#403830]'}`}>
-                          <Check className={`w-4 h-4 shrink-0 mt-0.5 ${isPopular ? 'text-emerald-300 stroke-[3]' : 'text-emerald-600 stroke-[2.5]'}`} />
-                          <span className="leading-snug font-medium">{feat}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* View Complete NFT Metadata Button */}
-                  <button
-                    type="button"
-                    onClick={() => setInspectedPlan(plan)}
-                    className={`w-full py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 mb-4 border ${
-                      isPopular
-                        ? 'bg-white/10 hover:bg-white/20 text-white border-white/20'
-                        : 'bg-[#FAF3EA] hover:bg-[#F2E5D5] text-[#0047AB] border-[#E5D7C5]'
-                    }`}
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>Inspect NFT Metadata & Schema</span>
-                  </button>
-                </div>
-
-                <div>
-                  <Button
-                    variant={isPopular ? 'secondary' : 'primary'}
-                    onClick={() => handleMint(plan.id)}
-                    disabled={!!mintingTier}
-                    className={`w-full py-3 text-sm font-bold gap-2 rounded-xl cursor-pointer shadow-sm ${
-                      isPopular ? 'bg-white text-[#0047AB] hover:bg-stone-100 border-white' : ''
-                    }`}
-                  >
-                    {isMintingThis ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Transacting on MST...</span>
-                      </>
-                    ) : plan.tierNumber <= 2 ? (
-                      <>
-                        <Wallet className="w-4 h-4" />
-                        <span>Mint Subscription NFT ({plan.mstPrice})</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck className="w-4 h-4" />
-                        <span>Enterprise Node ({plan.mstPrice})</span>
-                      </>
-                    )}
-                  </Button>
-                  <p className={`text-[10px] text-center mt-2 font-mono font-semibold ${isPopular ? 'text-white/70' : 'text-[#8A7B6D]'}`}>
-                    {plan.tierNumber <= 2 ? 'MST Testnet (91562037) • Direct Mint' : 'Tiers 1 & 2 Active on Contract 0x3EDad...'}
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* ERC-721 Metadata Inspector Modal */}
-      <AnimatePresence>
-        {inspectedPlan && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white border-2 border-[#0047AB] shadow-2xl p-6 space-y-5"
-            >
-              <div className="flex items-center justify-between border-b border-[#EADCC9] pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-10 h-10 rounded-xl overflow-hidden border-2 border-[#0047AB] shrink-0">
-                    <img src={CANONICAL_NFT_IMAGE_URL} alt="NFT Thumbnail" className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-black text-[#1A1A1A]">
-                      ERC-721 / OpenSea Metadata: {inspectedPlan.name}
-                    </h3>
-                    <p className="text-xs text-[#6E6258]">
-                      Standard JSON metadata format with Cobalt Blue theme (<code className="text-[#0047AB] font-bold">#0047AB</code>)
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setInspectedPlan(null)}
-                  className="p-1.5 rounded-lg text-[#6E6258] hover:bg-stone-100 transition-colors cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* Trait Summary Pills */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] block">Rate Limit</span>
-                  <span className="text-sm font-black text-[#0047AB]">{inspectedPlan.autologgingRateLimit} / min</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] block">Theme Color</span>
-                  <span className="text-sm font-black text-[#0047AB]">#0047AB</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] block">Tier Level</span>
-                  <span className="text-sm font-black text-[#1A1A1A]">{inspectedPlan.tierNumber} / 4</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-[#FAF3EA] border border-[#E8DAC8]">
-                  <span className="text-[10px] text-[#8A7B6D] block">Standard</span>
-                  <span className="text-sm font-black text-emerald-800">ERC-721</span>
-                </div>
-              </div>
-
-              {/* Complete JSON Metadata Viewer */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono text-[#6E6258]">
-                  <span className="font-bold flex items-center gap-1.5">
-                    <FileCode className="w-3.5 h-3.5 text-[#0047AB]" />
-                    Complete Metadata JSON Payload:
-                  </span>
-                  <button
-                    onClick={() => {
-                      const jsonText = JSON.stringify(buildNFTMetadata(inspectedPlan.id), null, 2);
-                      navigator.clipboard.writeText(jsonText);
-                      setCopiedMetadata(true);
-                      setTimeout(() => setCopiedMetadata(false), 2000);
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-[#FAF3EA] hover:bg-[#F2E5D5] border border-[#E5D7C5] transition-all cursor-pointer flex items-center gap-1 text-[#0047AB] font-bold"
-                  >
-                    {copiedMetadata ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                    <span>{copiedMetadata ? 'Copied!' : 'Copy JSON'}</span>
-                  </button>
-                </div>
-
-                <pre className="p-4 rounded-2xl bg-[#1A1A1A] text-cyan-300 font-mono text-[11px] overflow-x-auto max-h-[300px] border border-black shadow-inner leading-relaxed">
-                  {JSON.stringify(buildNFTMetadata(inspectedPlan.id), null, 2)}
-                </pre>
-              </div>
-
-              <div className="flex items-center justify-between pt-2 border-t border-[#EADCC9] text-xs">
-                <a
-                  href={`/nft/metadata/${inspectedPlan.id}.json`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#0047AB] font-bold hover:underline flex items-center gap-1"
-                >
-                  <span>Open Public JSON Endpoint (/nft/metadata/{inspectedPlan.id}.json)</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-                <button
-                  onClick={() => setInspectedPlan(null)}
-                  className="px-4 py-2 rounded-xl bg-[#0047AB] hover:bg-blue-800 text-white font-bold cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* BridgeKey NFT Display & Import Guide */}
-      <Card className="p-6 skeuo-card border-[#E5D7C5] space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#EADCC9]">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-[#0047AB]" />
-            <h4 className="text-base font-bold text-[#1A1A1A]">
-              Why BridgeKey Wallet requires NFT Registration (EIP-747)
-            </h4>
-          </div>
-          <span className="text-xs font-mono text-emerald-800 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-            ERC-721 Contract Verified
-          </span>
-        </div>
-
-        <div className="text-xs sm:text-sm text-[#5A4E44] space-y-3 leading-relaxed font-medium">
-          <p>
-            When minting an NFT on custom testnets such as MST Testnet, Web3 wallets (including BridgeKey) do not query every unindexed ERC-721 contract automatically. To show the token in your wallet's NFT collectibles tab, the wallet must be informed via <code className="text-[#0047AB] font-mono font-bold bg-[#FAF3EA] px-1.5 py-0.5 rounded border border-[#E5D7C5]">wallet_watchAsset</code> or manual token import.
-          </p>
-
-          <div className="p-4 rounded-xl skeuo-well border-[#E5D7C5] space-y-2">
-            <div className="text-xs font-bold text-[#1A1A1A]">Manual Import Credentials for BridgeKey Wallet:</div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-xs">
-              <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E5D7C5]">
-                <span className="text-[#8A7B6D] font-bold">Contract:</span>
-                <span className="text-[#0047AB] font-bold truncate max-w-[150px]">{MST_CONFIG.subscriptionContractAddress}</span>
-                <button
-                  onClick={handleCopyContract}
-                  className="text-xs text-[#0047AB] hover:underline ml-1 p-1"
-                  title="Copy contract address"
-                >
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E5D7C5]">
-                <span className="text-[#8A7B6D] font-bold">Token ID:</span>
-                <span className="text-emerald-800 font-bold">1 (or your minted ID)</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded-lg bg-white border border-[#E5D7C5]">
-                <span className="text-[#8A7B6D] font-bold">Explorer:</span>
-                <a
-                  href={`${MST_CONFIG.explorerUrl}/token/${MST_CONFIG.subscriptionContractAddress}/instance/1`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#0047AB] font-bold hover:underline flex items-center gap-1"
-                >
-                  <span>MSTScan Token #1</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-            </div>
-            {copiedContract && (
-              <span className="text-emerald-800 text-xs font-mono font-bold block">Contract address copied to clipboard!</span>
-            )}
-          </div>
-        </div>
-      </Card>
     </div>
   );
 };

@@ -2,14 +2,8 @@ import React from 'react';
 import { motion, type BezierDefinition } from 'framer-motion';
 import { Link } from 'react-router';
 import { SubscriptionPlans } from '../components/subscription/SubscriptionPlans';
-import { Card } from '../components/common/Card';
 import { MST_CONFIG } from '../engine/mstBlockchain';
-import {
-  Gem,
-  ShieldCheck,
-  Wallet,
-  ExternalLink,
-} from 'lucide-react';
+import { Gem, ExternalLink } from 'lucide-react';
 
 const EASE: BezierDefinition = [0.16, 1, 0.3, 1];
 
@@ -56,12 +50,12 @@ export const SubscriptionPage: React.FC = () => {
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black font-montserrat tracking-tight text-[#1A1A1A]">
               Web3 Platform Subscriptions
             </h1>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
               <Gem className="w-3.5 h-3.5 text-[#0047AB]" />
-              ERC-721 TOKEN-GATED
+              ERC-721 Token-Gated
             </span>
           </div>
           <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
@@ -78,55 +72,6 @@ export const SubscriptionPage: React.FC = () => {
           <span>ZXPASS Contract</span>
           <ExternalLink className="w-4 h-4" />
         </a>
-      </motion.div>
-
-      {/* Bento Metric Summary Strip */}
-      <motion.div variants={itemVariants} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>Smart Contract</span>
-            <Gem className="w-4 h-4 text-[#0047AB]" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">ZXPASS</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">ERC-721 on MST Testnet ({MST_CONFIG.chainId})</div>
-        </Card>
-
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>AutoLogging Rate Limits</span>
-            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-700">5 → 20 /min</div>
-          <div className="text-[11px] text-emerald-800 font-mono font-bold">Tiered: 5, 10, 15, 20 events/min</div>
-        </Card>
-
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>Design Theme Color</span>
-            <span className="w-3.5 h-3.5 rounded-full bg-[#0047AB] border border-white shadow-xs" />
-          </div>
-          <div className="text-2xl sm:text-3xl font-black font-mono text-[#0047AB]">#0047AB</div>
-          <div className="text-[11px] text-[#6E6258] font-mono font-medium">Cobalt Blue &bull; Cream #FFF8F0</div>
-        </Card>
-
-        <Card className="p-4 sm:p-5 space-y-1 skeuo-card border-[#E5D7C5]">
-          <div className="flex items-center justify-between text-xs text-[#6E6258] font-medium">
-            <span>NFT Canonical Image</span>
-            <Wallet className="w-4 h-4 text-amber-600" />
-          </div>
-          <div className="text-base sm:text-lg font-black font-mono text-[#1A1A1A] truncate">
-            horizon.jpg
-          </div>
-          <a
-            href="https://horizon-aiops.vercel.app/horizon.jpg"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[11px] text-[#0047AB] font-mono font-bold hover:underline flex items-center gap-1"
-          >
-            <span>View Image Asset</span>
-            <ExternalLink className="w-3 h-3" />
-          </a>
-        </Card>
       </motion.div>
 
       {/* Subscription Plans & Minting Engine */}

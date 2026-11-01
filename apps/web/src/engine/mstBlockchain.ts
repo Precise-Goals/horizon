@@ -464,27 +464,45 @@ export class MSTBlockchainService {
     if (typeof window === 'undefined') return false;
     const provider = await getInjectedProvider(500);
     if (!provider || !provider.request) {
-      throw new Error('BridgeKey Wallet extension not detected in browser.');
+      console.warn('BridgeKey or Web3 provider not detected for wallet_watchAsset');
+      return false;
     }
 
+    const assetOptions = {
+      address: MST_CONFIG.subscriptionContractAddress,
+      tokenId: tokenId.toString(),
+      symbol: 'ZXPASS',
+      decimals: 0,
+      image: 'https://horizon-aiops.vercel.app/horizon.jpg',
+    };
+
     try {
+      // Standard EIP-747 object params
       const added = await provider.request({
         method: 'wallet_watchAsset',
         params: {
           type: 'ERC721',
-          options: {
-            address: MST_CONFIG.subscriptionContractAddress,
-            tokenId: tokenId.toString(),
-            symbol: 'ZXPASS',
-            decimals: 0,
-            image: 'https://horizon-aiops.vercel.app/horizon.jpg',
-          },
+          options: assetOptions,
         },
       });
       return !!added;
     } catch (err: any) {
-      console.warn('[BridgeKey] wallet_watchAsset request handled:', err);
-      return false;
+      try {
+        // Fallback for providers expecting array params
+        const added = await provider.request({
+          method: 'wallet_watchAsset',
+          params: [
+            {
+              type: 'ERC721',
+              options: assetOptions,
+            },
+          ],
+        });
+        return !!added;
+      } catch (fallbackErr) {
+        console.warn('[BridgeKey] wallet_watchAsset auto-add handled:', fallbackErr);
+        return false;
+      }
     }
   }
 
