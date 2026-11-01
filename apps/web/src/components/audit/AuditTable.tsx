@@ -143,7 +143,7 @@ export const AuditTable: React.FC = () => {
                       {log.action}
                     </td>
                     <td className="p-3.5 font-sans text-[#5A4E44] max-w-xs truncate font-medium">
-                      {log.details || '—'}
+                      {log.details || '-'}
                     </td>
                     <td className="p-3.5 whitespace-nowrap">
                       <Badge

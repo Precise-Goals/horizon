@@ -1,5 +1,5 @@
 /**
- * Horizon Autonomous Recovery Engine — Directed Acyclic Graph (DAG)
+ * Horizon Autonomous Recovery Engine: Directed Acyclic Graph (DAG)
  * Pure TypeScript implementation for monolithic React/Vite/Bun deployment.
  */
 import type { SystemNode } from '@/types';

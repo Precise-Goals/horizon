@@ -86,7 +86,7 @@ export const LandingPage: React.FC = () => {
       />
 
       {/* ============================================================
-          HERO SECTION — DOMINATING CREAM WITH TACTILE DEPTH
+          HERO SECTION: DOMINATING CREAM WITH TACTILE DEPTH
           ============================================================ */}
       <section
         className="horizon-hero relative pt-28 sm:pt-36 md:pt-44 pb-16 sm:pb-24 flex flex-col items-center justify-center text-center z-10"
@@ -111,7 +111,7 @@ export const LandingPage: React.FC = () => {
             className="text-base sm:text-lg md:text-xl text-[#444444] max-w-2xl mx-auto leading-relaxed font-normal"
           >
             Detect systemic outages, compute topological blast radius in real time, and orchestrate
-            deterministic recovery in strict dependency order — with cryptographic on-chain verification.
+            deterministic recovery in strict dependency order with cryptographic on-chain verification.
           </motion.p>
 
           {/* Tactile Buttons */}
@@ -239,7 +239,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ============================================================
-          ARCHITECTURAL PILLARS — SKEUOMORPHIC BENTO ON CREAM
+          ARCHITECTURAL PILLARS: SKEUOMORPHIC BENTO ON CREAM
           ============================================================ */}
       <section
         className="horizon-pillars relative py-20 sm:py-28 border-t border-[rgba(26,26,26,0.1)] bg-[#FFF8F0]"
@@ -383,7 +383,7 @@ export const LandingPage: React.FC = () => {
                     Cryptographic Human Approval Gates
                   </h3>
                   <p className="text-sm text-[#555555] mt-2 leading-relaxed">
-                    Full autonomy does not mean unchecked risk. High-impact operations—such as promoting a standby database to primary, purging distributed cache pools, or rerouting edge DNS—automatically pause awaiting multi-signature approval from SRE commanders via BridgeKey.
+                    Full autonomy does not mean unchecked risk. High-impact operations (such as promoting a standby database to primary, purging distributed cache pools, or rerouting edge DNS-automatically pause awaiting multi-signature approval from SRE commanders via BridgeKey.
                   </p>
                 </div>
               </div>
@@ -494,7 +494,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ============================================================
-          FREQUENTLY ASKED QUESTIONS — PORCELAIN ON CREAM
+          FREQUENTLY ASKED QUESTIONS: PORCELAIN ON CREAM
           ============================================================ */}
       <section
         className="horizon-faq relative py-20 sm:py-28 border-t border-[rgba(26,26,26,0.1)] bg-[#FFF8F0]"
@@ -558,7 +558,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* ============================================================
-          FINAL WAR ROOM CTA — COBALT BLUE PATCH
+          FINAL WAR ROOM CTA: COBALT BLUE PATCH
           ============================================================ */}
       <section className="horizon-cta relative py-20 sm:py-28 border-t border-[rgba(26,26,26,0.1)] bg-[#FAF3EA]">
         <div className="max-w-6xl mx-auto px-5 sm:px-8">

@@ -1896,7 +1896,7 @@ export const DocsPage: React.FC = () => {
  </span>
  </td>
  <td className="p-3.5 text-[#6E6258] whitespace-nowrap font-medium">
- {sc.args || '—'}
+ {sc.args || '-'}
  </td>
  <td className="p-3.5 font-poppins font-medium text-[#1A1A1A] max-w-xs leading-relaxed">
  {sc.desc}

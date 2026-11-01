@@ -118,7 +118,7 @@ export const MSTWalletModal: React.FC<MSTWalletModalProps> = ({ isOpen, onClose 
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="BridgeKey Wallet — MST Blockchain Testnet">
+    <Modal isOpen={isOpen} onClose={onClose} title="BridgeKey Wallet | MST Blockchain Testnet">
       <div className="space-y-5">
         {/* Network & Live Connection Status */}
         <div className="p-4 rounded-xl bg-blue-500/[0.08] border border-blue-500/25 flex items-center justify-between">

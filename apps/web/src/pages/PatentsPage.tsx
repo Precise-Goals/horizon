@@ -19,7 +19,7 @@ interface PatentsPageProps {
 }
 
 /**
- * PatentsPage — Continuous Full-Article Document Reader.
+ * PatentsPage: Continuous Full-Article Document Reader.
  * Renders all pages sequentially one after the other with zero spacing,
  * freely scrolling with the window as a unified article.
  */
@@ -50,13 +50,13 @@ export const PatentsPage: React.FC<PatentsPageProps> = ({ className }) => {
         </div>
       </div>
 
-      {/* Unified Continuous Article Sheet — Rendered Pages One After Other Without Spacing */}
+      {/* Unified Continuous Article Sheet: Rendered Pages One After Other Without Spacing */}
       <article className="w-full max-w-4xl bg-white rounded-2xl sm:rounded-3xl shadow-[0_4px_36px_rgba(26,26,26,0.08),0_1px_3px_rgba(26,26,26,0.04)] border border-[#E5D7C5] overflow-hidden">
         {PAGES.map((page) => (
           <img
             key={page.pageNumber}
             src={page.src}
-            alt={`Horizon Research & Patent Disclosure — Page ${page.pageNumber}`}
+            alt={`Horizon Research & Patent Disclosure: Page ${page.pageNumber}`}
             className="w-full h-auto block select-auto m-0 p-0 border-0"
             loading={page.pageNumber <= 2 ? 'eager' : 'lazy'}
             decoding="async"

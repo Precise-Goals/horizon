@@ -758,7 +758,7 @@ export const ObservabilityPage: React.FC<ObservabilityPageProps> = ({ className 
  );
  };
 
- // Autonomous AI Remediation Action — Computes Kahn DAG, queries Real AI, anchors Merkle checksums, and creates Post-Mortem Report
+ // Autonomous AI Remediation Action: Computes Kahn DAG, queries Real AI, anchors Merkle checksums, and creates Post-Mortem Report
  const executeAiAgentRemediation = async (incidentOverride?: typeof activeIncident) => {
  if (autoTimerRef.current) {
  clearTimeout(autoTimerRef.current);

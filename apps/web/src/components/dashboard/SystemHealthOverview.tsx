@@ -259,7 +259,7 @@ export const SystemHealthOverview: React.FC = () => {
           <Zap className="w-4 h-4 text-[#0047AB] shrink-0" />
           <span>
             {downCount > 0 ? (
-              <strong className="text-[#D97706] font-bold">{downCount} service(s) impacted — autonomous recovery sequence initialized.</strong>
+              <strong className="text-[#D97706] font-bold">{downCount} service(s) impacted: autonomous recovery sequence initialized.</strong>
             ) : (
               'Chaos engineering switch active: toggle failover on any node to verify blast radius.'
             )}

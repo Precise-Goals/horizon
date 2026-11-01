@@ -47,7 +47,7 @@ export const DashboardPage: React.FC = () => {
   const [nodes, setNodes] = useState<SystemNode[]>([]);
   const [loading, setLoading] = useState(true);
   const [blockHeight, setBlockHeight] = useState<number>(0);
-  const [lastCheckTime, setLastCheckTime] = useState('—');
+  const [lastCheckTime, setLastCheckTime] = useState('-');
   const [watchdogMetrics, setWatchdogMetrics] = useState<WatchdogMetrics>(
     () => autonomousWatchdog.getMetrics()
   );
@@ -220,11 +220,11 @@ export const DashboardPage: React.FC = () => {
 
       {/* ── Main Bento: Health Matrix + Activity Stream ── */}
       <motion.div variants={itemVariants} className="horizon-health-grid grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* System health — occupies 2/3 */}
+        {/* System health: occupies 2/3 */}
         <div className="xl:col-span-2">
           <SystemHealthOverview />
         </div>
-        {/* Activity feed — 1/3 */}
+        {/* Activity feed: 1/3 */}
         <div className="xl:col-span-1">
           <RecentActivityWidget />
         </div>

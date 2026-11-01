@@ -30,7 +30,7 @@ export function generateKubernetesManifests(
   const now = new Date().toISOString();
 
   const manifestHeader = `# ==============================================================================
-# HORIZON RESILIENCE PLATFORM — PRODUCTION KUBERNETES MANIFESTS
+# HORIZON RESILIENCE PLATFORM: PRODUCTION KUBERNETES MANIFESTS
 # Pipeline: ${pipelineName}
 # Generated: ${now}
 # Engine: Kahn Topological DAG O(V+E)

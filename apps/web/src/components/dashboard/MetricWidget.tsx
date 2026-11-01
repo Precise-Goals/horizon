@@ -16,7 +16,7 @@ interface MetricWidgetProps {
 }
 
 /**
- * MetricWidget — Tactile porcelain KPI bento card with skeuomorphic sparkline well.
+ * MetricWidget: Tactile porcelain KPI bento card with skeuomorphic sparkline well.
  * Cream background, ink black numbers, cobalt blue sparkline & accents.
  */
 export const MetricWidget: React.FC<MetricWidgetProps> = ({

@@ -185,7 +185,7 @@ export function buildNFTMetadata(tierKeyOrNumber: NFTTierKey | number): Complete
   }
 
   return {
-    name: `Horizon ZXPASS — ${plan.name} #${plan.tierNumber}`,
+    name: `Horizon ZXPASS: ${plan.name} #${plan.tierNumber}`,
     description: `Enterprise Autonomous Infrastructure Recovery Platform NFT Subscription Pass (${plan.name}). Token-gated SRE recovery orchestration on MST Blockchain Testnet (Chain ID 91562037). Features Kahn DAG recovery sequencing, EIP-712 cryptographic commander approval gates, tamper-evident Merkle audit vault anchoring, and dedicated AutoLogging rate limit of ${plan.autologgingRateLimit} events/min.`,
     image: CANONICAL_NFT_IMAGE_URL,
     external_url: 'https://horizon-aiops.vercel.app/subscription',

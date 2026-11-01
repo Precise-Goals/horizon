@@ -3,7 +3,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // ─────────────────────────────────────────────────────────────
-// GLSL Vertex Shader — Fibonacci halftone point sizing + fake lighting
+// GLSL Vertex Shader: Fibonacci halftone point sizing + fake lighting
 // ─────────────────────────────────────────────────────────────
 const vertexShader = /* glsl */ `
   attribute float aLand;
@@ -74,7 +74,7 @@ const vertexShader = /* glsl */ `
 `;
 
 // ─────────────────────────────────────────────────────────────
-// GLSL Fragment Shader — crisp circle with 1px smoothstep AA
+// GLSL Fragment Shader: crisp circle with 1px smoothstep AA
 // ─────────────────────────────────────────────────────────────
 const fragmentShader = /* glsl */ `
   varying float vAlpha;
@@ -172,20 +172,20 @@ function createLandMask(width: number, height: number): { landData: Uint8Array; 
     [42, 58], [38, 65], [45, 70], [60, 73], [80, 75],
   ]);
 
-  // Japan — Hokkaido
+  // Japan: Hokkaido
   drawPoly([[139.5, 45.5], [141, 45.8], [145.5, 44], [145, 42.5], [143, 42], [141, 42.8], [140, 43.5]]);
-  // Japan — Honshu
+  // Japan: Honshu
   drawPoly([
     [141.5, 41.5], [142, 40], [141.5, 38.5], [141, 37], [140.5, 36],
     [139.7, 35.5], [138, 35], [136.5, 34.8], [135, 34.5], [133.5, 34.2],
     [132, 34], [131, 33.8], [131, 34.5], [132.5, 35.5], [134, 36],
     [136, 36.8], [138, 37.5], [139.5, 38.5], [140, 39.5], [140.8, 41],
   ]);
-  // Japan — Shikoku
+  // Japan: Shikoku
   drawPoly([[132.5, 34], [134.5, 34.2], [134.5, 33.3], [133, 33.2]]);
-  // Japan — Kyushu
+  // Japan: Kyushu
   drawPoly([[129.5, 33.8], [131.5, 34], [132, 32.5], [131, 31], [130, 31.5]]);
-  // Japan — Okinawa arc
+  // Japan: Okinawa arc
   drawPoly([[127, 27], [128.5, 27.5], [128, 26], [126.5, 26.5]]);
 
   // Korean Peninsula

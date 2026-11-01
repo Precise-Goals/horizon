@@ -1,4 +1,4 @@
-# Horizon Web Console — Frontend Architecture & Technical Report
+# Horizon Web Console : Frontend Architecture & Technical Report
 
 > **Mission-Control SRE War Room & Autonomous Infrastructure Recovery Console**  
 > *Built with React 19, TypeScript (Strict Mode), Vite, Bun Runtime, Tailwind CSS v4, DaisyUI, and Web3 BridgeKey Wallet on the MST Blockchain.*

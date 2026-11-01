@@ -7,7 +7,7 @@ import { OnboardingGate } from '../auth/OnboardingGate';
 import { cn } from '../../lib/utils';
 
 /**
- * RootLayout — Minimalist, Centered, SRE Command Layout.
+ * RootLayout: Minimalist, Centered, SRE Command Layout.
  * Features:
  * - Completely centered, uncluttered layout (sidebar removed).
  * - Dominating cream background (#FFF8F0) with skeuomorphic porcelain depth.
