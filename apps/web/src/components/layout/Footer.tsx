@@ -228,8 +228,8 @@ export const Footer: React.FC = () => {
         {/* ============================================================
             MIDDLE SECTION: MONUMENTAL "HORIZON" DISPLAY TITLE
             ============================================================ */}
-        <div className="pt-6 sm:pt-10 border-t border-white/10 select-none">
-          <h1 className="text-[17vw] sm:text-[16vw] md:text-[15vw] lg:text-[14vw] font-black uppercase tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-b from-white via-zinc-200 to-zinc-600/30 text-center sm:text-left drop-shadow-[0_4px_30px_rgba(255,255,255,0.06)]">
+        <div className="pt-10 sm:pt-14 md:pt-16 pb-4 sm:pb-6 border-t border-white/10 select-none">
+          <h1 className="footer-horizon-title text-[17vw] sm:text-[16vw] md:text-[15vw] lg:text-[14vw] font-black uppercase tracking-tighter leading-none text-transparent bg-clip-text text-center sm:text-left drop-shadow-[0_4px_30px_rgba(255,255,255,0.06)]">
             Horizon
           </h1>
         </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const PAGES = [
@@ -11,6 +11,7 @@ const PAGES = [
   { pageNumber: 5, src: '/research-pages/page-5.webp' },
   { pageNumber: 6, src: '/research-pages/page-6.webp' },
   { pageNumber: 7, src: '/research-pages/page-7.webp' },
+  { pageNumber: 8, src: '/research-pages/page-8.webp' },
 ];
 
 interface PatentsPageProps {
@@ -34,9 +35,19 @@ export const PatentsPage: React.FC<PatentsPageProps> = ({ className }) => {
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Return to Home</span>
         </Link>
-        <span className="text-[#8A7B6D] hidden sm:inline">
-          Horizon: Dependency-Aware Autonomous Infrastructure Recovery &bull; Research Article
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[#8A7B6D] hidden md:inline">
+            Horizon: Dependency-Aware Autonomous Infrastructure Recovery &bull; Research Article (8 Pages)
+          </span>
+          <a
+            href="/research.pdf"
+            download="research.pdf"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0047AB] text-white hover:bg-[#003380] transition-colors font-sans text-xs font-semibold shadow-sm"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Download PDF</span>
+          </a>
+        </div>
       </div>
 
       {/* Unified Continuous Article Sheet — Rendered Pages One After Other Without Spacing */}
