@@ -13,9 +13,11 @@ import { cn } from '../../lib/utils';
  * - Dominating cream background (#FFF8F0) with skeuomorphic porcelain depth.
  * - Fluid, component-by-component Framer Motion transitions.
  * - Subtle ambient cobalt blue lighting.
+ * - Editorial Silvana typography applied across pages, preserving sans on home hero/navbar/footer.
  */
 export const RootLayout: React.FC = () => {
   const location = useLocation();
+  const isHome = location.pathname === '/';
   const isPatents = location.pathname.startsWith('/patents') || location.pathname === '/governance/patents';
   const isArchitect = location.pathname.startsWith('/architect');
 
@@ -34,7 +36,7 @@ export const RootLayout: React.FC = () => {
           className="pointer-events-none fixed inset-0 z-0 opacity-20 bg-[linear-gradient(to_right,rgba(26,26,26,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(26,26,26,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem]"
         />
 
-        {/* Floating Porcelain Dock Navbar */}
+        {/* Floating Porcelain Dock Navbar (Maintains Poppins / font-sans) */}
         <Navbar />
 
         {/* Centered Main Stage */}
@@ -56,14 +58,14 @@ export const RootLayout: React.FC = () => {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -10, scale: 0.995 }}
                 transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full"
+                className={cn('w-full', !isHome && 'silvana-scope')}
               >
                 <Outlet />
               </motion.div>
             </AnimatePresence>
           </div>
         </main>
-        {/* Antigravity-Style Monumental Footer */}
+        {/* Antigravity-Style Monumental Footer (Maintains Poppins / font-sans) */}
         <Footer />
       </div>
     </OnboardingGate>

@@ -963,7 +963,7 @@ export const DocsPage: React.FC = () => {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8 font-sans w-full max-w-7xl mx-auto pb-16"
+      className="space-y-8 font-silvana docs-page-container w-full max-w-7xl mx-auto pb-16"
     >
       {/* MDN-Style Breadcrumb Navigation */}
       <motion.div variants={itemVariants} className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-[#EADCC9] pb-3">
@@ -1474,25 +1474,25 @@ export const DocsPage: React.FC = () => {
                         <td className="p-3 font-bold text-[#0047AB]">HORIZON_API_URL</td>
                         <td className="p-3 text-[#6E6258]">URL</td>
                         <td className="p-3 text-emerald-800 font-bold">Required</td>
-                        <td className="p-3 font-sans text-[#1A1A1A]">Production Horizon orchestrator endpoint or local daemon URL.</td>
+                        <td className="p-3 font-silvana text-[#1A1A1A]">Production Horizon orchestrator endpoint or local daemon URL.</td>
                       </tr>
                       <tr>
                         <td className="p-3 font-bold text-[#0047AB]">MST_CHAIN_ID</td>
                         <td className="p-3 text-[#6E6258]">Number</td>
                         <td className="p-3">91562037</td>
-                        <td className="p-3 font-sans text-[#1A1A1A]">MST Blockchain Testnet EVM Chain identifier for EIP-712 signing.</td>
+                        <td className="p-3 font-silvana text-[#1A1A1A]">MST Blockchain Testnet EVM Chain identifier for EIP-712 signing.</td>
                       </tr>
                       <tr>
                         <td className="p-3 font-bold text-[#0047AB]">MST_RPC_URL</td>
                         <td className="p-3 text-[#6E6258]">URL</td>
                         <td className="p-3">https://testnet.mstscan.com/rpc</td>
-                        <td className="p-3 font-sans text-[#1A1A1A]">JSON-RPC node for blockchain Merkle root query and smart contract state.</td>
+                        <td className="p-3 font-silvana text-[#1A1A1A]">JSON-RPC node for blockchain Merkle root query and smart contract state.</td>
                       </tr>
                       <tr>
                         <td className="p-3 font-bold text-[#0047AB]">SARVAM_AGENT_ENABLED</td>
                         <td className="p-3 text-[#6E6258]">Boolean</td>
                         <td className="p-3">true</td>
-                        <td className="p-3 font-sans text-[#1A1A1A]">Enables native Sarvam-105b LLM integration for automated SRE synthesis.</td>
+                        <td className="p-3 font-silvana text-[#1A1A1A]">Enables native Sarvam-105b LLM integration for automated SRE synthesis.</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1611,7 +1611,7 @@ export const DocsPage: React.FC = () => {
                             )}
                           </td>
                           <td className="p-3 text-[#5A4E44]">{param.defaultVal}</td>
-                          <td className="p-3 font-sans text-[#1A1A1A] leading-relaxed">{param.description}</td>
+                          <td className="p-3 font-silvana text-[#1A1A1A] leading-relaxed">{param.description}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1769,10 +1769,10 @@ export const DocsPage: React.FC = () => {
                           {err.category}
                         </span>
                       </td>
-                      <td className="p-3.5 font-sans font-medium text-[#403830] max-w-sm leading-relaxed">
+                      <td className="p-3.5 font-silvana font-medium text-[#403830] max-w-sm leading-relaxed">
                         {err.description}
                       </td>
-                      <td className="p-3.5 font-sans font-medium text-emerald-800 max-w-xs leading-relaxed">
+                      <td className="p-3.5 font-silvana font-medium text-emerald-800 max-w-xs leading-relaxed">
                         {err.remediation}
                       </td>
                     </tr>
@@ -1863,7 +1863,7 @@ export const DocsPage: React.FC = () => {
                       <td className="p-3.5 text-[#6E6258] whitespace-nowrap font-medium">
                         {sc.args || '—'}
                       </td>
-                      <td className="p-3.5 font-sans font-medium text-[#1A1A1A] max-w-xs leading-relaxed">
+                      <td className="p-3.5 font-silvana font-medium text-[#1A1A1A] max-w-xs leading-relaxed">
                         {sc.desc}
                       </td>
                       <td className="p-3.5 text-emerald-800 font-semibold whitespace-nowrap">

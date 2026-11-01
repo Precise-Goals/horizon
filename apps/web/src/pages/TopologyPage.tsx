@@ -38,7 +38,7 @@ export const TopologyPage: React.FC = () => {
       animate="visible"
       className="space-y-6 sm:space-y-8 font-sans w-full"
     >
-      {/* Return Navigation & Live Pill */}
+      {/* Return Navigation */}
       <motion.div variants={itemVariants} className="flex items-center justify-between">
         <Link
           to="/"
@@ -46,24 +46,14 @@ export const TopologyPage: React.FC = () => {
         >
           <span>&larr; Return to Home</span>
         </Link>
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 shadow-xs">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-mono text-emerald-800 font-bold">O(V + E) Acyclic DAG Active</span>
-        </div>
       </motion.div>
 
       {/* Header */}
       <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
-              Dependency DAG Topology
-            </h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-[#0047AB]/10 text-[#0047AB] border border-[#0047AB]/20 shadow-xs">
-              <Network className="w-3.5 h-3.5 text-[#0047AB]" />
-              TOPOLOGICAL RESOLVER
-            </span>
-          </div>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[#1A1A1A]">
+            Dependency DAG Topology
+          </h1>
           <p className="text-xs sm:text-sm text-[#5A4E44] mt-1.5 max-w-3xl leading-relaxed font-medium">
             Dynamic Directed Acyclic Graph (DAG) visualizing parent-child service relationships, reverse dependency traversal, and failure blast radius.
           </p>
